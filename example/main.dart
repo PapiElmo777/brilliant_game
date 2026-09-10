@@ -7,7 +7,7 @@ void main() {
     zonas: [
       Zona(
         id: '2',
-        tipo: TipoZona.verde,
+        tipo: const TipoVerde(),
         campoPuntuacion: 'puntosZona2',
         celdas: [
           Celda(id: 'C1', fila: 0, columna: 0, esInicio: true),
@@ -16,7 +16,7 @@ void main() {
       ),
       Zona(
         id: '5',
-        tipo: TipoZona.azul,
+        tipo: const TipoAzul(),
         celdas: [
           Celda(id: 'C3', fila: 0, columna: 1),
           Celda(id: 'C4', fila: 1, columna: 1),

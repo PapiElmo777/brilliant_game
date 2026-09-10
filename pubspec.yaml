@@ -1,8 +1,13 @@
 name: brilliant_game
-description: Motor lógico de Brilliant organizado en tableros, zonas y celdas.
+description: Motor de Brilliant con tableros, zonas y tipos de color para Flutter.
 
 environment:
   sdk: '^3.9.0'
 
+dependencies:
+  flutter:
+    sdk: flutter
+
 dev_dependencies:
-  test: ^1.24.0
+  flutter_test:
+    sdk: flutter

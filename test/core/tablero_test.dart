@@ -1,12 +1,12 @@
 import 'package:brilliant_game/brilliant_game.dart';
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 Zona zona(
   String id,
   String celdaId,
   int fila,
   int columna, {
-  TipoZona tipo = TipoZona.verde,
+  Tipo tipo = const TipoVerde(),
 }) => Zona(
   id: id,
   tipo: tipo,
@@ -18,7 +18,7 @@ Tablero crearTablero() => Tablero(
   zonas: [
     Zona(
       id: '2',
-      tipo: TipoZona.azul,
+      tipo: const TipoAzul(),
       celdas: [
         Celda(id: 'C00', fila: 0, columna: 0),
         Celda(id: 'C01', fila: 0, columna: 1),
@@ -26,7 +26,7 @@ Tablero crearTablero() => Tablero(
     ),
     Zona(
       id: '7',
-      tipo: TipoZona.azul,
+      tipo: const TipoAzul(),
       celdas: [
         Celda(id: 'C10', fila: 1, columna: 0),
         Celda(id: 'C11', fila: 1, columna: 1),
@@ -74,12 +74,12 @@ void main() {
       final uno = Tablero(id: 'nivel1', zonas: [zona('2', 'A', 0, 0)]);
       final dos = Tablero(
         id: 'nivel2',
-        zonas: [zona('2', 'A', 4, 5, tipo: TipoZona.rojo)],
+        zonas: [zona('2', 'A', 4, 5, tipo: const TipoRojo())],
       );
       uno.colocarValor('A', 6);
       expect(dos.obtenerCelda('A').valor, isNull);
-      expect(uno.obtenerZona('2').tipo, TipoZona.verde);
-      expect(dos.obtenerZona('2').tipo, TipoZona.rojo);
+      expect(uno.obtenerZona('2').tipo, const TipoVerde());
+      expect(dos.obtenerZona('2').tipo, const TipoRojo());
       expect(dos.obtenerCeldaEn(4, 5)?.id, 'A');
     },
   );

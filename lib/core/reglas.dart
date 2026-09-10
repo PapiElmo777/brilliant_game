@@ -1,32 +1,29 @@
-/// Restricciones sobre los números de una zona, independientes de su identidad.
-enum ReglaZona {
-  cualquierNumero,
-  todosIguales,
-  todosDiferentes,
-  maxDosDiferentes;
+import '../models/tipo.dart';
 
-  bool validarValores(Iterable<int> valores) {
-    final lista = valores.toList();
-    if (lista.any((valor) => valor < 1 || valor > 6)) return false;
-    final distintos = lista.toSet().length;
-    return switch (this) {
-      ReglaZona.cualquierNumero => true,
-      ReglaZona.todosIguales => distintos <= 1,
-      ReglaZona.todosDiferentes => distintos == lista.length,
-      ReglaZona.maxDosDiferentes => distintos <= 2,
-    };
+/// Comprueba una configuración completa, incluido el rango de cada número.
+/// Las restricciones de color pertenecen exclusivamente a las clases Tipo.
+bool validarValoresDeTipo(Tipo tipo, Iterable<int> valores) {
+  final anteriores = <int>[];
+  for (final valor in valores) {
+    if (valor < 1 ||
+        valor > 6 ||
+        !tipo.esPosibleAgregar(List.unmodifiable(anteriores), valor)) {
+      return false;
+    }
+    anteriores.add(valor);
   }
+  return true;
 }
 
-// Se conservan las funciones existentes, delegando en la misma implementación.
+// Adaptadores de las funciones existentes a la jerarquía de tipos.
 bool cumpleReglaRojoAmarillo(List<int> lista, int numero) =>
-    ReglaZona.todosDiferentes.validarValores([...lista, numero]);
+    validarValoresDeTipo(const TipoRojo(), [...lista, numero]);
 
 bool cumpleReglaVerde(List<int> lista, int numero) =>
-    ReglaZona.cualquierNumero.validarValores([...lista, numero]);
+    validarValoresDeTipo(const TipoVerde(), [...lista, numero]);
 
 bool cumpleReglaAzul(List<int> lista, int numero) =>
-    ReglaZona.todosIguales.validarValores([...lista, numero]);
+    validarValoresDeTipo(const TipoAzul(), [...lista, numero]);
 
 bool cumpleReglaMorado(List<int> lista, int numero) =>
-    ReglaZona.maxDosDiferentes.validarValores([...lista, numero]);
+    validarValoresDeTipo(const TipoMorado(), [...lista, numero]);

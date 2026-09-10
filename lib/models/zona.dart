@@ -2,13 +2,13 @@ import 'dart:collection';
 
 import '../core/reglas.dart';
 import 'celda.dart';
-import 'tipo_zona.dart';
+import 'tipo.dart';
 
 /// Conjunto no vacío de casillas con un tipo y una regla común.
 /// Los identificadores son locales al tablero, independientes del color.
 class Zona {
   final String id;
-  final TipoZona tipo;
+  final Tipo tipo;
   final String? campoPuntuacion;
   final Map<String, Celda> _celdas = {};
 
@@ -42,7 +42,6 @@ class Zona {
   }
 
   Map<String, Celda> get celdas => UnmodifiableMapView(_celdas);
-  ReglaZona get regla => tipo.regla;
   List<int> get valores => List.unmodifiable(
     _celdas.values.map((celda) => celda.valor).whereType<int>(),
   );
@@ -51,7 +50,7 @@ class Zona {
   /// Valida una configuración propuesta, incluida la capacidad de la zona.
   bool validarValores(Iterable<int> valores) {
     final lista = valores.toList();
-    return lista.length <= _celdas.length && regla.validarValores(lista);
+    return lista.length <= _celdas.length && validarValoresDeTipo(tipo, lista);
   }
 
   Celda _obtenerCelda(String celdaId) {
