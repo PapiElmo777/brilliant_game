@@ -5,6 +5,7 @@ environment:
   sdk: '^3.9.0'
 
 dependencies:
+  bloc: ^9.2.1
   flutter:
     sdk: flutter
 

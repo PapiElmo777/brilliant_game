@@ -126,6 +126,45 @@ flutter test test/example_test.dart
 
 ## Alcance
 
-Esta etapa no implementa turnos, dados, asignación de puntos, restricciones de inicio o de adyacencia al colocar, fin de partida, persistencia ni interfaz gráfica. Tampoco exige conectividad geométrica de una zona. Esas reglas pueden añadirse sobre el modelo actual.
+Esta etapa no implementa turnos, dados, asignación de puntos, restricciones de adyacencia durante el juego, fin de partida, persistencia ni interfaz gráfica. Tampoco exige conectividad geométrica de una zona. Esas reglas pueden añadirse sobre el modelo actual.
 
 Validación de esta adaptación: **74 pruebas aprobadas con Flutter**, incluido el ejemplo y las puntuaciones de los cinco tipos.
+
+
+## Preparación inicial con BLoC
+
+`PreparacionInicial` controla la colocación manual de los números 1, 2, 3, 4, 5 y 6, cada uno exactamente una vez. El tablero debe definir exactamente seis celdas con `esInicio: true`. Las demás casillas deben estar vacías. Se pueden proporcionar valores iniciales válidos al construirlo.
+
+En esta etapa el jugador elige la distribución; no se genera automáticamente una distribución aleatoria. Se conservan las restricciones de cada tipo de zona y el rango 1–6. El diseño del tablero debe permitir esa distribución; esta validación no resuelve ni busca distribuciones posibles.
+
+`InicioBloc`, basado en el paquete `bloc`, expone tres fases:
+
+- `preparando`: faltan números; el inicio se rechaza.
+- `listo`: están los seis números; se permite solicitar inicio.
+- `iniciado`: se aceptó la solicitud y se bloquean las ediciones de preparación.
+
+Eventos: `ValorInicialColocado(celdaId, valor)`, `ValorInicialRetirado(celdaId)` e `InicioSolicitado()`. Los eventos se procesan en orden. Una colocación inválida conserva los valores existentes y publica `state.error`; una operación válida limpia el error.
+
+```dart
+final bloc = InicioBloc(tableroConSeisCasillasIniciales);
+final subscription = bloc.stream.listen((estado) {
+  // En una futura pantalla, habilitar el botón con estado.puedeIniciar.
+  // Solo avanzar cuando estado.fase == FaseInicio.iniciado.
+  print(estado.numerosFaltantes);
+});
+
+bloc.add(const ValorInicialColocado('C1', 4));
+// Colocar los cinco números restantes en las otras casillas iniciales.
+bloc.add(const InicioSolicitado()); // Se rechaza si falta algún número.
+
+// Después de observar FaseInicio.iniciado:
+// final tableroParaJuego = bloc.crearTableroParaJuego();
+// await subscription.cancel();
+// await bloc.close();
+```
+
+El BLoC usa una copia del tablero recibido. Sus estados son instantáneas inmutables. `crearTableroParaJuego()` entrega una nueva copia independiente solamente después del inicio. Modificar el tablero original no altera la preparación.
+
+No hay navegación ni pantalla implementada: el bloqueo está en la lógica y deberá respetarlo la interfaz. Las operaciones de bajo nivel de `Tablero` siguen disponibles para construir datos y para el juego posterior; el flujo de preparación debe usar `InicioBloc`.
+
+Pruebas de esta funcionalidad: `test/core/preparacion_inicial_test.dart` y `test/bloc/inicio_bloc_test.dart`.

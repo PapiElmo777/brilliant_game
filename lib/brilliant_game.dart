@@ -4,3 +4,6 @@ export 'models/celda.dart';
 export 'models/tipo.dart';
 export 'models/zona.dart';
 export 'core/preparacion_inicial.dart';
+export 'bloc/inicio_bloc.dart';
+export 'bloc/inicio_estado.dart';
+export 'bloc/inicio_evento.dart';
