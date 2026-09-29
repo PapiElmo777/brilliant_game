@@ -9,6 +9,7 @@ import '../widgets/fondo_espacial.dart';
 import '../widgets/nave_marciano.dart';
 import '../widgets/nave_entrada.dart';
 import '../widgets/disparo_numero_overlay.dart';
+import '../widgets/respuesta_error.dart';
 import '../widgets/tablero_view.dart';
 import '../widgets/bandeja_numeros.dart';
 
@@ -166,7 +167,9 @@ class _PreparacionPageState extends State<PreparacionPage> {
                               ),
                               const SizedBox(height: 16),
                               if (estado.error != null)
-                                Semantics(
+                                RespuestaError(
+                                  key: ObjectKey(estado),
+                                  child: Semantics(
                                   liveRegion: true,
                                   child: Container(
                                     key: const ValueKey('mensaje_error'),
@@ -193,6 +196,7 @@ class _PreparacionPageState extends State<PreparacionPage> {
                                       ],
                                     ),
                                   ),
+                                ),
                                 ),
                               if (estado.fase != FaseInicio.iniciado)
                                 const Padding(
