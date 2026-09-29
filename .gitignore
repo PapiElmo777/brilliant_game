@@ -4,3 +4,9 @@ build/
 coverage/
 docs/
 .DS_Store
+.flutter-plugins-dependencies
+*.iml
+.idea/
+/android/app/debug/
+/android/app/profile/
+/android/app/release/
