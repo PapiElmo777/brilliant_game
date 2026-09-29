@@ -9,12 +9,14 @@ class TableroView extends StatelessWidget {
   final DefinicionTablero definicion;
   final InicioEstado estado;
   final ValueChanged<String> onCeldaSeleccionada;
+  final Map<String, GlobalKey> clavesCeldas;
 
   const TableroView({
     super.key,
     required this.definicion,
     required this.estado,
     required this.onCeldaSeleccionada,
+    this.clavesCeldas = const {},
   });
 
   @override
@@ -55,13 +57,16 @@ class TableroView extends StatelessWidget {
           ),
           itemBuilder: (context, index) {
             final celda = celdas[index];
-            return CeldaView(
-              key: ValueKey('celda_${celda.id}'),
-              celda: celda,
-              tipo: tipos[celda.id]!,
-              onTap: estado.interaccionBloqueada
-                  ? null
-                  : () => onCeldaSeleccionada(celda.id),
+            return KeyedSubtree(
+              key: clavesCeldas[celda.id],
+              child: CeldaView(
+                key: ValueKey('celda_${celda.id}'),
+                celda: celda,
+                tipo: tipos[celda.id]!,
+                onTap: estado.interaccionBloqueada
+                    ? null
+                    : () => onCeldaSeleccionada(celda.id),
+              ),
             );
           },
         ),
