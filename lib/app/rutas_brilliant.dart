@@ -19,7 +19,7 @@ abstract final class RutasBrilliant {
         builder: (_) {
           final definicion = settings.arguments! as DefinicionTablero;
           return BlocProvider(
-            create: (_) => InicioBloc(definicion.crearTablero()),
+            create: (_) => InicioBloc(definicion.crearTablero(), animarEntrada: true),
             child: PreparacionPage(definicion: definicion),
           );
         },

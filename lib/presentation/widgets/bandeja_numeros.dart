@@ -2,26 +2,80 @@ import 'package:flutter/material.dart';
 
 import '../../bloc/inicio_estado.dart';
 
-class BandejaNumeros extends StatelessWidget {
+class BandejaNumeros extends StatefulWidget {
   final InicioEstado estado;
   final ValueChanged<int> onSeleccionado;
+  final VoidCallback? onPresentacionCompletada;
 
   const BandejaNumeros({
     super.key,
     required this.estado,
     required this.onSeleccionado,
+    this.onPresentacionCompletada,
   });
 
   @override
+  State<BandejaNumeros> createState() => _BandejaNumerosState();
+}
+
+class _BandejaNumerosState extends State<BandejaNumeros> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100))
+    ..addStatusListener((status) { if (status == AnimationStatus.completed) _notificar(); });
+  bool _notificada = false;
+
+  void _notificar() {
+    if (widget.estado.faseVisual != FaseVisualInicio.mostrandoNumeros || _notificada) return;
+    _notificada = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onPresentacionCompletada?.call();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _actualizar();
+  }
+
+  @override
+  void didUpdateWidget(BandejaNumeros oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _actualizar();
+  }
+
+  void _actualizar() {
+    if (widget.estado.faseVisual == FaseVisualInicio.llegandoNave) {
+      _controller.value = 0;
+    } else if (widget.estado.faseVisual == FaseVisualInicio.mostrandoNumeros && !MediaQuery.disableAnimationsOf(context)) {
+      if (_controller.status == AnimationStatus.dismissed) _controller.forward();
+    } else {
+      _controller.value = 1;
+      _notificar();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final estado = widget.estado;
+    final onSeleccionado = widget.onSeleccionado;
     final numeros = estado.numerosFaltantes.toList()..sort();
-    return Wrap(
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) => Wrap(
       alignment: WrapAlignment.center,
       spacing: 8,
       runSpacing: 8,
       children: [
         for (final numero in numeros)
-          Semantics(
+          _AparicionNumero(
+            progreso: Interval(.26 + numeros.indexOf(numero) * .09, .5 + numeros.indexOf(numero) * .09, curve: Curves.easeOutCubic).transform(_controller.value),
+            child: Semantics(
             selected: numero == estado.numeroSeleccionado,
             button: true,
             enabled: !estado.interaccionBloqueada,
@@ -73,7 +127,25 @@ class BandejaNumeros extends StatelessWidget {
               ),
             ),
           ),
+          ),
       ],
+    ),
     );
   }
+}
+
+class _AparicionNumero extends StatelessWidget {
+  final double progreso;
+  final Widget child;
+
+  const _AparicionNumero({required this.progreso, required this.child});
+
+  @override
+  Widget build(BuildContext context) => ExcludeSemantics(
+    excluding: progreso < 1,
+    child: Opacity(
+      opacity: progreso,
+      child: Transform.translate(offset: Offset(0, -36 * (1 - progreso)), child: child),
+    ),
+  );
 }

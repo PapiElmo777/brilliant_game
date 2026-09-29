@@ -7,6 +7,7 @@ import '../../bloc/inicio_evento.dart';
 import '../../catalogo/definicion_tablero.dart';
 import '../widgets/fondo_espacial.dart';
 import '../widgets/nave_marciano.dart';
+import '../widgets/nave_entrada.dart';
 import '../widgets/tablero_view.dart';
 import '../widgets/bandeja_numeros.dart';
 
@@ -73,7 +74,14 @@ class PreparacionPage extends StatelessWidget {
                               ),
                             ],
                           ),
-                          const SizedBox(width: 170, child: NaveMarciano()),
+                          SizedBox(
+                            width: 170,
+                            child: NaveEntrada(
+                              llegando: estado.faseVisual == FaseVisualInicio.llegandoNave,
+                              onCompletada: () => context.read<InicioBloc>().add(const LlegadaNaveCompletada()),
+                              child: NaveMarciano(hazActivo: estado.faseVisual != FaseVisualInicio.llegandoNave),
+                            ),
+                          ),
                           Text(
                             estado.fase == FaseInicio.iniciado
                                 ? 'MISIÓN INICIADA'
@@ -98,6 +106,7 @@ class PreparacionPage extends StatelessWidget {
                           const SizedBox(height: 20),
                           BandejaNumeros(
                             estado: estado,
+                            onPresentacionCompletada: () => context.read<InicioBloc>().add(const PresentacionNumerosCompletada()),
                             onSeleccionado: (numero) => context
                                 .read<InicioBloc>()
                                 .add(NumeroInicialSeleccionado(numero)),
