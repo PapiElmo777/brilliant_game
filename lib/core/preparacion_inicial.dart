@@ -54,7 +54,9 @@ class PreparacionInicial {
       throw ArgumentError('El número $valor ya está colocado.');
     }
     if (!_tablero.puedeColocarValor(celdaId, valor)) {
-      throw ArgumentError('El valor $valor incumple la regla o el rango de la zona.');
+      throw ArgumentError(
+        'El valor $valor incumple la regla o el rango de la zona.',
+      );
     }
   }
 

@@ -201,3 +201,21 @@ Cada definición valida la geometría 7×7 y la preparación inicial al construi
 Los IDs de celda tienen el formato `f1_c2`, usando base 1 para facilitar su lectura. Las propiedades `fila` y `columna` siguen usando base 0. Las iniciales del primer tablero son `f1_c2`, `f2_c6`, `f4_c2`, `f4_c5`, `f6_c3` y `f7_c5`.
 
 Las pruebas de `test/catalogo/` verifican la matriz completa, los tipos, las posiciones iniciales, la independencia entre partidas y el rechazo de configuraciones inválidas. Esta fase añade los datos; la pantalla provisional todavía no muestra el tablero.
+
+## Flujo BLoC de presentación: fase 3
+
+`MenuBloc` recibe `NuevaPartidaSolicitada` y publica las fases `creandoPartida` y `partidaPreparada`. El estado entrega la definición de `tablero_01` y un `solicitudId` creciente. La futura pantalla debe escuchar esta intención mediante `BlocListener`, crear el tablero con `state.tablero!.crearTablero()` y navegar. Las solicitudes nuevas permiten crear partidas independientes; el BLoC no ejecuta navegación.
+
+`InicioBloc(tablero, animarEntrada: true)` comienza en `llegandoNave`, bloqueando las acciones de preparación. `LlegadaNaveCompletada` avanza a `mostrandoNumeros` y `PresentacionNumerosCompletada` habilita la interacción. El constructor sin esta opción conserva el comportamiento anterior, sin esperar animaciones.
+
+Durante la preparación:
+
+- `NumeroInicialSeleccionado(valor)` selecciona un número disponible y `SeleccionCancelada` limpia la selección.
+- `CeldaInicialSeleccionada(celdaId)` retira el valor si la celda inicial está ocupada. Si está vacía, valida el número seleccionado y publica un `DisparoPendiente` con ID, número y destino.
+- La validación utiliza `PreparacionInicial.validarColocacion`, que lanza `ArgumentError` ante una operación inválida sin modificar el tablero.
+- La presentación confirma la animación mediante `DisparoNumeroCompletado(disparo.id)`. Sólo entonces se coloca el valor. Confirmaciones antiguas o duplicadas se ignoran.
+- Durante el disparo, las demás acciones no modifican la preparación. Tras iniciar, las ediciones publican un error y conservan el tablero.
+
+`fase` conserva el estado del dominio; `faseVisual`, `numeroSeleccionado`, `disparoPendiente` e `interaccionBloqueada` coordinan la presentación. `puedeIniciar` requiere que el dominio esté listo y que no haya interacción bloqueada. Los eventos anteriores de colocación, retiro e inicio siguen disponibles.
+
+Las posiciones en píxeles y los controladores de animación corresponden a los widgets de las próximas fases. Esta fase no cambia todavía la pantalla provisional.

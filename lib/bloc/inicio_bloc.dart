@@ -13,10 +13,12 @@ class InicioBloc extends Bloc<InicioEvento, InicioEstado> {
       InicioBloc._(PreparacionInicial(tablero), animarEntrada);
 
   InicioBloc._(this._preparacion, bool animarEntrada)
-    : super(_estado(
-        _preparacion,
-        faseVisual: animarEntrada ? FaseVisualInicio.llegandoNave : null,
-      )) {
+    : super(
+        _estado(
+          _preparacion,
+          faseVisual: animarEntrada ? FaseVisualInicio.llegandoNave : null,
+        ),
+      ) {
     // Una única cola preserva el orden entre acciones y confirmaciones visuales.
     on<InicioEvento>(
       _procesar,
@@ -27,7 +29,9 @@ class InicioBloc extends Bloc<InicioEvento, InicioEstado> {
   void _procesar(InicioEvento evento, Emitter<InicioEstado> emit) {
     if (evento is LlegadaNaveCompletada) {
       if (state.faseVisual == FaseVisualInicio.llegandoNave) {
-        emit(_estado(_preparacion, faseVisual: FaseVisualInicio.mostrandoNumeros));
+        emit(
+          _estado(_preparacion, faseVisual: FaseVisualInicio.mostrandoNumeros),
+        );
       }
       return;
     }
@@ -45,7 +49,13 @@ class InicioBloc extends Bloc<InicioEvento, InicioEstado> {
       return;
     }
     if (state.fase == FaseInicio.iniciado) {
-      emit(_estado(_preparacion, iniciado: true, error: 'La partida ya fue iniciada.'));
+      emit(
+        _estado(
+          _preparacion,
+          iniciado: true,
+          error: 'La partida ya fue iniciada.',
+        ),
+      );
       return;
     }
     if (state.interaccionBloqueada) return;
@@ -75,23 +85,27 @@ class InicioBloc extends Bloc<InicioEvento, InicioEstado> {
               throw StateError('Selecciona primero un número disponible.');
             }
             _preparacion.validarColocacion(celda.id, numero);
-            emit(_estado(
-              _preparacion,
-              faseVisual: FaseVisualInicio.disparando,
-              numeroSeleccionado: numero,
-              disparoPendiente: DisparoPendiente(
-                id: ++_ultimoDisparoId,
-                numero: numero,
-                celdaId: celda.id,
+            emit(
+              _estado(
+                _preparacion,
+                faseVisual: FaseVisualInicio.disparando,
+                numeroSeleccionado: numero,
+                disparoPendiente: DisparoPendiente(
+                  id: ++_ultimoDisparoId,
+                  numero: numero,
+                  celdaId: celda.id,
+                ),
               ),
-            ));
+            );
             return;
           }
         case SeleccionCancelada():
           break;
         case InicioSolicitado():
           if (!_preparacion.estaLista) {
-            throw StateError('Debes colocar los números del 1 al 6 antes de iniciar.');
+            throw StateError(
+              'Debes colocar los números del 1 al 6 antes de iniciar.',
+            );
           }
           emit(_estado(_preparacion, iniciado: true));
           return;
@@ -102,15 +116,21 @@ class InicioBloc extends Bloc<InicioEvento, InicioEstado> {
       }
       emit(_estado(_preparacion));
     } on ArgumentError catch (error) {
-      emit(_estado(_preparacion,
-        numeroSeleccionado: state.numeroSeleccionado,
-        error: error.message.toString(),
-      ));
+      emit(
+        _estado(
+          _preparacion,
+          numeroSeleccionado: state.numeroSeleccionado,
+          error: error.message.toString(),
+        ),
+      );
     } on StateError catch (error) {
-      emit(_estado(_preparacion,
-        numeroSeleccionado: state.numeroSeleccionado,
-        error: error.message,
-      ));
+      emit(
+        _estado(
+          _preparacion,
+          numeroSeleccionado: state.numeroSeleccionado,
+          error: error.message,
+        ),
+      );
     }
   }
 

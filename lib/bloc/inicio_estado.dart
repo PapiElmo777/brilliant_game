@@ -40,11 +40,13 @@ class InicioEstado {
     this.numeroSeleccionado,
     this.disparoPendiente,
     this.error,
-  }) : faseVisual = faseVisual ?? switch (fase) {
-         FaseInicio.preparando => FaseVisualInicio.preparando,
-         FaseInicio.listo => FaseVisualInicio.listo,
-         FaseInicio.iniciado => FaseVisualInicio.iniciado,
-       },
+  }) : faseVisual =
+           faseVisual ??
+           switch (fase) {
+             FaseInicio.preparando => FaseVisualInicio.preparando,
+             FaseInicio.listo => FaseVisualInicio.listo,
+             FaseInicio.iniciado => FaseVisualInicio.iniciado,
+           },
        celdas = Map.unmodifiable(celdas),
        numerosFaltantes = Set.unmodifiable(numerosFaltantes);
 

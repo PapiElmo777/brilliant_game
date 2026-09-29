@@ -31,13 +31,17 @@ class MenuBloc extends Bloc<NuevaPartidaSolicitada, MenuEstado> {
       emit(MenuEstado(fase: FaseMenu.creandoPartida, solicitudId: solicitudId));
       try {
         final tablero = tableros.obtenerDefinicion('tablero_01');
-        emit(MenuEstado(
-          fase: FaseMenu.partidaPreparada,
-          tablero: tablero,
-          solicitudId: solicitudId,
-        ));
+        emit(
+          MenuEstado(
+            fase: FaseMenu.partidaPreparada,
+            tablero: tablero,
+            solicitudId: solicitudId,
+          ),
+        );
       } on ArgumentError catch (error) {
-        emit(MenuEstado(solicitudId: solicitudId, error: error.message.toString()));
+        emit(
+          MenuEstado(solicitudId: solicitudId, error: error.message.toString()),
+        );
       }
     }, transformer: (eventos, mapper) => eventos.asyncExpand(mapper));
   }
