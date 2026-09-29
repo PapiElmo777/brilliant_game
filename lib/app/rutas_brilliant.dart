@@ -12,7 +12,8 @@ abstract final class RutasBrilliant {
   static const preparacion = '/preparacion';
 
   static Route<void> generar(RouteSettings settings) {
-    if (settings.name == preparacion && settings.arguments is DefinicionTablero) {
+    if (settings.name == preparacion &&
+        settings.arguments is DefinicionTablero) {
       return MaterialPageRoute<void>(
         settings: settings,
         builder: (_) {

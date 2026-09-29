@@ -6,7 +6,11 @@ class BandejaNumeros extends StatelessWidget {
   final InicioEstado estado;
   final ValueChanged<int> onSeleccionado;
 
-  const BandejaNumeros({super.key, required this.estado, required this.onSeleccionado});
+  const BandejaNumeros({
+    super.key,
+    required this.estado,
+    required this.onSeleccionado,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +26,9 @@ class BandejaNumeros extends StatelessWidget {
             button: true,
             enabled: !estado.interaccionBloqueada,
             label: 'Número $numero',
-            onTap: estado.interaccionBloqueada ? null : () => onSeleccionado(numero),
+            onTap: estado.interaccionBloqueada
+                ? null
+                : () => onSeleccionado(numero),
             excludeSemantics: true,
             child: SizedBox(
               width: 48,
@@ -31,17 +37,37 @@ class BandejaNumeros extends StatelessWidget {
                 key: ValueKey('numero_$numero'),
                 style: OutlinedButton.styleFrom(
                   padding: EdgeInsets.zero,
-                  backgroundColor: numero == estado.numeroSeleccionado ? const Color(0xFF72E9FF) : const Color(0xFF132D46),
-                  foregroundColor: numero == estado.numeroSeleccionado ? const Color(0xFF071226) : const Color(0xFFF4FAFF),
-                  side: BorderSide(color: numero == estado.numeroSeleccionado ? Colors.white : const Color(0xFF44647A), width: numero == estado.numeroSeleccionado ? 2 : 1),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  backgroundColor: numero == estado.numeroSeleccionado
+                      ? const Color(0xFF72E9FF)
+                      : const Color(0xFF132D46),
+                  foregroundColor: numero == estado.numeroSeleccionado
+                      ? const Color(0xFF071226)
+                      : const Color(0xFFF4FAFF),
+                  side: BorderSide(
+                    color: numero == estado.numeroSeleccionado
+                        ? Colors.white
+                        : const Color(0xFF44647A),
+                    width: numero == estado.numeroSeleccionado ? 2 : 1,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                onPressed: estado.interaccionBloqueada ? null : () => onSeleccionado(numero),
+                onPressed: estado.interaccionBloqueada
+                    ? null
+                    : () => onSeleccionado(numero),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('$numero', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-                    if (numero == estado.numeroSeleccionado) const Icon(Icons.check_rounded, size: 14),
+                    Text(
+                      '$numero',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    if (numero == estado.numeroSeleccionado)
+                      const Icon(Icons.check_rounded, size: 14),
                   ],
                 ),
               ),

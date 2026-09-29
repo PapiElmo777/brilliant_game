@@ -28,8 +28,13 @@ class _EscenarioPainter extends CustomPainter {
     final random = math.Random(27);
     final pintura = Paint();
     for (var i = 0; i < 100; i++) {
-      final posicion = Offset(random.nextDouble() * size.width, random.nextDouble() * size.height * .85);
-      pintura.color = Colors.white.withValues(alpha: .15 + random.nextDouble() * .55);
+      final posicion = Offset(
+        random.nextDouble() * size.width,
+        random.nextDouble() * size.height * .85,
+      );
+      pintura.color = Colors.white.withValues(
+        alpha: .15 + random.nextDouble() * .55,
+      );
       canvas.drawCircle(posicion, i % 9 == 0 ? 1.5 : .7, pintura);
     }
     final planeta = Offset(size.width * .87, size.height * .16);
@@ -39,12 +44,23 @@ class _EscenarioPainter extends CustomPainter {
     ).createShader(Rect.fromCircle(center: planeta, radius: 28));
     canvas.drawCircle(planeta, 28, pintura);
     pintura.shader = null;
-    final suelo = Rect.fromLTWH(-size.width * .3, size.height - 75, size.width * 1.6, 220);
+    final suelo = Rect.fromLTWH(
+      -size.width * .3,
+      size.height - 75,
+      size.width * 1.6,
+      220,
+    );
     pintura.color = const Color(0xFF22384B);
     canvas.drawOval(suelo, pintura);
     pintura.color = const Color(0xFF15283B);
-    canvas.drawOval(Rect.fromLTWH(size.width * .12, size.height - 35, 100, 24), pintura);
-    canvas.drawOval(Rect.fromLTWH(size.width * .72, size.height - 45, 58, 14), pintura);
+    canvas.drawOval(
+      Rect.fromLTWH(size.width * .12, size.height - 35, 100, 24),
+      pintura,
+    );
+    canvas.drawOval(
+      Rect.fromLTWH(size.width * .72, size.height - 45, 58, 14),
+      pintura,
+    );
   }
 
   @override

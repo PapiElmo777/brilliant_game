@@ -27,6 +27,7 @@ abstract final class TemaBrilliant {
           minimumSize: const Size(48, 48),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
           textStyle: const TextStyle(
+            fontFamily: 'Roboto',
             fontSize: 16,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.2,

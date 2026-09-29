@@ -24,7 +24,12 @@ class _NavePainter extends CustomPainter {
     canvas.save();
     canvas.scale(size.width / 300, size.height / 182);
     final pintura = Paint();
-    final haz = Path()..moveTo(122, 122)..lineTo(77, 182)..lineTo(223, 182)..lineTo(178, 122)..close();
+    final haz = Path()
+      ..moveTo(122, 122)
+      ..lineTo(77, 182)
+      ..lineTo(223, 182)
+      ..lineTo(178, 122)
+      ..close();
     pintura.shader = const LinearGradient(
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
@@ -53,7 +58,13 @@ class _NavePainter extends CustomPainter {
     pintura.color = const Color(0x8872E9FF);
     pintura.style = PaintingStyle.stroke;
     pintura.strokeWidth = 2;
-    canvas.drawArc(const Rect.fromLTWH(87, 17, 126, 100), 3.3, 2.6, false, pintura);
+    canvas.drawArc(
+      const Rect.fromLTWH(87, 17, 126, 100),
+      3.3,
+      2.6,
+      false,
+      pintura,
+    );
     pintura.style = PaintingStyle.fill;
     pintura.shader = const LinearGradient(
       begin: Alignment.topCenter,
@@ -66,10 +77,19 @@ class _NavePainter extends CustomPainter {
     pintura.color = const Color(0xFF72E9FF);
     pintura.style = PaintingStyle.stroke;
     pintura.strokeWidth = 3;
-    canvas.drawArc(const Rect.fromLTWH(35, 85, 230, 52), .15, 2.85, false, pintura);
+    canvas.drawArc(
+      const Rect.fromLTWH(35, 85, 230, 52),
+      .15,
+      2.85,
+      false,
+      pintura,
+    );
     pintura.style = PaintingStyle.fill;
     for (final x in [76.0, 111.0, 150.0, 189.0, 224.0]) {
-      canvas.drawOval(Rect.fromCenter(center: Offset(x, 113), width: 12, height: 5), pintura);
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset(x, 113), width: 12, height: 5),
+        pintura,
+      );
     }
     canvas.restore();
   }

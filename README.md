@@ -171,7 +171,7 @@ Pruebas de esta funcionalidad: `test/core/preparacion_inicial_test.dart` y `test
 
 ## Aplicación Flutter: fase 1
 
-La aplicación arranca desde `lib/main.dart` y muestra una pantalla provisional con el título BRILLIANT. Incluye tema oscuro, colores de presentación y una ruta inicial centralizada. El menú interactivo y la preparación del tablero se incorporarán en las siguientes fases de `docs/PLAN_IMPLEMENTACION_INTERFAZ.md` (documento local).
+La aplicación arranca desde `lib/main.dart`. La fase 1 estableció una pantalla provisional con el título BRILLIANT, sustituida por el menú en la fase 4. Incluye tema oscuro, colores de presentación y una ruta inicial centralizada. El menú interactivo y la preparación del tablero se incorporarán en las siguientes fases de `docs/PLAN_IMPLEMENTACION_INTERFAZ.md` (documento local).
 
 Ejecutar en un dispositivo o simulador disponible:
 
@@ -200,7 +200,7 @@ Cada definición valida la geometría 7×7 y la preparación inicial al construi
 
 Los IDs de celda tienen el formato `f1_c2`, usando base 1 para facilitar su lectura. Las propiedades `fila` y `columna` siguen usando base 0. Las iniciales del primer tablero son `f1_c2`, `f2_c6`, `f4_c2`, `f4_c5`, `f6_c3` y `f7_c5`.
 
-Las pruebas de `test/catalogo/` verifican la matriz completa, los tipos, las posiciones iniciales, la independencia entre partidas y el rechazo de configuraciones inválidas. Esta fase añade los datos; la pantalla provisional todavía no muestra el tablero.
+Las pruebas de `test/catalogo/` verifican la matriz completa, los tipos, las posiciones iniciales, la independencia entre partidas y el rechazo de configuraciones inválidas. Esta fase añade los datos que utiliza la pantalla de preparación de la fase 4.
 
 ## Flujo BLoC de presentación: fase 3
 
@@ -218,4 +218,16 @@ Durante la preparación:
 
 `fase` conserva el estado del dominio; `faseVisual`, `numeroSeleccionado`, `disparoPendiente` e `interaccionBloqueada` coordinan la presentación. `puedeIniciar` requiere que el dominio esté listo y que no haya interacción bloqueada. Los eventos anteriores de colocación, retiro e inicio siguen disponibles.
 
-Las posiciones en píxeles y los controladores de animación corresponden a los widgets de las próximas fases. Esta fase no cambia todavía la pantalla provisional.
+Las posiciones en píxeles y los controladores de animación corresponden a los widgets de las próximas fases. La fase 4 conecta este flujo con los widgets de preparación.
+
+## Interfaz estática: fase 4
+
+El menú muestra un escenario lunar, una nave con marciano, el logotipo y únicamente `NUEVA PARTIDA`. El fondo y la nave se dibujan por separado con Flutter, sin usar una imagen plana como interfaz.
+
+La navegación escucha `MenuBloc` y crea un `InicioBloc` nuevo por pantalla. La preparación representa las 49 celdas del modelo y resalta las seis iniciales con contorno cian y un signo +. La bandeja muestra los números faltantes, identifica la selección visual y semánticamente y permite cancelarla. Tocar una celda inicial ocupada retira su número.
+
+Los errores y el progreso reflejan el estado del BLoC. `INICIO` sólo aparece al completar la preparación; al confirmar, se muestra el estado iniciado y las celdas quedan bloqueadas. Volver al menú y solicitar otra partida crea un tablero vacío. No se implementa todavía el desarrollo posterior de la partida.
+
+En esta fase las colocaciones se confirman al renderizar el disparo pendiente, sin animación. La fase 5 sustituirá esa confirmación por la llegada efectiva del número y activará la entrada animada. La interfaz utiliza desplazamiento vertical cuando el espacio o el tamaño del texto lo requieren.
+
+`test/presentation/flujo_interfaz_test.dart` cubre navegación, colores, selección accesible, errores, colocación, retiro, inicio, partidas nuevas y ausencia de desbordamientos en tamaños 320×568, 430×932 y 844×390 con texto ampliado.
