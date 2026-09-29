@@ -218,7 +218,7 @@ Durante la preparación:
 
 `fase` conserva el estado del dominio; `faseVisual`, `numeroSeleccionado`, `disparoPendiente` e `interaccionBloqueada` coordinan la presentación. `puedeIniciar` requiere que el dominio esté listo y que no haya interacción bloqueada. Los eventos anteriores de colocación, retiro e inicio siguen disponibles.
 
-Las posiciones en píxeles y los controladores de animación corresponden a los widgets de las próximas fases. La fase 4 conecta este flujo con los widgets de preparación.
+Las posiciones en píxeles y los controladores de animación pertenecen a los widgets de presentación. La fase 4 conecta este flujo con los widgets de preparación.
 
 ## Interfaz estática: fase 4
 
@@ -228,6 +228,18 @@ La navegación escucha `MenuBloc` y crea un `InicioBloc` nuevo por pantalla. La 
 
 Los errores y el progreso reflejan el estado del BLoC. `INICIO` sólo aparece al completar la preparación; al confirmar, se muestra el estado iniciado y las celdas quedan bloqueadas. Volver al menú y solicitar otra partida crea un tablero vacío. No se implementa todavía el desarrollo posterior de la partida.
 
-En esta fase las colocaciones se confirman al renderizar el disparo pendiente, sin animación. La fase 5 sustituirá esa confirmación por la llegada efectiva del número y activará la entrada animada. La interfaz utiliza desplazamiento vertical cuando el espacio o el tamaño del texto lo requieren.
+La fase 4 estableció colocaciones instantáneas; la fase 5 las sustituyó por la confirmación al terminar el vuelo y activó la entrada animada. La interfaz utiliza desplazamiento vertical cuando el espacio o el tamaño del texto lo requieren.
 
 `test/presentation/flujo_interfaz_test.dart` cubre navegación, colores, selección accesible, errores, colocación, retiro, inicio, partidas nuevas y ausencia de desbordamientos en tamaños 320×568, 430×932 y 844×390 con texto ampliado.
+
+## Animaciones: fase 5
+
+Al abrir la preparación, la nave entra durante un segundo con desaceleración y rebote. Después se activa el haz en 280 ms y se presentan los números de forma escalonada. La interacción permanece bloqueada hasta que `PresentacionNumerosCompletada` confirma la secuencia al BLoC.
+
+Cada colocación válida monta un `DisparoNumeroOverlay` identificado por el ID del disparo. El número viaja durante 650 ms con brillo y estela cian. El origen y destino se calculan desde las posiciones globales de los widgets, sin guardar píxeles en el BLoC. Sólo al terminar se envía `DisparoNumeroCompletado`; reconstruir el widget no repite esa confirmación. Salir de la pantalla descarta la animación sin confirmar una colocación pendiente.
+
+La bandeja conserva el espacio de las fichas utilizadas, sin mostrarlas ni incluirlas en la semántica. El indicador y el control de cancelación también mantienen su espacio para que el destino del disparo no salte al confirmar la colocación. El desplazamiento del tablero se bloquea durante el vuelo.
+
+Los errores reciben una breve sacudida y un resplandor en su panel, además del mensaje visible. `INICIO` aparece con escala y opacidad cuando el BLoC lo permite. Todos estos efectos respetan `MediaQuery.disableAnimations`: se presentan los estados finales y se mantienen las confirmaciones necesarias sin bloquear el flujo.
+
+Las pruebas de animación cubren tiempos, confirmación única, reconstrucciones, cancelación al desmontar, aparición escalonada, estabilidad de la celda de destino y preparación completa con movimiento reducido. La revisión en dispositivos y las capturas doradas de referencia corresponden a la fase 6.

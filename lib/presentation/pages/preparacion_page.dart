@@ -134,22 +134,46 @@ class _PreparacionPageState extends State<PreparacionPage> {
                                     .add(NumeroInicialSeleccionado(numero)),
                               ),
                               const SizedBox(height: 12),
-                              Semantics(
-                                liveRegion: true,
-                                child: Text(
-                                  estado.fase == FaseInicio.iniciado
-                                      ? 'Preparación confirmada'
-                                      : estado.numeroSeleccionado != null
-                                      ? 'Número ${estado.numeroSeleccionado} seleccionado · toca una celda +'
-                                      : '${6 - estado.numerosFaltantes.length} de 6 colocados',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    color: Color(0xFFB1C4D4),
+                              Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  const ExcludeSemantics(
+                                    child: Opacity(
+                                      opacity: 0,
+                                      child: Text(
+                                        'Número 6 seleccionado · toca una celda +',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Color(0xFFB1C4D4),
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                  Semantics(
+                                    liveRegion: true,
+                                    child: Text(
+                                      estado.fase == FaseInicio.iniciado
+                                          ? 'Preparación confirmada'
+                                          : estado.faseVisual ==
+                                                FaseVisualInicio.disparando
+                                          ? 'Enviando número ${estado.numeroSeleccionado}'
+                                          : estado.numeroSeleccionado != null
+                                          ? 'Número ${estado.numeroSeleccionado} seleccionado · toca una celda +'
+                                          : '${6 - estado.numerosFaltantes.length} de 6 colocados',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        color: Color(0xFFB1C4D4),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              if (estado.numeroSeleccionado != null)
-                                TextButton(
+                              Visibility(
+                                visible: estado.numeroSeleccionado != null,
+                                maintainState: true,
+                                maintainAnimation: true,
+                                maintainSize: true,
+                                child: TextButton(
                                   onPressed: estado.interaccionBloqueada
                                       ? null
                                       : () => context.read<InicioBloc>().add(
@@ -157,6 +181,7 @@ class _PreparacionPageState extends State<PreparacionPage> {
                                         ),
                                   child: const Text('Cancelar selección'),
                                 ),
+                              ),
                               const SizedBox(height: 16),
                               TableroView(
                                 definicion: widget.definicion,
@@ -171,33 +196,33 @@ class _PreparacionPageState extends State<PreparacionPage> {
                                 RespuestaError(
                                   key: ObjectKey(estado),
                                   child: Semantics(
-                                  liveRegion: true,
-                                  child: Container(
-                                    key: const ValueKey('mensaje_error'),
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF3A202D),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.error_outline_rounded,
-                                          color: Color(0xFFFFB4AB),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Text(
-                                            estado.error!,
-                                            style: const TextStyle(
-                                              color: Color(0xFFFFDAD6),
+                                    liveRegion: true,
+                                    child: Container(
+                                      key: const ValueKey('mensaje_error'),
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF3A202D),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.error_outline_rounded,
+                                            color: Color(0xFFFFB4AB),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              estado.error!,
+                                              style: const TextStyle(
+                                                color: Color(0xFFFFDAD6),
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
                                 ),
                               if (estado.fase != FaseInicio.iniciado)
                                 const Padding(
@@ -212,7 +237,11 @@ class _PreparacionPageState extends State<PreparacionPage> {
                                   ),
                                 ),
                               if (estado.puedeIniciar)
-                                BotonInicio(onPressed: () => context.read<InicioBloc>().add(const InicioSolicitado())),
+                                BotonInicio(
+                                  onPressed: () => context
+                                      .read<InicioBloc>()
+                                      .add(const InicioSolicitado()),
+                                ),
                               if (estado.fase == FaseInicio.iniciado)
                                 Semantics(
                                   liveRegion: true,

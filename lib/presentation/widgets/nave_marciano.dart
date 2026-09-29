@@ -14,8 +14,11 @@ class NaveMarciano extends StatelessWidget {
         aspectRatio: 1.65,
         child: TweenAnimationBuilder<double>(
           tween: Tween(begin: hazActivo ? 1 : 0, end: hazActivo ? 1 : 0),
-          duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 280),
-          builder: (context, intensidad, _) => CustomPaint(painter: _NavePainter(intensidad)),
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 280),
+          builder: (context, intensidad, _) =>
+              CustomPaint(painter: _NavePainter(intensidad)),
         ),
       ),
     );
@@ -41,7 +44,10 @@ class _NavePainter extends CustomPainter {
     pintura.shader = LinearGradient(
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
-      colors: [const Color(0xFF72E9FF).withValues(alpha: intensidadHaz / 3), const Color(0x0072E9FF)],
+      colors: [
+        const Color(0xFF72E9FF).withValues(alpha: intensidadHaz / 3),
+        const Color(0x0072E9FF),
+      ],
     ).createShader(const Rect.fromLTWH(77, 122, 146, 60));
     canvas.drawPath(haz, pintura);
     pintura.shader = const RadialGradient(
@@ -103,5 +109,6 @@ class _NavePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_NavePainter oldDelegate) => oldDelegate.intensidadHaz != intensidadHaz;
+  bool shouldRepaint(_NavePainter oldDelegate) =>
+      oldDelegate.intensidadHaz != intensidadHaz;
 }
