@@ -10,6 +10,7 @@ import '../widgets/nave_marciano.dart';
 import '../widgets/nave_entrada.dart';
 import '../widgets/disparo_numero_overlay.dart';
 import '../widgets/respuesta_error.dart';
+import '../widgets/boton_inicio.dart';
 import '../widgets/tablero_view.dart';
 import '../widgets/bandeja_numeros.dart';
 
@@ -211,19 +212,7 @@ class _PreparacionPageState extends State<PreparacionPage> {
                                   ),
                                 ),
                               if (estado.puedeIniciar)
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: FilledButton.icon(
-                                    key: const ValueKey('boton_inicio'),
-                                    onPressed: () => context
-                                        .read<InicioBloc>()
-                                        .add(const InicioSolicitado()),
-                                    icon: const Icon(
-                                      Icons.rocket_launch_rounded,
-                                    ),
-                                    label: const Text('INICIO'),
-                                  ),
-                                ),
+                                BotonInicio(onPressed: () => context.read<InicioBloc>().add(const InicioSolicitado())),
                               if (estado.fase == FaseInicio.iniciado)
                                 Semantics(
                                   liveRegion: true,
