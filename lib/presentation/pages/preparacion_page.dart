@@ -7,6 +7,7 @@ import '../../bloc/inicio_evento.dart';
 import '../../catalogo/definicion_tablero.dart';
 import '../widgets/fondo_espacial.dart';
 import '../widgets/nave_marciano.dart';
+import '../widgets/tablero_view.dart';
 
 class PreparacionPage extends StatelessWidget {
   final DefinicionTablero definicion;
@@ -55,6 +56,11 @@ class PreparacionPage extends StatelessWidget {
                           const SizedBox(height: 8),
                           const Text('Acomoda los números en las celdas iniciales', textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                           const SizedBox(height: 20),
+                          TableroView(
+                            definicion: definicion,
+                            estado: estado,
+                            onCeldaSeleccionada: (id) => context.read<InicioBloc>().add(CeldaInicialSeleccionada(id)),
+                          ),
                         ],
                       ),
                     ),
