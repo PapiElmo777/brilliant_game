@@ -1,7 +1,3 @@
-/// Una casilla y su valor en un momento concreto.
-///
-/// Es inmutable: la zona sustituye la casilla al colocar o quitar un número.
-/// Su pertenencia y color se obtienen de la zona que la contiene.
 class Celda {
   final String id;
   final int fila;
