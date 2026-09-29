@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../bloc/inicio_bloc.dart';
 
 import '../catalogo/definicion_tablero.dart';
 import '../presentation/pages/menu_inicial_page.dart';
+import '../presentation/pages/preparacion_page.dart';
 
 abstract final class RutasBrilliant {
   static const menu = '/';
@@ -11,10 +15,13 @@ abstract final class RutasBrilliant {
     if (settings.name == preparacion && settings.arguments is DefinicionTablero) {
       return MaterialPageRoute<void>(
         settings: settings,
-        builder: (_) => Scaffold(
-          appBar: AppBar(title: const Text('Preparación')),
-          body: const Center(child: Text('Acomoda los números en las celdas iniciales')),
-        ),
+        builder: (_) {
+          final definicion = settings.arguments! as DefinicionTablero;
+          return BlocProvider(
+            create: (_) => InicioBloc(definicion.crearTablero()),
+            child: PreparacionPage(definicion: definicion),
+          );
+        },
       );
     }
     return MaterialPageRoute<void>(
