@@ -1,6 +1,6 @@
 # Brilliant Game
 
-Motor de Brilliant organizado como **Tablero → Zona → Celda**. Cada zona tiene un objeto `Tipo` que define su color, descripción, restricción y puntuaciones. El paquete requiere Flutter porque utiliza `Color` de `dart:ui`; no incluye todavía una interfaz gráfica.
+Motor de Brilliant organizado como **Tablero → Zona → Celda**. Cada zona tiene un objeto `Tipo` que define su color, descripción, restricción y puntuaciones. El paquete requiere Flutter porque utiliza `Color` de `dart:ui`; incluye la base ejecutable de la aplicación para Android e iOS. La interfaz jugable está en implementación.
 
 ## Contrato de los tipos
 
@@ -168,3 +168,18 @@ El BLoC usa una copia del tablero recibido. Sus estados son instantáneas inmuta
 No hay navegación ni pantalla implementada: el bloqueo está en la lógica y deberá respetarlo la interfaz. Las operaciones de bajo nivel de `Tablero` siguen disponibles para construir datos y para el juego posterior; el flujo de preparación debe usar `InicioBloc`.
 
 Pruebas de esta funcionalidad: `test/core/preparacion_inicial_test.dart` y `test/bloc/inicio_bloc_test.dart`.
+
+## Aplicación Flutter: fase 1
+
+La aplicación arranca desde `lib/main.dart` y muestra una pantalla provisional con el título BRILLIANT. Incluye tema oscuro, colores de presentación y una ruta inicial centralizada. El menú interactivo y la preparación del tablero se incorporarán en las siguientes fases de `docs/PLAN_IMPLEMENTACION_INTERFAZ.md` (documento local).
+
+Ejecutar en un dispositivo o simulador disponible:
+
+```sh
+flutter pub get
+flutter run
+```
+
+Android e iOS utilizan por ahora los identificadores de desarrollo generados por Flutter. Para ejecutar iOS en un dispositivo físico, configurar el equipo de firma en Xcode. Los recursos e iconos nativos son todavía los predeterminados.
+
+La integración de `flutter_bloc` ya está declarada. El punto de entrada y la presentación están separados de las exportaciones del motor en `lib/brilliant_game.dart`.
