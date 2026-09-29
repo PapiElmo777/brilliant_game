@@ -8,6 +8,7 @@ import '../../catalogo/definicion_tablero.dart';
 import '../widgets/fondo_espacial.dart';
 import '../widgets/nave_marciano.dart';
 import '../widgets/tablero_view.dart';
+import '../widgets/bandeja_numeros.dart';
 
 class PreparacionPage extends StatelessWidget {
   final DefinicionTablero definicion;
@@ -55,6 +56,11 @@ class PreparacionPage extends StatelessWidget {
                           const Text('PREPARA TU MISIÓN', style: TextStyle(fontSize: 12, letterSpacing: 2.5, color: Color(0xFF72E9FF))),
                           const SizedBox(height: 8),
                           const Text('Acomoda los números en las celdas iniciales', textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 20),
+                          BandejaNumeros(
+                            estado: estado,
+                            onSeleccionado: (numero) => context.read<InicioBloc>().add(NumeroInicialSeleccionado(numero)),
+                          ),
                           const SizedBox(height: 20),
                           TableroView(
                             definicion: definicion,
