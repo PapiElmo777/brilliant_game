@@ -42,14 +42,20 @@ class PreparacionInicial {
   bool get estaLista => numerosFaltantes.isEmpty;
 
   void colocarValor(String celdaId, int valor) {
+    validarColocacion(celdaId, valor);
+    _tablero.colocarValor(celdaId, valor);
+  }
+
+  void validarColocacion(String celdaId, int valor) {
     _comprobarCeldaInicial(celdaId);
     if (celdas.values.any(
       (celda) => celda.id != celdaId && celda.valor == valor,
     )) {
       throw ArgumentError('El número $valor ya está colocado.');
     }
-    // Tablero aplica el rango 1–6 y las restricciones del tipo de zona.
-    _tablero.colocarValor(celdaId, valor);
+    if (!_tablero.puedeColocarValor(celdaId, valor)) {
+      throw ArgumentError('El valor $valor incumple la regla o el rango de la zona.');
+    }
   }
 
   void vaciarCelda(String celdaId) {
