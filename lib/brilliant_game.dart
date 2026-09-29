@@ -7,3 +7,6 @@ export 'core/preparacion_inicial.dart';
 export 'bloc/inicio_bloc.dart';
 export 'bloc/inicio_estado.dart';
 export 'bloc/inicio_evento.dart';
+export 'catalogo/catalogo_tableros.dart';
+export 'catalogo/definicion_tablero.dart';
+export 'catalogo/validador_tablero.dart';

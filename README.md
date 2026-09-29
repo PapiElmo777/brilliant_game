@@ -183,3 +183,21 @@ flutter run
 Android e iOS utilizan por ahora los identificadores de desarrollo generados por Flutter. Para ejecutar iOS en un dispositivo físico, configurar el equipo de firma en Xcode. Los recursos e iconos nativos son todavía los predeterminados.
 
 La integración de `flutter_bloc` ya está declarada. El punto de entrada y la presentación están separados de las exportaciones del motor en `lib/brilliant_game.dart`.
+
+## Catálogo de tableros: fase 2
+
+El catálogo predeterminado incluye `tablero_01`, con las 13 zonas, 49 celdas y seis posiciones iniciales del plan. Cada llamada crea un tablero con zonas independientes y sin valores colocados:
+
+```dart
+final catalogo = CatalogoTableros.predeterminado();
+final tablero = catalogo.crearTablero('tablero_01');
+final preparacion = PreparacionInicial(tablero);
+```
+
+`DefinicionTablero` y `DefinicionZona` conservan colecciones inmutables. Se pueden registrar más definiciones con `CatalogoTableros(definiciones: [...])`; los IDs duplicados o desconocidos generan `ArgumentError`.
+
+Cada definición valida la geometría 7×7 y la preparación inicial al construirse. Reutiliza las validaciones del motor para IDs y posiciones únicos, reglas de zona, seis celdas iniciales, valores iniciales sin repetir y celdas no iniciales vacías. `Tablero` conserva su contrato genérico y admite otros tamaños fuera del catálogo.
+
+Los IDs de celda tienen el formato `f1_c2`, usando base 1 para facilitar su lectura. Las propiedades `fila` y `columna` siguen usando base 0. Las iniciales del primer tablero son `f1_c2`, `f2_c6`, `f4_c2`, `f4_c5`, `f6_c3` y `f7_c5`.
+
+Las pruebas de `test/catalogo/` verifican la matriz completa, los tipos, las posiciones iniciales, la independencia entre partidas y el rechazo de configuraciones inválidas. Esta fase añade los datos; la pantalla provisional todavía no muestra el tablero.
