@@ -8,6 +8,15 @@ dependencies:
   bloc: ^9.2.1
   flutter:
     sdk: flutter
+  flutter_bloc: ^9.1.1
+
+flutter:
+  assets:
+    - assets/images/backgrounds/
+    - assets/images/characters/
+    - assets/images/branding/
+    - assets/images/ui/
+    - assets/images/effects/
 
 dev_dependencies:
   flutter_test:
