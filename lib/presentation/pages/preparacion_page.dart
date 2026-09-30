@@ -9,6 +9,7 @@ import '../widgets/fondo_espacial.dart';
 import '../widgets/nave_marciano.dart';
 import '../widgets/nave_entrada.dart';
 import '../widgets/disparo_numero_overlay.dart';
+import '../widgets/mensaje_error.dart';
 import '../widgets/respuesta_error.dart';
 import '../widgets/boton_inicio.dart';
 import '../widgets/tablero_view.dart';
@@ -188,34 +189,7 @@ class _PreparacionPageState extends State<PreparacionPage> {
                               if (estado.error != null)
                                 RespuestaError(
                                   key: ObjectKey(estado),
-                                  child: Semantics(
-                                    liveRegion: true,
-                                    child: Container(
-                                      key: const ValueKey('mensaje_error'),
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF3A202D),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.error_outline_rounded,
-                                            color: Color(0xFFFFB4AB),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              estado.error!,
-                                              style: const TextStyle(
-                                                color: Color(0xFFFFDAD6),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
+                                  child: MensajeError(mensaje: estado.error!),
                                 ),
                               if (estado.fase != FaseInicio.iniciado)
                                 const Padding(

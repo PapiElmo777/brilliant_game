@@ -5,6 +5,7 @@ import '../../bloc/menu_bloc.dart';
 import '../../catalogo/definicion_tablero.dart';
 import '../widgets/boton_panel.dart';
 import '../widgets/fondo_espacial.dart';
+import '../widgets/logotipo_brilliant.dart';
 import '../widgets/nave_marciano.dart';
 
 class MenuInicialPage extends StatelessWidget {
@@ -58,35 +59,7 @@ class MenuInicialPage extends StatelessWidget {
                               const SizedBox(height: 28),
                               const NaveMarciano(),
                               const SizedBox(height: 12),
-                              Semantics(
-                                header: true,
-                                child: const FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Text(
-                                    'BRILLIANT',
-                                    style: TextStyle(
-                                      fontSize: 52,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 4,
-                                      color: Color(0xFFE2F9FF),
-                                      shadows: [
-                                        Shadow(
-                                          color: Color(0x8872E9FF),
-                                          blurRadius: 24,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const Text(
-                                'by Alfredo',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  letterSpacing: 3,
-                                  color: Color(0xFF72E9FF),
-                                ),
-                              ),
+                              const LogotipoBrilliant(),
                               const SizedBox(height: 36),
                               const Text(
                                 'Cada número encuentra su lugar.',
