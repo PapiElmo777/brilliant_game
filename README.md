@@ -255,3 +255,11 @@ La aplicación se limita a orientación vertical en teléfonos. Los errores de p
 ```sh
 flutter test --update-goldens test/golden
 ```
+
+## Nombre del jugador, acomodo aleatorio e INICIO fijo
+
+Al pulsar `NUEVA PARTIDA` se pide el nombre del jugador. `MenuBloc` pasa a la fase `pidiendoNombre`; `NombreJugadorConfirmado(nombre)` valida entre 1 y 16 caracteres, sin espacios sobrantes, y prepara `tablero_01`. `CapturaNombreCancelada` vuelve al menú. El último nombre aceptado se propone en la siguiente partida y la preparación lo muestra en su encabezado.
+
+`Acomodo aleatorio` envía `ColocacionAleatoriaSolicitada`. `PreparacionInicial.distribucionAleatoria` busca, sobre una copia, una colocación de los números faltantes que cumpla las reglas de zona; los números ya colocados se conservan. `InicioBloc` dispara las colocaciones una por una, del número menor al mayor, con la misma animación y confirmación que la colocación manual. Si no existe una distribución válida se publica un error sin disparar.
+
+Al completar la preparación, `PanelInicio` presenta `INICIO` fijo en la parte inferior de la pantalla, sin necesidad de desplazar. El botón entra desde abajo con rebote y emite dos pulsos de resplandor; con movimiento reducido aparece directamente. Tras iniciar, el panel confirma las posiciones.
