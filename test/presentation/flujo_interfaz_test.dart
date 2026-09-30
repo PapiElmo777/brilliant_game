@@ -13,10 +13,17 @@ Future<void> pulsar(WidgetTester tester, Finder finder) async {
   await tester.pumpAndSettle();
 }
 
+Future<void> nuevaPartida(WidgetTester tester, {String nombre = 'Ana'}) async {
+  await pulsar(tester, find.text('NUEVA PARTIDA'));
+  await tester.enterText(find.byKey(const ValueKey('campo_nombre')), nombre);
+  await tester.pump();
+  await pulsar(tester, find.byKey(const ValueKey('confirmar_nombre')));
+}
+
 Future<void> abrir(WidgetTester tester) async {
   await tester.pumpWidget(const BrilliantGameApp());
   await tester.pumpAndSettle();
-  await pulsar(tester, find.text('NUEVA PARTIDA'));
+  await nuevaPartida(tester);
 }
 
 InicioBloc blocDe(WidgetTester tester) =>
@@ -33,7 +40,7 @@ void main() {
     );
     expect(find.text('NUEVA PARTIDA'), findsOneWidget);
     expect(find.text('SALIR'), findsNothing);
-    await pulsar(tester, find.text('NUEVA PARTIDA'));
+    await nuevaPartida(tester);
     expect(find.byType(CeldaView), findsNWidgets(49));
     final celdas = tester
         .widgetList<CeldaView>(find.byType(CeldaView))
@@ -50,6 +57,24 @@ void main() {
     }
     expect(find.byKey(const ValueKey('boton_inicio')), findsNothing);
     expect(find.byType(OutlinedButton), findsNWidgets(6));
+  });
+
+  testWidgets('Pide el nombre antes de preparar y permite cancelar', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const BrilliantGameApp());
+    await tester.pumpAndSettle();
+    await pulsar(tester, find.text('NUEVA PARTIDA'));
+    expect(find.text('¿Cómo te llamas?'), findsOneWidget);
+    final confirmar = find.byKey(const ValueKey('confirmar_nombre'));
+    expect(tester.widget<FilledButton>(confirmar).onPressed, isNull);
+    await pulsar(tester, find.text('Cancelar'));
+    expect(find.byType(PreparacionPage), findsNothing);
+    expect(find.text('NUEVA PARTIDA'), findsOneWidget);
+    await nuevaPartida(tester, nombre: 'Alfredo');
+    expect(find.byType(PreparacionPage), findsOneWidget);
+    expect(find.text('PREPARA TU MISIÓN, ALFREDO'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('Selecciona, muestra error, coloca y retira desde BLoC', (
@@ -104,6 +129,8 @@ void main() {
     await pulsar(tester, find.byTooltip('Volver al menú'));
     expect(anterior.isClosed, isTrue);
     await pulsar(tester, find.text('NUEVA PARTIDA'));
+    expect(find.text('Ana'), findsOneWidget);
+    await pulsar(tester, find.byKey(const ValueKey('confirmar_nombre')));
     expect(blocDe(tester).state.numerosFaltantes.length, 6);
     expect(identical(anterior, blocDe(tester)), isFalse);
     expect(tester.takeException(), isNull);

@@ -26,9 +26,8 @@ Future<void> _cargarFuentes() async {
   }
   final fuentes = Directory('${directorio.path}/artifacts/material_fonts');
   if (!fuentes.existsSync()) return;
-  Future<ByteData> leer(String nombre) async => ByteData.sublistView(
-    await File('${fuentes.path}/$nombre').readAsBytes(),
-  );
+  Future<ByteData> leer(String nombre) async =>
+      ByteData.sublistView(await File('${fuentes.path}/$nombre').readAsBytes());
   final roboto = FontLoader('Roboto');
   for (final peso in ['Regular', 'Medium', 'Bold', 'Black']) {
     roboto.addFont(leer('Roboto-$peso.ttf'));
@@ -60,6 +59,9 @@ Future<void> _pulsar(WidgetTester tester, String clave) async {
 Future<void> _nuevaPartida(WidgetTester tester) async {
   await tester.tap(find.text('NUEVA PARTIDA'));
   await tester.pumpAndSettle();
+  await tester.enterText(find.byKey(const ValueKey('campo_nombre')), 'Ana');
+  await tester.pump();
+  await _pulsar(tester, 'confirmar_nombre');
 }
 
 Future<void> _completar(WidgetTester tester) async {
@@ -83,6 +85,15 @@ void main() {
     testWidgets('Menú', skip: _omitir, (tester) async {
       await _abrir(tester, _telefono);
       await _comparar('menu');
+    });
+
+    testWidgets('Diálogo del nombre', skip: _omitir, (tester) async {
+      await _abrir(tester, _telefono);
+      await tester.tap(find.text('NUEVA PARTIDA'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const ValueKey('campo_nombre')), 'Ana');
+      await tester.pump();
+      await _comparar('dialogo_nombre');
     });
 
     testWidgets('Preparación vacía', skip: _omitir, (tester) async {

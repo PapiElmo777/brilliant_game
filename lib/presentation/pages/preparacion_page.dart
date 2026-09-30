@@ -17,8 +17,9 @@ import '../widgets/bandeja_numeros.dart';
 
 class PreparacionPage extends StatefulWidget {
   final DefinicionTablero definicion;
+  final String? jugador;
 
-  const PreparacionPage({super.key, required this.definicion});
+  const PreparacionPage({super.key, required this.definicion, this.jugador});
 
   @override
   State<PreparacionPage> createState() => _PreparacionPageState();
@@ -99,7 +100,11 @@ class _PreparacionPageState extends State<PreparacionPage> {
                               Text(
                                 estado.fase == FaseInicio.iniciado
                                     ? 'MISIÓN INICIADA'
-                                    : 'PREPARA TU MISIÓN',
+                                    : widget.jugador == null
+                                    ? 'PREPARA TU MISIÓN'
+                                    : 'PREPARA TU MISIÓN, '
+                                          '${widget.jugador!.toUpperCase()}',
+                                textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 12,
                                   letterSpacing: 2.5,

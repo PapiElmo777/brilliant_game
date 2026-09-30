@@ -4,12 +4,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/menu_bloc.dart';
 import '../../catalogo/definicion_tablero.dart';
 import '../widgets/boton_panel.dart';
+import '../widgets/dialogo_nombre_jugador.dart';
 import '../widgets/fondo_espacial.dart';
 import '../widgets/logotipo_brilliant.dart';
 import '../widgets/nave_marciano.dart';
 
 class MenuInicialPage extends StatelessWidget {
-  final ValueChanged<DefinicionTablero> onNuevaPartida;
+  final void Function(DefinicionTablero tablero, String jugador) onNuevaPartida;
 
   const MenuInicialPage({super.key, required this.onNuevaPartida});
 
@@ -18,14 +19,29 @@ class MenuInicialPage extends StatelessWidget {
     return BlocProvider(
       create: (_) => MenuBloc(),
       child: BlocConsumer<MenuBloc, MenuEstado>(
-        listenWhen: (anterior, actual) =>
-            actual.fase == FaseMenu.partidaPreparada || actual.error != null,
-        listener: (context, estado) {
-          if (estado.tablero != null) onNuevaPartida(estado.tablero!);
-          if (estado.error != null) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(estado.error!)));
+        listener: (context, estado) async {
+          switch (estado.fase) {
+            case FaseMenu.pidiendoNombre:
+              final bloc = context.read<MenuBloc>();
+              final nombre = await DialogoNombreJugador.mostrar(
+                context,
+                inicial: estado.jugador,
+                error: estado.error,
+              );
+              if (bloc.isClosed) return;
+              bloc.add(
+                nombre == null
+                    ? const CapturaNombreCancelada()
+                    : NombreJugadorConfirmado(nombre),
+              );
+            case FaseMenu.partidaPreparada:
+              onNuevaPartida(estado.tablero!, estado.jugador!);
+            case FaseMenu.menuVisible when estado.error != null:
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(estado.error!)));
+            default:
+              break;
           }
         },
         builder: (context, estado) => Scaffold(
@@ -71,11 +87,12 @@ class MenuInicialPage extends StatelessWidget {
                                 texto: 'NUEVA PARTIDA',
                                 icono: Icons.play_arrow_rounded,
                                 onPressed:
-                                    estado.fase == FaseMenu.creandoPartida
-                                    ? null
-                                    : () => context.read<MenuBloc>().add(
+                                    estado.fase == FaseMenu.menuVisible ||
+                                        estado.fase == FaseMenu.partidaPreparada
+                                    ? () => context.read<MenuBloc>().add(
                                         const NuevaPartidaSolicitada(),
-                                      ),
+                                      )
+                                    : null,
                               ),
                               const SizedBox(height: 36),
                             ],

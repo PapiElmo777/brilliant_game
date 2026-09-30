@@ -12,25 +12,29 @@ abstract final class RutasBrilliant {
   static const preparacion = '/preparacion';
 
   static Route<void> generar(RouteSettings settings) {
-    if (settings.name == preparacion &&
-        settings.arguments is DefinicionTablero) {
+    if (settings.arguments case (
+      DefinicionTablero definicion,
+      String jugador,
+    ) when settings.name == preparacion) {
       return MaterialPageRoute<void>(
         settings: settings,
-        builder: (_) {
-          final definicion = settings.arguments! as DefinicionTablero;
-          return BlocProvider(
-            create: (_) => InicioBloc(definicion.crearTablero(), animarEntrada: true),
-            child: PreparacionPage(definicion: definicion),
-          );
-        },
+        builder: (_) => BlocProvider(
+          create: (_) =>
+              InicioBloc(definicion.crearTablero(), animarEntrada: true),
+          child: PreparacionPage(definicion: definicion, jugador: jugador),
+        ),
       );
     }
     return MaterialPageRoute<void>(
       settings: const RouteSettings(name: menu),
       builder: (context) => MenuInicialPage(
-        onNuevaPartida: (tablero) {
-          if (ModalRoute.of(context)?.isCurrent != true) return;
-          Navigator.of(context).pushNamed(preparacion, arguments: tablero);
+        onNuevaPartida: (tablero, jugador) {
+          // MenuBloc evita solicitudes duplicadas; el diálogo del nombre
+          // puede seguir cerrándose sobre el menú en este momento.
+          if (ModalRoute.of(context)?.isActive != true) return;
+          Navigator.of(
+            context,
+          ).pushNamed(preparacion, arguments: (tablero, jugador));
         },
       ),
     );
