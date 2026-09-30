@@ -62,7 +62,7 @@ class BotonPanel extends StatelessWidget {
                   horizontal: 28,
                   vertical: 18,
                 ),
-                textStyle: const TextStyle(
+                textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 2.4,
