@@ -32,15 +32,8 @@ class _PreparacionPageState extends State<PreparacionPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<InicioBloc, InicioEstado>(
-      listenWhen: (anterior, actual) =>
-          anterior.error != actual.error || actual.error != null,
-      listener: (context, estado) {
-        final mensajes = ScaffoldMessenger.of(context);
-        mensajes.hideCurrentSnackBar();
-        if (estado.error != null)
-          mensajes.showSnackBar(SnackBar(content: Text(estado.error!)));
-      },
+    // El error se presenta sólo en línea, junto al tablero.
+    return BlocBuilder<InicioBloc, InicioEstado>(
       builder: (context, estado) => Scaffold(
         body: Stack(
           fit: StackFit.expand,

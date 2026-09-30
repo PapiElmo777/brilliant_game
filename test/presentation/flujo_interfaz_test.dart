@@ -73,6 +73,7 @@ void main() {
     );
     await pulsar(tester, find.byKey(const ValueKey('celda_f1_c1')));
     expect(find.byKey(const ValueKey('mensaje_error')), findsOneWidget);
+    expect(find.byType(SnackBar), findsNothing);
     expect(blocDe(tester).state.numerosFaltantes.length, 6);
     await pulsar(tester, find.byKey(const ValueKey('celda_f1_c2')));
     expect(blocDe(tester).state.celdas['f1_c2']!.valor, 2);
