@@ -167,4 +167,56 @@ void main() {
     expect(find.byType(DisparoNumeroOverlay), findsNothing);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('INICIO entra fijo en pantalla sin necesidad de desplazar', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final definicion = CatalogoTableros.predeterminado().obtenerDefinicion(
+      'tablero_01',
+    );
+    final bloc = InicioBloc(definicion.crearTablero(), aleatorio: Random(5));
+    addTearDown(bloc.close);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: TemaBrilliant.oscuro,
+        home: BlocProvider.value(
+          value: bloc,
+          child: PreparacionPage(definicion: definicion),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final inicio = find.byKey(const ValueKey('boton_inicio'));
+    await tester.tap(find.byKey(const ValueKey('boton_aleatorio')));
+    while (!bloc.state.puedeIniciar) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    await tester.pump();
+    expect(inicio, findsOneWidget);
+    // Entra desde abajo y termina dentro de la pantalla.
+    final alAparecer = tester.getRect(inicio).top;
+    await tester.pumpAndSettle();
+    var rect = tester.getRect(inicio);
+    expect(alAparecer, greaterThan(rect.top));
+    expect(rect.bottom, lessThanOrEqualTo(640));
+    expect(tester.hasRunningAnimations, isFalse);
+    // Permanece fijo aunque se desplace el contenido.
+    for (final desplazamiento in [2000.0, -2000.0]) {
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        Offset(0, desplazamiento),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.getRect(inicio), rect);
+    }
+    await tester.tap(inicio);
+    await tester.pumpAndSettle();
+    expect(bloc.state.fase, FaseInicio.iniciado);
+    expect(inicio, findsNothing);
+    expect(find.text('Posiciones iniciales confirmadas'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

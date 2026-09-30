@@ -69,7 +69,8 @@ Future<void> _completar(WidgetTester tester) async {
     await _pulsar(tester, 'numero_${i + 1}');
     await _pulsar(tester, 'celda_${_iniciales[i]}');
   }
-  await tester.ensureVisible(find.byKey(const ValueKey('boton_inicio')));
+  // Vuelve al inicio del contenido: INICIO debe verse sin desplazar.
+  await tester.drag(find.byType(SingleChildScrollView), const Offset(0, 2000));
   await tester.pumpAndSettle();
 }
 

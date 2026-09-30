@@ -11,7 +11,7 @@ import '../widgets/nave_entrada.dart';
 import '../widgets/disparo_numero_overlay.dart';
 import '../widgets/mensaje_error.dart';
 import '../widgets/respuesta_error.dart';
-import '../widgets/boton_inicio.dart';
+import '../widgets/panel_inicio.dart';
 import '../widgets/tablero_view.dart';
 import '../widgets/bandeja_numeros.dart';
 
@@ -31,6 +31,9 @@ class _PreparacionPageState extends State<PreparacionPage> {
     for (final zona in widget.definicion.zonas)
       for (final celda in zona.celdas) celda.id: GlobalKey(),
   };
+
+  static bool _panelVisible(InicioEstado estado) =>
+      estado.puedeIniciar || estado.fase == FaseInicio.iniciado;
 
   @override
   Widget build(BuildContext context) {
@@ -230,30 +233,9 @@ class _PreparacionPageState extends State<PreparacionPage> {
                                     ),
                                   ),
                                 ),
-                              if (estado.puedeIniciar)
-                                BotonInicio(
-                                  onPressed: () => context
-                                      .read<InicioBloc>()
-                                      .add(const InicioSolicitado()),
-                                ),
-                              if (estado.fase == FaseInicio.iniciado)
-                                Semantics(
-                                  liveRegion: true,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.check_circle_outline_rounded,
-                                        color: Color(0xFF72E9FF),
-                                      ),
-                                      SizedBox(width: 8),
-                                      Flexible(
-                                        child: Text(
-                                          'Posiciones iniciales confirmadas',
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                              if (_panelVisible(estado))
+                                const SizedBox(
+                                  height: PanelInicio.alturaReservada,
                                 ),
                             ],
                           ),
@@ -264,6 +246,17 @@ class _PreparacionPageState extends State<PreparacionPage> {
                 ),
               ),
             ),
+            if (_panelVisible(estado))
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: PanelInicio(
+                  iniciado: estado.fase == FaseInicio.iniciado,
+                  onInicio: () =>
+                      context.read<InicioBloc>().add(const InicioSolicitado()),
+                ),
+              ),
             if (estado.disparoPendiente case final disparo?)
               Positioned.fill(
                 child: DisparoNumeroOverlay(
