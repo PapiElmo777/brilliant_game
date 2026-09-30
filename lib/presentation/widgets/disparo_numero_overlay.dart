@@ -105,7 +105,12 @@ class _DisparoNumeroOverlayState extends State<DisparoNumeroOverlay>
                 children: [
                   Positioned.fill(
                     child: CustomPaint(
-                      painter: _EstelaPainter(origen, destino, progreso),
+                      painter: _EstelaPainter(
+                        origen,
+                        destino,
+                        progreso,
+                        semilla: widget.disparo.id,
+                      ),
                     ),
                   ),
                   Positioned(
@@ -158,17 +163,62 @@ class _EstelaPainter extends CustomPainter {
   final Offset origen;
   final Offset destino;
   final double progreso;
+  final int semilla;
 
-  const _EstelaPainter(this.origen, this.destino, this.progreso);
+  const _EstelaPainter(
+    this.origen,
+    this.destino,
+    this.progreso, {
+    this.semilla = 0,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
+    final pintura = Paint();
     for (var i = 0; i < 12; i++) {
       final t = math.max(0.0, progreso - (12 - i) * .013);
+      pintura.color = const Color(0xFF72E9FF).withValues(alpha: i / 18);
       canvas.drawCircle(
         _trayectoria(origen, destino, t),
         1.5 + i * .3,
-        Paint()..color = const Color(0xFF72E9FF).withValues(alpha: i / 18),
+        pintura,
+      );
+    }
+    // Las partículas son deterministas por disparo para que una
+    // reconstrucción dibuje exactamente el mismo cuadro.
+    final random = math.Random(semilla);
+    for (var i = 0; i < 14; i++) {
+      final nacimiento = random.nextDouble() * .8;
+      final angulo = random.nextDouble() * math.pi * 2;
+      final distancia = 6 + random.nextDouble() * 14;
+      final vida = (progreso - nacimiento) / .2;
+      if (vida <= 0 || vida >= 1) continue;
+      final centro =
+          _trayectoria(origen, destino, nacimiento) +
+          Offset(math.cos(angulo), math.sin(angulo)) * distancia * vida;
+      pintura.color = const Color(
+        0xFFB6F6FF,
+      ).withValues(alpha: .7 * (1 - vida));
+      canvas.drawCircle(centro, 1.8 * (1 - vida) + .6, pintura);
+    }
+    // Destello de llegada alrededor de la celda destino.
+    final impacto = (progreso - .82) / .18;
+    if (impacto <= 0) return;
+    pintura
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..color = const Color(0xFF72E9FF).withValues(alpha: .8 * (1 - impacto));
+    canvas.drawCircle(destino, 10 + 18 * impacto, pintura);
+    pintura
+      ..style = PaintingStyle.fill
+      ..color = const Color(0xFFE2F9FF).withValues(alpha: .9 * (1 - impacto));
+    for (var i = 0; i < 8; i++) {
+      final angulo = math.pi / 4 * i + semilla;
+      canvas.drawCircle(
+        destino +
+            Offset(math.cos(angulo), math.sin(angulo)) * (8 + 22 * impacto),
+        2 * (1 - impacto) + .5,
+        pintura,
       );
     }
   }
@@ -177,5 +227,6 @@ class _EstelaPainter extends CustomPainter {
   bool shouldRepaint(_EstelaPainter oldDelegate) =>
       oldDelegate.progreso != progreso ||
       oldDelegate.origen != origen ||
-      oldDelegate.destino != destino;
+      oldDelegate.destino != destino ||
+      oldDelegate.semilla != semilla;
 }
