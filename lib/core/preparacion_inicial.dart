@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../models/celda.dart';
 import '../models/zona.dart';
 import 'tablero.dart';
@@ -58,6 +60,42 @@ class PreparacionInicial {
         'El valor $valor incumple la regla o el rango de la zona.',
       );
     }
+  }
+
+  /// Propone al azar una colocación válida de los números faltantes en las
+  /// casillas iniciales vacías, ordenada del número menor al mayor. No
+  /// modifica la preparación: las reglas se comprueban sobre una copia.
+  List<(String celdaId, int valor)> distribucionAleatoria(math.Random random) {
+    final prueba = _copiar(_tablero);
+    final vacias = [
+      for (final celda in celdas.values)
+        if (celda.esInicio && !celda.estaOcupada) celda.id,
+    ]..shuffle(random);
+    final numeros = numerosFaltantes.toList()..shuffle(random);
+    final resultado = <(String, int)>[];
+    bool asignar(int indice) {
+      if (indice == vacias.length) return true;
+      final celdaId = vacias[indice];
+      for (final valor in numeros) {
+        if (resultado.any((asignado) => asignado.$2 == valor) ||
+            !prueba.puedeColocarValor(celdaId, valor)) {
+          continue;
+        }
+        prueba.colocarValor(celdaId, valor);
+        resultado.add((celdaId, valor));
+        if (asignar(indice + 1)) return true;
+        prueba.vaciarCelda(celdaId);
+        resultado.removeLast();
+      }
+      return false;
+    }
+
+    if (!asignar(0)) {
+      throw StateError(
+        'No existe una distribución válida para los números restantes.',
+      );
+    }
+    return resultado..sort((a, b) => a.$2.compareTo(b.$2));
   }
 
   void vaciarCelda(String celdaId) {

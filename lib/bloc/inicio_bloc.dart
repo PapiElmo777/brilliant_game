@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:bloc/bloc.dart';
 
 import '../core/preparacion_inicial.dart';
@@ -7,12 +9,23 @@ import 'inicio_evento.dart';
 
 class InicioBloc extends Bloc<InicioEvento, InicioEstado> {
   final PreparacionInicial _preparacion;
+  final math.Random _aleatorio;
+
+  /// Colocaciones aleatorias que esperan su turno de disparo.
+  final _pendientes = <(String, int)>[];
   int _ultimoDisparoId = 0;
 
-  factory InicioBloc(Tablero tablero, {bool animarEntrada = false}) =>
-      InicioBloc._(PreparacionInicial(tablero), animarEntrada);
+  factory InicioBloc(
+    Tablero tablero, {
+    bool animarEntrada = false,
+    math.Random? aleatorio,
+  }) => InicioBloc._(
+    PreparacionInicial(tablero),
+    animarEntrada,
+    aleatorio ?? math.Random(),
+  );
 
-  InicioBloc._(this._preparacion, bool animarEntrada)
+  InicioBloc._(this._preparacion, bool animarEntrada, this._aleatorio)
     : super(
         _estado(
           _preparacion,
@@ -45,7 +58,11 @@ class InicioBloc extends Bloc<InicioEvento, InicioEstado> {
       final disparo = state.disparoPendiente;
       if (disparo == null || disparo.id != evento.disparoId) return;
       _preparacion.colocarValor(disparo.celdaId, disparo.numero);
-      emit(_estado(_preparacion));
+      if (_pendientes.isNotEmpty) {
+        _dispararSiguiente(emit);
+      } else {
+        emit(_estado(_preparacion));
+      }
       return;
     }
     if (state.fase == FaseInicio.iniciado) {
@@ -101,6 +118,13 @@ class InicioBloc extends Bloc<InicioEvento, InicioEstado> {
           }
         case SeleccionCancelada():
           break;
+        case ColocacionAleatoriaSolicitada():
+          if (_preparacion.estaLista) return;
+          _pendientes
+            ..clear()
+            ..addAll(_preparacion.distribucionAleatoria(_aleatorio));
+          _dispararSiguiente(emit);
+          return;
         case InicioSolicitado():
           if (!_preparacion.estaLista) {
             throw StateError(
@@ -132,6 +156,22 @@ class InicioBloc extends Bloc<InicioEvento, InicioEstado> {
         ),
       );
     }
+  }
+
+  void _dispararSiguiente(Emitter<InicioEstado> emit) {
+    final (celdaId, numero) = _pendientes.removeAt(0);
+    emit(
+      _estado(
+        _preparacion,
+        faseVisual: FaseVisualInicio.disparando,
+        numeroSeleccionado: numero,
+        disparoPendiente: DisparoPendiente(
+          id: ++_ultimoDisparoId,
+          numero: numero,
+          celdaId: celdaId,
+        ),
+      ),
+    );
   }
 
   Tablero crearTableroParaJuego() {

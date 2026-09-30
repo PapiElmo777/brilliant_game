@@ -43,3 +43,8 @@ final class DisparoNumeroCompletado extends InicioEvento {
 final class SeleccionCancelada extends InicioEvento {
   const SeleccionCancelada();
 }
+
+/// Coloca al azar los números faltantes, disparándolos uno por uno.
+final class ColocacionAleatoriaSolicitada extends InicioEvento {
+  const ColocacionAleatoriaSolicitada();
+}

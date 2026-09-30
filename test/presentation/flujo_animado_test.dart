@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:brilliant_game/app/tema_brilliant.dart';
 import 'package:brilliant_game/brilliant_game.dart';
 import 'package:brilliant_game/presentation/pages/preparacion_page.dart';
@@ -124,4 +126,45 @@ void main() {
       expect(bloc.state.celdas['f1_c2']!.valor, 1);
     },
   );
+
+  testWidgets('El acomodo aleatorio anima cada disparo hasta completar', (
+    tester,
+  ) async {
+    final definicion = CatalogoTableros.predeterminado().obtenerDefinicion(
+      'tablero_01',
+    );
+    final bloc = InicioBloc(
+      definicion.crearTablero(),
+      animarEntrada: true,
+      aleatorio: Random(11),
+    );
+    addTearDown(bloc.close);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: TemaBrilliant.oscuro,
+        home: BlocProvider.value(
+          value: bloc,
+          child: PreparacionPage(definicion: definicion),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final aleatorio = find.byKey(const ValueKey('boton_aleatorio'));
+    await tester.ensureVisible(aleatorio);
+    await tester.tap(aleatorio);
+    await tester.pump();
+    expect(find.byType(DisparoNumeroOverlay), findsOneWidget);
+    expect(bloc.state.numerosFaltantes.length, 6);
+    final ids = <int>{};
+    while (bloc.state.disparoPendiente != null) {
+      ids.add(bloc.state.disparoPendiente!.id);
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    await tester.pumpAndSettle();
+    expect(ids.length, 6);
+    expect(bloc.state.numerosFaltantes, isEmpty);
+    expect(bloc.state.puedeIniciar, isTrue);
+    expect(find.byType(DisparoNumeroOverlay), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 }

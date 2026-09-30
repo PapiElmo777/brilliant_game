@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:brilliant_game/brilliant_game.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -134,5 +136,54 @@ void main() {
     juego.vaciarCelda('C1');
     expect(preparacion.estaLista, isTrue);
     expect(juego.obtenerZona('1').tipo, isA<TipoVerde>());
+  });
+
+  group('Distribución aleatoria', () {
+    test('Completa sólo las casillas vacías sin modificar la preparación', () {
+      final preparacion = PreparacionInicial(tableroInicial());
+      preparacion.colocarValor('C1', 4);
+      final distribucion = preparacion.distribucionAleatoria(Random(3));
+      expect(distribucion.map((d) => d.$2), [1, 2, 3, 5, 6]);
+      expect(distribucion.map((d) => d.$1).toSet(), {
+        'C2',
+        'C3',
+        'C4',
+        'C5',
+        'C6',
+      });
+      expect(preparacion.numerosFaltantes, {1, 2, 3, 5, 6});
+      for (final (celdaId, valor) in distribucion) {
+        preparacion.colocarValor(celdaId, valor);
+      }
+      expect(preparacion.estaLista, isTrue);
+      expect(preparacion.celdas['C1']!.valor, 4);
+    });
+
+    test('Respeta las reglas de zona del primer tablero y varía', () {
+      final resultados = <String>{};
+      for (var semilla = 0; semilla < 20; semilla++) {
+        final preparacion = PreparacionInicial(
+          CatalogoTableros.predeterminado().crearTablero('tablero_01'),
+        );
+        final distribucion = preparacion.distribucionAleatoria(Random(semilla));
+        for (final (celdaId, valor) in distribucion) {
+          preparacion.colocarValor(celdaId, valor);
+        }
+        expect(preparacion.estaLista, isTrue);
+        resultados.add(distribucion.toString());
+      }
+      expect(resultados.length, greaterThan(1));
+    });
+
+    test('Rechaza una configuración imposible', () {
+      final preparacion = PreparacionInicial(
+        tableroInicial(tipo: const TipoAzul()),
+      );
+      expect(
+        () => preparacion.distribucionAleatoria(Random(1)),
+        throwsStateError,
+      );
+      expect(preparacion.numerosFaltantes.length, 6);
+    });
   });
 }

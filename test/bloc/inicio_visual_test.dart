@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:brilliant_game/brilliant_game.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -206,4 +208,99 @@ void main() {
       expect(listo.state.puedeIniciar, isTrue);
     },
   );
+
+  group('Acomodo aleatorio', () {
+    late InicioBloc aleatorio;
+    setUp(
+      () => aleatorio = InicioBloc(
+        tablero(),
+        animarEntrada: true,
+        aleatorio: Random(7),
+      ),
+    );
+    tearDown(() => aleatorio.close());
+
+    test('Dispara uno por uno y coloca cada número al confirmar', () async {
+      // Durante la llegada de la nave la solicitud se ignora.
+      aleatorio.add(const ColocacionAleatoriaSolicitada());
+      await presentar(aleatorio);
+      expect(aleatorio.state.disparoPendiente, isNull);
+      await enviar(aleatorio, const NumeroInicialSeleccionado(2));
+      final disparos = <DisparoPendiente>[];
+      var estado = await enviar(
+        aleatorio,
+        const ColocacionAleatoriaSolicitada(),
+      );
+      for (
+        var disparo = estado.disparoPendiente;
+        disparo != null;
+        disparo = estado.disparoPendiente
+      ) {
+        expect(estado.faseVisual, FaseVisualInicio.disparando);
+        expect(estado.interaccionBloqueada, isTrue);
+        expect(estado.numeroSeleccionado, disparo.numero);
+        expect(estado.celdas[disparo.celdaId]!.valor, isNull);
+        disparos.add(disparo);
+        aleatorio.add(const NumeroInicialSeleccionado(1));
+        aleatorio.add(const ColocacionAleatoriaSolicitada());
+        estado = await enviar(aleatorio, DisparoNumeroCompletado(disparo.id));
+        expect(estado.celdas[disparo.celdaId]!.valor, disparo.numero);
+      }
+      expect(disparos.map((d) => d.numero), [1, 2, 3, 4, 5, 6]);
+      expect(disparos.map((d) => d.celdaId).toSet().length, 6);
+      expect(disparos.map((d) => d.id).toSet().length, 6);
+      expect(estado.fase, FaseInicio.listo);
+      expect(estado.puedeIniciar, isTrue);
+      expect(estado.numeroSeleccionado, isNull);
+    });
+
+    test('Conserva los números ya colocados', () async {
+      await presentar(aleatorio);
+      final propio = await disparar(aleatorio, 'f4_c2', 6);
+      await enviar(aleatorio, DisparoNumeroCompletado(propio.id));
+      var estado = await enviar(
+        aleatorio,
+        const ColocacionAleatoriaSolicitada(),
+      );
+      final numeros = <int>[];
+      for (
+        var disparo = estado.disparoPendiente;
+        disparo != null;
+        disparo = estado.disparoPendiente
+      ) {
+        numeros.add(disparo.numero);
+        expect(disparo.celdaId, isNot('f4_c2'));
+        estado = await enviar(aleatorio, DisparoNumeroCompletado(disparo.id));
+      }
+      expect(numeros, [1, 2, 3, 4, 5]);
+      expect(estado.celdas['f4_c2']!.valor, 6);
+      expect(estado.fase, FaseInicio.listo);
+    });
+
+    test('Una configuración imposible publica un error sin disparar', () async {
+      final imposible = InicioBloc(
+        Tablero(
+          id: 'azul',
+          zonas: [
+            Zona(
+              id: 'azul',
+              tipo: const TipoAzul(),
+              celdas: [
+                for (var i = 0; i < 6; i++)
+                  Celda(id: 'c$i', fila: 0, columna: i, esInicio: true),
+              ],
+            ),
+          ],
+        ),
+      );
+      addTearDown(imposible.close);
+      final estado = await enviar(
+        imposible,
+        const ColocacionAleatoriaSolicitada(),
+      );
+      expect(estado.error, isNotNull);
+      expect(estado.disparoPendiente, isNull);
+      expect(estado.numerosFaltantes.length, 6);
+    });
+  });
 }

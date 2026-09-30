@@ -167,19 +167,41 @@ class _PreparacionPageState extends State<PreparacionPage> {
                                   ),
                                 ],
                               ),
-                              Visibility(
-                                visible: estado.numeroSeleccionado != null,
-                                maintainState: true,
-                                maintainAnimation: true,
-                                maintainSize: true,
-                                child: TextButton(
-                                  onPressed: estado.interaccionBloqueada
-                                      ? null
-                                      : () => context.read<InicioBloc>().add(
-                                          const SeleccionCancelada(),
-                                        ),
-                                  child: const Text('Cancelar selección'),
-                                ),
+                              Wrap(
+                                alignment: WrapAlignment.center,
+                                spacing: 8,
+                                children: [
+                                  if (estado.numeroSeleccionado != null)
+                                    TextButton(
+                                      onPressed: estado.interaccionBloqueada
+                                          ? null
+                                          : () =>
+                                                context.read<InicioBloc>().add(
+                                                  const SeleccionCancelada(),
+                                                ),
+                                      child: const Text('Cancelar selección'),
+                                    ),
+                                  // Conserva su espacio al completar para que
+                                  // el tablero no cambie de posición.
+                                  Visibility(
+                                    visible:
+                                        estado.fase != FaseInicio.iniciado &&
+                                        estado.numerosFaltantes.isNotEmpty,
+                                    maintainState: true,
+                                    maintainAnimation: true,
+                                    maintainSize: true,
+                                    child: TextButton.icon(
+                                      key: const ValueKey('boton_aleatorio'),
+                                      onPressed: estado.interaccionBloqueada
+                                          ? null
+                                          : () => context.read<InicioBloc>().add(
+                                              const ColocacionAleatoriaSolicitada(),
+                                            ),
+                                      icon: const Icon(Icons.shuffle_rounded),
+                                      label: const Text('Acomodo aleatorio'),
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 16),
                               TableroView(
