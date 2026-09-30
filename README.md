@@ -243,3 +243,15 @@ La bandeja conserva el espacio de las fichas utilizadas, sin mostrarlas ni inclu
 Los errores reciben una breve sacudida y un resplandor en su panel, además del mensaje visible. `INICIO` aparece con escala y opacidad cuando el BLoC lo permite. Todos estos efectos respetan `MediaQuery.disableAnimations`: se presentan los estados finales y se mantienen las confirmaciones necesarias sin bloquear el flujo.
 
 Las pruebas de animación cubren tiempos, confirmación única, reconstrucciones, cancelación al desmontar, aparición escalonada, estabilidad de la celda de destino y preparación completa con movimiento reducido. La revisión en dispositivos y las capturas doradas de referencia corresponden a la fase 6.
+
+## Verificación y recursos: fase 6
+
+Los recursos visuales se dibujan con Flutter en lugar de usar imágenes. El fondo lunar (`FondoEspacial`), la nave con el marciano (`NaveMarciano`), el logotipo (`LogotipoBrilliant`), los botones de panel (`BotonPanel`), las celdas y los efectos de haz, estela y partículas son widgets o `CustomPainter` independientes. Al ser vectoriales se adaptan a cualquier densidad de pantalla y pueden animarse por separado. Las carpetas de `assets/images/` quedan reservadas por si en el futuro se sustituye alguno de estos elementos por ilustraciones.
+
+La aplicación se limita a orientación vertical en teléfonos. Los errores de preparación se muestran sólo en el panel junto al tablero. El disparo añade chispas deterministas a la estela y un destello al llegar a la celda.
+
+`test/golden/` contiene las capturas doradas del menú, la preparación vacía, un número seleccionado y la preparación completa con `INICIO`, en 390×844 y 320×568. Cargan Roboto desde el SDK de Flutter y sólo se comparan en macOS. Para regenerarlas tras un cambio visual intencional:
+
+```sh
+flutter test --update-goldens test/golden
+```
