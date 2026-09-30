@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'boton_panel.dart';
+
 class BotonInicio extends StatelessWidget {
   final VoidCallback onPressed;
 
@@ -12,14 +14,11 @@ class BotonInicio extends StatelessWidget {
         ? Duration.zero
         : const Duration(milliseconds: 280),
     curve: Curves.easeOutCubic,
-    child: SizedBox(
-      width: double.infinity,
-      child: FilledButton.icon(
-        key: const ValueKey('boton_inicio'),
-        onPressed: onPressed,
-        icon: const Icon(Icons.rocket_launch_rounded),
-        label: const Text('INICIO'),
-      ),
+    child: BotonPanel(
+      key: const ValueKey('boton_inicio'),
+      texto: 'INICIO',
+      icono: Icons.rocket_launch_rounded,
+      onPressed: onPressed,
     ),
     builder: (context, progreso, child) => Opacity(
       opacity: progreso,

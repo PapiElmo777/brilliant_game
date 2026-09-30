@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../bloc/menu_bloc.dart';
 import '../../catalogo/definicion_tablero.dart';
+import '../widgets/boton_panel.dart';
 import '../widgets/fondo_espacial.dart';
 import '../widgets/nave_marciano.dart';
 
@@ -93,18 +94,15 @@ class MenuInicialPage extends StatelessWidget {
                                 style: TextStyle(color: Color(0xFFB1C4D4)),
                               ),
                               const SizedBox(height: 24),
-                              SizedBox(
-                                width: double.infinity,
-                                child: FilledButton.icon(
-                                  onPressed:
-                                      estado.fase == FaseMenu.creandoPartida
-                                      ? null
-                                      : () => context.read<MenuBloc>().add(
-                                          const NuevaPartidaSolicitada(),
-                                        ),
-                                  icon: const Icon(Icons.play_arrow_rounded),
-                                  label: const Text('NUEVA PARTIDA'),
-                                ),
+                              BotonPanel(
+                                texto: 'NUEVA PARTIDA',
+                                icono: Icons.play_arrow_rounded,
+                                onPressed:
+                                    estado.fase == FaseMenu.creandoPartida
+                                    ? null
+                                    : () => context.read<MenuBloc>().add(
+                                        const NuevaPartidaSolicitada(),
+                                      ),
                               ),
                               const SizedBox(height: 36),
                             ],
