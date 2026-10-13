@@ -27,6 +27,9 @@ class InicioEstado {
   final FaseInicio fase;
   final FaseVisualInicio faseVisual;
   final int? numeroSeleccionado;
+
+  /// Celda inicial ocupada elegida para mover o intercambiar su número.
+  final String? celdaSeleccionada;
   final DisparoPendiente? disparoPendiente;
   final Map<String, Celda> celdas;
   final Set<int> numerosFaltantes;
@@ -38,6 +41,7 @@ class InicioEstado {
     required Set<int> numerosFaltantes,
     FaseVisualInicio? faseVisual,
     this.numeroSeleccionado,
+    this.celdaSeleccionada,
     this.disparoPendiente,
     this.error,
   }) : faseVisual =
@@ -56,4 +60,11 @@ class InicioEstado {
   };
 
   bool get puedeIniciar => fase == FaseInicio.listo && !interaccionBloqueada;
+
+  /// Hay algo que cancelar: una selección o números ya colocados.
+  bool get puedeReiniciar =>
+      fase != FaseInicio.iniciado &&
+      (numeroSeleccionado != null ||
+          celdaSeleccionada != null ||
+          numerosFaltantes.length < 6);
 }

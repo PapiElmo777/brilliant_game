@@ -44,6 +44,11 @@ final class SeleccionCancelada extends InicioEvento {
   const SeleccionCancelada();
 }
 
+/// Cancela la selección y regresa todos los números a la bandeja.
+final class PreparacionReiniciada extends InicioEvento {
+  const PreparacionReiniciada();
+}
+
 /// Coloca al azar los números faltantes, disparándolos uno por uno.
 final class ColocacionAleatoriaSolicitada extends InicioEvento {
   const ColocacionAleatoriaSolicitada();

@@ -83,7 +83,9 @@ class TableroView extends StatelessWidget {
                 celda: celda,
                 tipo: tipos[celda.id]!,
                 esDestino: destinos.contains(celda.id),
+                seleccionada: estado?.celdaSeleccionada == celda.id,
                 enPartida: estado == null,
+                pista: estado == null ? null : _pistaPreparacion(celda),
                 onTap:
                     (estado != null
                         ? !estado!.interaccionBloqueada
@@ -99,12 +101,34 @@ class TableroView extends StatelessWidget {
   }
 }
 
+extension on TableroView {
+  String _pistaPreparacion(Celda celda) {
+    final estado = this.estado!;
+    if (!celda.esInicio) return 'Celda de juego';
+    final origen = estado.celdaSeleccionada;
+    if (origen == celda.id) return 'Retirar número';
+    if (origen != null) {
+      return celda.estaOcupada ? 'Intercambiar números' : 'Mover número aquí';
+    }
+    if (!celda.estaOcupada) return 'Colocar número seleccionado';
+    return estado.numeroSeleccionado == null
+        ? 'Elegir para mover o intercambiar'
+        : 'Reemplazar por el número seleccionado';
+  }
+}
+
 class CeldaView extends StatelessWidget {
   final Celda celda;
   final Tipo tipo;
   final VoidCallback? onTap;
   final bool esDestino;
   final bool enPartida;
+
+  /// Indicación accesible de lo que hace tocar la celda.
+  final String? pista;
+
+  /// Número del tablero elegido para mover o intercambiar.
+  final bool seleccionada;
 
   const CeldaView({
     super.key,
@@ -113,6 +137,8 @@ class CeldaView extends StatelessWidget {
     this.onTap,
     this.esDestino = false,
     this.enPartida = false,
+    this.pista,
+    this.seleccionada = false,
   });
 
   @override
@@ -122,13 +148,17 @@ class CeldaView extends StatelessWidget {
         ? Colors.white
         : const Color(0xFF071226);
     final estado = celda.valor == null ? 'vacía' : 'número ${celda.valor}';
+    final resaltada = esDestino || seleccionada;
     return Semantics(
       button: true,
+      selected: seleccionada,
       enabled: onTap != null,
       onTap: onTap,
       label:
           'Fila ${celda.fila + 1}, columna ${celda.columna + 1}${celda.esInicio ? ', celda inicial' : ''}, $estado. ${tipo.descripcion}${esDestino ? ', destino disponible' : ''}',
-      hint: enPartida
+      hint: pista != null
+          ? pista!
+          : enPartida
           ? (esDestino ? 'Colocar dado seleccionado' : 'Destino no válido')
           : celda.esInicio
           ? (celda.estaOcupada
@@ -151,18 +181,18 @@ class CeldaView extends StatelessWidget {
             ),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: esDestino
+              color: resaltada
                   ? Colors.white
                   : celda.esInicio
                   ? const Color(0xFFB6F6FF)
                   : const Color(0x33FFFFFF),
-              width: esDestino
+              width: resaltada
                   ? 3
                   : celda.esInicio
                   ? 2
                   : 1,
             ),
-            boxShadow: esDestino
+            boxShadow: resaltada
                 ? const [
                     BoxShadow(
                       color: Colors.white70,

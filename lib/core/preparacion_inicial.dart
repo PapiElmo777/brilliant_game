@@ -103,6 +103,42 @@ class PreparacionInicial {
     _tablero.vaciarCelda(celdaId);
   }
 
+  /// Mueve el número de [origen] a [destino]; si [destino] está ocupado, los
+  /// dos números se intercambian. Se valida sobre una copia antes de aplicar.
+  void intercambiar(String origen, String destino) {
+    _comprobarCeldaInicial(origen);
+    _comprobarCeldaInicial(destino);
+    final valorOrigen = _tablero.obtenerCelda(origen).valor;
+    if (valorOrigen == null) {
+      throw ArgumentError('La celda $origen no tiene un número para mover.');
+    }
+    final valorDestino = _tablero.obtenerCelda(destino).valor;
+    void aplicar(Tablero tablero) {
+      tablero
+        ..vaciarCelda(origen)
+        ..vaciarCelda(destino)
+        ..colocarValor(destino, valorOrigen);
+      if (valorDestino != null) tablero.colocarValor(origen, valorDestino);
+    }
+
+    try {
+      aplicar(_copiar(_tablero));
+    } on ArgumentError {
+      throw ArgumentError(
+        'No se puede ${valorDestino == null ? 'mover' : 'intercambiar'}: '
+        'incumple la regla de una zona.',
+      );
+    }
+    aplicar(_tablero);
+  }
+
+  /// Regresa a la bandeja todos los números colocados.
+  void reiniciar() {
+    for (final celda in celdas.values) {
+      if (celda.esInicio && celda.estaOcupada) _tablero.vaciarCelda(celda.id);
+    }
+  }
+
   /// Entrega una copia independiente del tablero ya preparado.
   Tablero crearTableroParaJuego() {
     if (!estaLista) {

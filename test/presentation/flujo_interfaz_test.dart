@@ -106,8 +106,19 @@ void main() {
     expect(find.byKey(const ValueKey('numero_2')), findsNothing);
     expect(find.byKey(const ValueKey('mensaje_error')), findsNothing);
     await pulsar(tester, find.byKey(const ValueKey('celda_f1_c2')));
+    expect(blocDe(tester).state.celdaSeleccionada, 'f1_c2');
+    await pulsar(tester, find.byKey(const ValueKey('celda_f1_c2')));
     expect(find.byKey(const ValueKey('numero_2')), findsOneWidget);
     expect(blocDe(tester).state.celdas['f1_c2']!.valor, isNull);
+    // Cancelar selección regresa todos los números a la bandeja.
+    await pulsar(tester, find.byKey(const ValueKey('numero_2')));
+    await pulsar(tester, find.byKey(const ValueKey('celda_f1_c2')));
+    await pulsar(tester, find.byKey(const ValueKey('numero_5')));
+    await pulsar(tester, find.text('Cancelar selección'));
+    expect(blocDe(tester).state.numerosFaltantes.length, 6);
+    expect(blocDe(tester).state.numeroSeleccionado, isNull);
+    expect(find.byKey(const ValueKey('numero_2')), findsOneWidget);
+    expect(find.byKey(const ValueKey('boton_cancelar')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

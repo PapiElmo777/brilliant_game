@@ -94,14 +94,27 @@ class InicioBloc extends Bloc<InicioEvento, InicioEstado> {
           if (celda == null || !celda.esInicio) {
             throw ArgumentError('Selecciona una celda inicial del tablero.');
           }
-          if (celda.estaOcupada) {
-            _preparacion.vaciarCelda(celda.id);
+          final origen = state.celdaSeleccionada;
+          if (origen != null) {
+            // Con un número del tablero elegido: tocarlo de nuevo lo retira;
+            // otra celda recibe el número o lo intercambia con el suyo.
+            if (origen == celda.id) {
+              _preparacion.vaciarCelda(celda.id);
+            } else {
+              _preparacion.intercambiar(origen, celda.id);
+            }
+          } else if (celda.estaOcupada && state.numeroSeleccionado == null) {
+            emit(_estado(_preparacion, celdaSeleccionada: celda.id));
+            return;
           } else {
             final numero = state.numeroSeleccionado;
             if (numero == null) {
               throw StateError('Selecciona primero un número disponible.');
             }
+            // Sobre una celda ocupada, el número elegido reemplaza al que
+            // estaba, que vuelve a la bandeja.
             _preparacion.validarColocacion(celda.id, numero);
+            if (celda.estaOcupada) _preparacion.vaciarCelda(celda.id);
             emit(
               _estado(
                 _preparacion,
@@ -118,6 +131,8 @@ class InicioBloc extends Bloc<InicioEvento, InicioEstado> {
           }
         case SeleccionCancelada():
           break;
+        case PreparacionReiniciada():
+          _preparacion.reiniciar();
         case ColocacionAleatoriaSolicitada():
           if (_preparacion.estaLista) return;
           _pendientes
@@ -186,6 +201,7 @@ class InicioBloc extends Bloc<InicioEvento, InicioEstado> {
     bool iniciado = false,
     FaseVisualInicio? faseVisual,
     int? numeroSeleccionado,
+    String? celdaSeleccionada,
     DisparoPendiente? disparoPendiente,
     String? error,
   }) => InicioEstado(
@@ -196,6 +212,7 @@ class InicioBloc extends Bloc<InicioEvento, InicioEstado> {
         : FaseInicio.preparando,
     faseVisual: faseVisual,
     numeroSeleccionado: numeroSeleccionado,
+    celdaSeleccionada: celdaSeleccionada,
     disparoPendiente: disparoPendiente,
     celdas: preparacion.celdas,
     numerosFaltantes: preparacion.numerosFaltantes,

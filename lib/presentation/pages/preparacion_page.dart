@@ -159,7 +159,7 @@ class _PreparacionPageState extends State<PreparacionPage> {
                                       child: Opacity(
                                         opacity: 0,
                                         child: Text(
-                                          'Número 6 seleccionado · toca una celda +',
+                                          'Número 6 elegido · toca otra celda + para moverlo o intercambiarlo',
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
                                             color: Color(0xFFB1C4D4),
@@ -175,6 +175,8 @@ class _PreparacionPageState extends State<PreparacionPage> {
                                             : estado.faseVisual ==
                                                   FaseVisualInicio.disparando
                                             ? 'Enviando número ${estado.numeroSeleccionado}'
+                                            : estado.celdaSeleccionada != null
+                                            ? 'Número ${estado.celdas[estado.celdaSeleccionada]!.valor} elegido · toca otra celda + para moverlo o intercambiarlo'
                                             : estado.numeroSeleccionado != null
                                             ? 'Número ${estado.numeroSeleccionado} seleccionado · toca una celda +'
                                             : '${6 - estado.numerosFaltantes.length} de 6 colocados',
@@ -190,16 +192,20 @@ class _PreparacionPageState extends State<PreparacionPage> {
                                   alignment: WrapAlignment.center,
                                   spacing: 8,
                                   children: [
-                                    if (estado.numeroSeleccionado != null)
-                                      TextButton(
+                                    // Cancela la selección y regresa todos
+                                    // los números a la bandeja.
+                                    if (estado.puedeReiniciar)
+                                      TextButton.icon(
+                                        key: const ValueKey('boton_cancelar'),
                                         onPressed: estado.interaccionBloqueada
                                             ? null
                                             : () => context
                                                   .read<InicioBloc>()
                                                   .add(
-                                                    const SeleccionCancelada(),
+                                                    const PreparacionReiniciada(),
                                                   ),
-                                        child: const Text('Cancelar selección'),
+                                        icon: const Icon(Icons.undo_rounded),
+                                        label: const Text('Cancelar selección'),
                                       ),
                                     // Conserva su espacio al completar para que
                                     // el tablero no cambie de posición.
@@ -242,7 +248,7 @@ class _PreparacionPageState extends State<PreparacionPage> {
                                   const Padding(
                                     padding: EdgeInsets.symmetric(vertical: 12),
                                     child: Text(
-                                      'Las celdas + son tu punto de partida.\nToca un número colocado para retirarlo.',
+                                      'Las celdas + son tu punto de partida.\nToca un número colocado para moverlo o intercambiarlo; tócalo dos veces para retirarlo.',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         fontSize: 12,

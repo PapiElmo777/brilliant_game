@@ -148,8 +148,12 @@ void main() {
     expect(bloc.state.numeroSeleccionado, isNull);
     expect(pendiente.celdas['f1_c2']!.valor, isNull);
     bloc.add(DisparoNumeroCompletado(disparo.id));
+    // El primer toque elige el número; el segundo lo retira.
     await enviar(bloc, const CeldaInicialSeleccionada('f1_c2'));
-    expect(estados.length, 2);
+    expect(bloc.state.celdaSeleccionada, 'f1_c2');
+    await enviar(bloc, const CeldaInicialSeleccionada('f1_c2'));
+    expect(estados.length, 3);
+    expect(bloc.state.celdaSeleccionada, isNull);
     expect(bloc.state.numerosFaltantes.length, 6);
     final siguiente = await disparar(bloc, 'f2_c6', 1);
     expect(siguiente.id, greaterThan(disparo.id));
@@ -172,6 +176,7 @@ void main() {
     }
     expect(bloc.state.faseVisual, FaseVisualInicio.listo);
     expect(bloc.state.puedeIniciar, isTrue);
+    await enviar(bloc, CeldaInicialSeleccionada(ids.last));
     await enviar(bloc, CeldaInicialSeleccionada(ids.last));
     expect(bloc.state.puedeIniciar, isFalse);
     expect(bloc.state.numerosFaltantes, {6});
@@ -302,5 +307,83 @@ void main() {
       expect(estado.disparoPendiente, isNull);
       expect(estado.numerosFaltantes.length, 6);
     });
+  });
+
+  test('Intercambia, mueve y reemplaza números sin retirarlos', () async {
+    await presentar(bloc);
+    for (final (id, numero) in [('f1_c2', 1), ('f2_c6', 2)]) {
+      final disparo = await disparar(bloc, id, numero);
+      await enviar(bloc, DisparoNumeroCompletado(disparo.id));
+    }
+    // Elegir un número del tablero y tocar otro ocupado los intercambia.
+    await enviar(bloc, const CeldaInicialSeleccionada('f1_c2'));
+    await enviar(bloc, const CeldaInicialSeleccionada('f2_c6'));
+    expect(bloc.state.celdas['f1_c2']!.valor, 2);
+    expect(bloc.state.celdas['f2_c6']!.valor, 1);
+    expect(bloc.state.celdaSeleccionada, isNull);
+    expect(bloc.state.disparoPendiente, isNull);
+    // Tocar una celda vacía mueve el número.
+    await enviar(bloc, const CeldaInicialSeleccionada('f2_c6'));
+    await enviar(bloc, const CeldaInicialSeleccionada('f4_c2'));
+    expect(bloc.state.celdas['f2_c6']!.valor, isNull);
+    expect(bloc.state.celdas['f4_c2']!.valor, 1);
+    // Un número de la bandeja sobre una celda ocupada la reemplaza.
+    final disparo = await disparar(bloc, 'f4_c2', 3);
+    expect(bloc.state.celdas['f4_c2']!.valor, isNull);
+    await enviar(bloc, DisparoNumeroCompletado(disparo.id));
+    expect(bloc.state.celdas['f4_c2']!.valor, 3);
+    expect(bloc.state.numerosFaltantes, {1, 4, 5, 6});
+  });
+
+  test('Cancelar selección regresa todos los números a la bandeja', () async {
+    await presentar(bloc);
+    expect(bloc.state.puedeReiniciar, isFalse);
+    for (final (id, numero) in [('f1_c2', 1), ('f2_c6', 2)]) {
+      final disparo = await disparar(bloc, id, numero);
+      await enviar(bloc, DisparoNumeroCompletado(disparo.id));
+    }
+    await enviar(bloc, const NumeroInicialSeleccionado(3));
+    expect(bloc.state.puedeReiniciar, isTrue);
+    await enviar(bloc, const PreparacionReiniciada());
+    expect(bloc.state.numerosFaltantes.length, 6);
+    expect(bloc.state.numeroSeleccionado, isNull);
+    expect(bloc.state.celdas.values.where((c) => c.estaOcupada), isEmpty);
+    expect(bloc.state.puedeReiniciar, isFalse);
+  });
+
+  test('Un movimiento que incumple una zona se rechaza sin cambios', () async {
+    final restringido = InicioBloc(
+      Tablero(
+        id: 'mixto',
+        zonas: [
+          Zona(
+            id: 'morado',
+            tipo: const TipoMorado(),
+            celdas: [
+              for (var i = 0; i < 3; i++)
+                Celda(id: 'm$i', fila: 0, columna: i, esInicio: true),
+            ],
+          ),
+          Zona(
+            id: 'verde',
+            tipo: const TipoVerde(),
+            celdas: [
+              for (var i = 3; i < 6; i++)
+                Celda(id: 'v$i', fila: 0, columna: i, esInicio: true),
+            ],
+          ),
+        ],
+      ),
+    );
+    addTearDown(restringido.close);
+    await enviar(restringido, const ValorInicialColocado('m0', 1));
+    await enviar(restringido, const ValorInicialColocado('m1', 2));
+    await enviar(restringido, const ValorInicialColocado('v3', 3));
+    // El morado admite como máximo dos números distintos.
+    await enviar(restringido, const CeldaInicialSeleccionada('v3'));
+    await enviar(restringido, const CeldaInicialSeleccionada('m2'));
+    expect(restringido.state.error, contains('mover'));
+    expect(restringido.state.celdas['v3']!.valor, 3);
+    expect(restringido.state.celdas['m2']!.valor, isNull);
   });
 }
