@@ -124,6 +124,22 @@ flutter test
 flutter test test/example_test.dart
 ```
 
+Si Android falla en `parseDebugLocalResources` con nombres como
+`launch_background 3.xml` dentro de `build/`, limpiar los archivos generados y
+volver a compilar:
+
+```sh
+flutter clean
+flutter pub get
+flutter run -t lib/main.dart
+```
+
+Usar el mismo SDK de Flutter en el editor y la terminal. La primera compilación
+después de limpiar reconstruye los archivos generados y puede tardar más. Si
+reaparecen copias con sufijos `2` o `3`, revisar si una herramienta de
+sincronización o copia está modificando la carpeta del proyecto. No renombrar
+recursos dentro de `build/`, porque se generan de nuevo al compilar.
+
 ## Alcance
 
 Esta etapa no implementa turnos, dados, asignación de puntos, restricciones de adyacencia durante el juego, fin de partida, persistencia ni interfaz gráfica. Tampoco exige conectividad geométrica de una zona. Esas reglas pueden añadirse sobre el modelo actual.
