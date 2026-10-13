@@ -5,6 +5,7 @@ import 'package:brilliant_game/brilliant_game.dart';
 import 'package:brilliant_game/presentation/pages/preparacion_page.dart';
 import 'package:brilliant_game/presentation/widgets/disparo_numero_overlay.dart';
 import 'package:flutter/material.dart';
+import 'package:brilliant_game/presentation/pages/partida_page.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -216,7 +217,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(bloc.state.fase, FaseInicio.iniciado);
     expect(inicio, findsNothing);
-    expect(find.text('Posiciones iniciales confirmadas'), findsOneWidget);
+    expect(find.byType(PartidaPage), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
     expect(tester.takeException(), isNull);
   });
 }

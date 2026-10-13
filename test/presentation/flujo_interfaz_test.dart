@@ -1,6 +1,7 @@
 import 'package:brilliant_game/app/brilliant_game_app.dart';
 import 'package:brilliant_game/brilliant_game.dart';
 import 'package:brilliant_game/presentation/pages/preparacion_page.dart';
+import 'package:brilliant_game/presentation/pages/partida_page.dart';
 import 'package:brilliant_game/presentation/widgets/bandeja_numeros.dart';
 import 'package:brilliant_game/presentation/widgets/tablero_view.dart';
 import 'package:flutter/material.dart';
@@ -123,7 +124,8 @@ void main() {
     expect(find.byType(OutlinedButton), findsNothing);
     await pulsar(tester, find.byKey(const ValueKey('boton_inicio')));
     expect(anterior.state.fase, FaseInicio.iniciado);
-    expect(find.text('MISIÓN INICIADA'), findsOneWidget);
+    expect(find.byType(PartidaPage), findsOneWidget);
+    expect(find.byKey(const ValueKey('boton_inicio')), findsNothing);
     await pulsar(tester, find.byKey(const ValueKey('celda_f1_c2')));
     expect(anterior.state.celdas['f1_c2']!.valor, 1);
     await pulsar(tester, find.byTooltip('Volver al menú'));
