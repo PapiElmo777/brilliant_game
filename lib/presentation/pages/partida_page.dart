@@ -9,6 +9,7 @@ import '../widgets/fondo_espacial.dart';
 import '../widgets/historial_tiradas.dart';
 import '../widgets/meteoritos_animacion.dart';
 import '../widgets/nave_marciano.dart';
+import '../widgets/respuesta_error.dart';
 import '../widgets/tablero_view.dart';
 
 class PartidaPage extends StatefulWidget {
@@ -123,7 +124,17 @@ class _PartidaPageState extends State<PartidaPage> {
                                 const SizedBox(height: 8),
                                 Semantics(
                                   liveRegion: true,
-                                  child: GloboAlien(mensaje: _mensaje(e)),
+                                  // Las jugadas no válidas se avisan en el globo
+                                  // con una sacudida.
+                                  child: e.error == null
+                                      ? GloboAlien(mensaje: _mensaje(e))
+                                      : RespuestaError(
+                                          key: ObjectKey(e),
+                                          child: GloboAlien(
+                                            mensaje: e.error!,
+                                            error: true,
+                                          ),
+                                        ),
                                 ),
                                 SizedBox(
                                   key: _arriba,
@@ -144,6 +155,7 @@ class _PartidaPageState extends State<PartidaPage> {
                                   definicion: widget.definicion,
                                   celdas: e.celdas,
                                   destinos: e.destinos,
+                                  interactiva: e.puedeSeleccionar,
                                   onCeldaSeleccionada: (id) => bloc.add(
                                     DestinoSeleccionado(e.tirada.id, id),
                                   ),
@@ -153,14 +165,6 @@ class _PartidaPageState extends State<PartidaPage> {
                                   height: 260,
                                   width: double.infinity,
                                 ),
-                                if (e.error != null)
-                                  Semantics(
-                                    liveRegion: true,
-                                    child: Text(
-                                      e.error!,
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ),
                                 if (e.puedeOmitir)
                                   ElevatedButton(
                                     onPressed: () =>
@@ -232,24 +236,30 @@ class _PartidaPageState extends State<PartidaPage> {
 /// Globo de diálogo que sale de la nave del alien.
 class GloboAlien extends StatelessWidget {
   final String mensaje;
-  const GloboAlien({super.key, required this.mensaje});
+  final bool error;
+  const GloboAlien({super.key, required this.mensaje, this.error = false});
+
+  Color get _borde => error ? const Color(0xFFFF6B6B) : const Color(0xFF72E9FF);
 
   @override
   Widget build(BuildContext context) => Column(
     mainAxisSize: MainAxisSize.min,
     children: [
-      CustomPaint(size: const Size(18, 9), painter: _PicoGlobo()),
+      CustomPaint(size: const Size(18, 9), painter: _PicoGlobo(_borde)),
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: const Color(0xE6102B4A),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF72E9FF), width: 1.5),
+          border: Border.all(color: _borde, width: error ? 2.5 : 1.5),
         ),
         child: Text(
           mensaje,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 18, color: Color(0xFFB6F6FF)),
+          style: TextStyle(
+            fontSize: 18,
+            color: error ? const Color(0xFFFFB4B4) : const Color(0xFFB6F6FF),
+          ),
         ),
       ),
     ],
@@ -257,6 +267,9 @@ class GloboAlien extends StatelessWidget {
 }
 
 class _PicoGlobo extends CustomPainter {
+  final Color color;
+  const _PicoGlobo(this.color);
+
   @override
   void paint(Canvas canvas, Size size) {
     final pico = Path()
@@ -264,9 +277,9 @@ class _PicoGlobo extends CustomPainter {
       ..lineTo(size.width / 2, 0)
       ..lineTo(size.width, size.height + 1)
       ..close();
-    canvas.drawPath(pico, Paint()..color = const Color(0xFF72E9FF));
+    canvas.drawPath(pico, Paint()..color = color);
   }
 
   @override
-  bool shouldRepaint(_PicoGlobo oldDelegate) => false;
+  bool shouldRepaint(_PicoGlobo oldDelegate) => oldDelegate.color != color;
 }

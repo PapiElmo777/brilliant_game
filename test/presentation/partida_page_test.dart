@@ -39,6 +39,11 @@ void main() {
       expect(find.text('Tu ancla es el 2'),findsOneWidget);
       final disponibles=tester.widgetList<CeldaView>(find.byType(CeldaView)).where((c)=>c.esDestino);
       expect(disponibles.map((c)=>c.celda.id).toSet(),b.state.destinos);
+      final invalida=b.state.celdas.values.firstWhere((c)=>!c.estaOcupada&&!b.state.destinos.contains(c.id));
+      await tester.ensureVisible(find.byKey(ValueKey('celda_${invalida.id}')));
+      await tester.tap(find.byKey(ValueKey('celda_${invalida.id}')));await tester.pumpAndSettle();
+      expect(find.text('Esa casilla no es válida. Elige una casilla resaltada.'),findsOneWidget);
+      expect(b.state.historial,isEmpty);expect(b.state.celdas[invalida.id]!.valor,isNull);
       final destino=find.byKey(ValueKey('celda_${b.state.destinos.first}'));
       await tester.ensureVisible(destino);await tester.pumpAndSettle();await tester.tap(destino);await tester.pumpAndSettle();
       expect(b.state.historial.length,1);expect(b.state.historial.single.dadoId,1);

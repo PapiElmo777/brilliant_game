@@ -145,4 +145,18 @@ void main() {
       expect(b.state.destinos, {'b'});
     },
   );
+  test('Tocar una casilla sin número elegido o no válida avisa sin colocar', () async {
+    final b = PartidaBloc(tablero(), azar: AzarFijo([2, 5]));
+    addTearDown(b.close);
+    await enviar(b, const MeteorosCompletados(1));
+    await enviar(b, const DestinoSeleccionado(1, 'b'));
+    expect(b.state.error, 'Primero elige un número.');
+    await enviar(b, const DadoSeleccionado(1, 1));
+    await enviar(b, const MovimientoDadosCompletado(1));
+    expect(b.state.error, isNull);
+    await enviar(b, const DestinoSeleccionado(1, 'd'));
+    expect(b.state.error, contains('no es válida'));
+    expect(b.state.celdas['d']!.valor, isNull);
+    expect(b.state.historial, isEmpty);
+  });
 }

@@ -13,6 +13,10 @@ class TableroView extends StatelessWidget {
   final ValueChanged<String> onCeldaSeleccionada;
   final Map<String, GlobalKey> clavesCeldas;
 
+  /// En partida, permite tocar cualquier celda para que el BLoC informe si el
+  /// destino no es válido.
+  final bool interactiva;
+
   const TableroView({
     super.key,
     required this.definicion,
@@ -20,7 +24,8 @@ class TableroView extends StatelessWidget {
     required this.onCeldaSeleccionada,
     this.clavesCeldas = const {},
   }) : celdasPartida = null,
-       destinos = const {};
+       destinos = const {},
+       interactiva = true;
 
   const TableroView.partida({
     super.key,
@@ -28,6 +33,7 @@ class TableroView extends StatelessWidget {
     required Map<String, Celda> celdas,
     required this.destinos,
     required this.onCeldaSeleccionada,
+    this.interactiva = true,
   }) : estado = null,
        celdasPartida = celdas,
        clavesCeldas = const {};
@@ -81,7 +87,7 @@ class TableroView extends StatelessWidget {
                 onTap:
                     (estado != null
                         ? !estado!.interaccionBloqueada
-                        : destinos.contains(celda.id))
+                        : interactiva)
                     ? () => onCeldaSeleccionada(celda.id)
                     : null,
               ),
@@ -123,7 +129,7 @@ class CeldaView extends StatelessWidget {
       label:
           'Fila ${celda.fila + 1}, columna ${celda.columna + 1}${celda.esInicio ? ', celda inicial' : ''}, $estado. ${tipo.descripcion}${esDestino ? ', destino disponible' : ''}',
       hint: enPartida
-          ? (esDestino ? 'Colocar dado seleccionado' : 'Celda no disponible')
+          ? (esDestino ? 'Colocar dado seleccionado' : 'Destino no válido')
           : celda.esInicio
           ? (celda.estaOcupada
                 ? 'Retirar número'

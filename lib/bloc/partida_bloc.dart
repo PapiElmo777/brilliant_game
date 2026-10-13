@@ -118,10 +118,19 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
         if (state.fase == FasePartida.moviendoDados)
           emit(_estado(FasePartida.eligiendoDestino));
       case DestinoSeleccionado():
+        if (state.puedeSeleccionar && _seleccion == null) {
+          emit(_estado(state.fase, error: 'Primero elige un número.'));
+          return;
+        }
         if (state.fase != FasePartida.eligiendoDestino || _seleccion == null)
           return;
         if (!_destinos(_seleccion!).contains(evento.celdaId)) {
-          emit(_estado(state.fase, error: 'Selecciona un destino disponible.'));
+          emit(
+            _estado(
+              state.fase,
+              error: 'Esa casilla no es válida. Elige una casilla resaltada.',
+            ),
+          );
           return;
         }
         _tablero.colocarValor(evento.celdaId, _tirada.dados[_seleccion!].valor);
