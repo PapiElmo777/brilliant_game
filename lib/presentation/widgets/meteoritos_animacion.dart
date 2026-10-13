@@ -9,12 +9,16 @@ class MeteoritosAnimacion extends StatefulWidget {
   final ValueChanged<int> onCompletada;
   final Future<ui.Codec> Function()? cargar;
 
+  /// Multiplica la velocidad de reproducción del clip.
+  final int velocidad;
+
   const MeteoritosAnimacion({
     super.key,
     required this.tiradaId,
     required this.onImpacto,
     required this.onCompletada,
     this.cargar,
+    this.velocidad = 3,
   });
 
   @override
@@ -105,7 +109,10 @@ class _MeteoritosAnimacionState extends State<MeteoritosAnimacion> {
         _impacto = true;
         widget.onImpacto(widget.tiradaId);
       }
-      _cuadro = Timer(cuadro.duration, () => _siguiente(version));
+      _cuadro = Timer(
+        cuadro.duration ~/ widget.velocidad,
+        () => _siguiente(version),
+      );
     } catch (_) {
       if (mounted && version == _version) _finalizar();
     }
@@ -155,7 +162,7 @@ class _MeteoritosAnimacionState extends State<MeteoritosAnimacion> {
     child: ExcludeSemantics(
       child: RawImage(
         image: _imagen,
-        fit: BoxFit.contain,
+        fit: BoxFit.cover,
         alignment: Alignment.bottomCenter,
       ),
     ),

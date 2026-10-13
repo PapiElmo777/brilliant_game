@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 class CuadroPrueba implements ui.FrameInfo {
   @override final ui.Image image;
-  @override Duration get duration => const Duration(milliseconds: 10);
+  @override Duration get duration => const Duration(milliseconds: 30);
   CuadroPrueba(this.image);
 }
 
@@ -33,7 +33,8 @@ void main() {
     imagen=await picture.toImage(2,2); picture.dispose();
   });
   tearDown(()=>imagen.dispose());
-  testWidgets('Impacto y final se confirman una vez sin reiniciar al reconstruir', (tester) async {
+  // Los cuadros duran 30 ms y se reproducen cada 10 ms (velocidad x3).
+  testWidgets('Impacto y final se confirman una vez a velocidad x3 sin reiniciar', (tester) async {
     final codec=CodecPrueba(imagen); final eventos=<String>[]; var cargas=0;
     Widget pantalla()=>MaterialApp(home: MeteoritosAnimacion(tiradaId:7,
       cargar: () async { cargas++;return codec; },

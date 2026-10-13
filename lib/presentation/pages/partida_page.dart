@@ -61,169 +61,168 @@ class _PartidaPageState extends State<PartidaPage> {
       _mostrarImpactos(e.tirada.id);
       final bloc = context.read<PartidaBloc>();
       return Scaffold(
-        body: FondoEspacial(
-          child: SafeArea(
-            child: SingleChildScrollView(
-              controller: _scroll,
-              physics: e.animandoMeteoros || e.fase == FasePartida.moviendoDados
-                  ? const NeverScrollableScrollPhysics()
-                  : null,
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 520),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-                    child: Stack(
-                      key: _lienzo,
-                      children: [
-                        Column(
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            FondoEspacial(
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  controller: _scroll,
+                  physics:
+                      e.animandoMeteoros || e.fase == FasePartida.moviendoDados
+                      ? const NeverScrollableScrollPhysics()
+                      : null,
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 520),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+                        child: Stack(
+                          key: _lienzo,
                           children: [
-                            Row(
+                            Column(
                               children: [
-                                IconButton(
-                                  tooltip: 'Volver al menú',
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  icon: const Icon(Icons.arrow_back_rounded),
-                                ),
-                                const Expanded(
-                                  child: Text(
-                                    'BRILLIANT',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w800,
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      tooltip: 'Volver al menú',
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(),
+                                      icon: const Icon(
+                                        Icons.arrow_back_rounded,
+                                      ),
                                     ),
-                                  ),
-                                ),
-                                Flexible(
-                                  child: HistorialTiradas(
-                                    registros: e.historial,
-                                    celdas: e.celdas,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(width: 130, child: NaveMarciano()),
-                            Text(
-                              widget.jugador == null
-                                  ? 'MISIÓN INICIADA'
-                                  : 'MISIÓN DE ${widget.jugador!.toUpperCase()}',
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 8),
-                            Semantics(
-                              liveRegion: true,
-                              child: GloboAlien(mensaje: _mensaje(e)),
-                            ),
-                            SizedBox(
-                              key: _arriba,
-                              height: 80,
-                              width: double.infinity,
-                            ),
-                            if (e.fase == FasePartida.eligiendoDestino &&
-                                e.destinos.isEmpty &&
-                                !e.puedeOmitir)
-                              const Padding(
-                                padding: EdgeInsets.only(bottom: 12),
-                                child: Text(
-                                  'Cambia el número seleccionado para encontrar destinos.',
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            TableroView.partida(
-                              definicion: widget.definicion,
-                              celdas: e.celdas,
-                              destinos: e.destinos,
-                              onCeldaSeleccionada: (id) => bloc.add(
-                                DestinoSeleccionado(e.tirada.id, id),
-                              ),
-                            ),
-                            SizedBox(
-                              key: _impactos,
-                              height: 260,
-                              width: double.infinity,
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  if (e.animandoMeteoros)
-                                    MeteoritosAnimacion(
-                                      key: ValueKey(e.tirada.id),
-                                      tiradaId: e.tirada.id,
-                                      onImpacto: (id) =>
-                                          bloc.add(ImpactoConfirmado(id)),
-                                      onCompletada: (id) =>
-                                          bloc.add(MeteorosCompletados(id)),
-                                    ),
-                                  if (e.animandoMeteoros)
-                                    Positioned(
-                                      top: 8,
-                                      left: 0,
-                                      right: 0,
-                                      // El globo del alien ya anuncia el
-                                      // mensaje; aquí sólo se repite a la vista.
-                                      child: ExcludeSemantics(
-                                        child: Text(
-                                          _mensaje(e),
-                                          textAlign: TextAlign.center,
+                                    const Expanded(
+                                      child: Text(
+                                        'BRILLIANT',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w800,
                                         ),
                                       ),
                                     ),
-                                ],
-                              ),
-                            ),
-                            if (e.error != null)
-                              Semantics(
-                                liveRegion: true,
-                                child: Text(
-                                  e.error!,
+                                    Flexible(
+                                      child: HistorialTiradas(
+                                        registros: e.historial,
+                                        celdas: e.celdas,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(
+                                  width: 130,
+                                  child: NaveMarciano(),
+                                ),
+                                Text(
+                                  widget.jugador == null
+                                      ? 'MISIÓN INICIADA'
+                                      : 'MISIÓN DE ${widget.jugador!.toUpperCase()}',
                                   textAlign: TextAlign.center,
                                 ),
+                                const SizedBox(height: 8),
+                                Semantics(
+                                  liveRegion: true,
+                                  child: GloboAlien(mensaje: _mensaje(e)),
+                                ),
+                                SizedBox(
+                                  key: _arriba,
+                                  height: 80,
+                                  width: double.infinity,
+                                ),
+                                if (e.fase == FasePartida.eligiendoDestino &&
+                                    e.destinos.isEmpty &&
+                                    !e.puedeOmitir)
+                                  const Padding(
+                                    padding: EdgeInsets.only(bottom: 12),
+                                    child: Text(
+                                      'Cambia el número seleccionado para encontrar destinos.',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                TableroView.partida(
+                                  definicion: widget.definicion,
+                                  celdas: e.celdas,
+                                  destinos: e.destinos,
+                                  onCeldaSeleccionada: (id) => bloc.add(
+                                    DestinoSeleccionado(e.tirada.id, id),
+                                  ),
+                                ),
+                                SizedBox(
+                                  key: _impactos,
+                                  height: 260,
+                                  width: double.infinity,
+                                ),
+                                if (e.error != null)
+                                  Semantics(
+                                    liveRegion: true,
+                                    child: Text(
+                                      e.error!,
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                if (e.puedeOmitir)
+                                  ElevatedButton(
+                                    onPressed: () =>
+                                        bloc.add(TiroOmitido(e.tirada.id)),
+                                    child: const Text('Omitir tiro'),
+                                  ),
+                                if (e.fase == FasePartida.rondaResuelta)
+                                  ElevatedButton.icon(
+                                    onPressed: () => bloc.add(
+                                      MeteorosSolicitados(e.tirada.id),
+                                    ),
+                                    icon: const Icon(Icons.bolt),
+                                    label: const Text('Lanzar meteoros'),
+                                  ),
+                              ],
+                            ),
+                            Positioned.fill(
+                              child: DadosPartida(
+                                key: ValueKey('dados_${e.tirada.id}'),
+                                estado: e,
+                                lienzo: _lienzo,
+                                arriba: _arriba,
+                                abajo: _impactos,
+                                onSeleccionar: (id) =>
+                                    bloc.add(DadoSeleccionado(e.tirada.id, id)),
+                                onMovimientoCompletado: () {
+                                  bloc.add(
+                                    MovimientoDadosCompletado(e.tirada.id),
+                                  );
+                                  if (_arriba.currentContext != null)
+                                    Scrollable.ensureVisible(
+                                      _arriba.currentContext!,
+                                      alignment: .2,
+                                      duration:
+                                          MediaQuery.disableAnimationsOf(
+                                            context,
+                                          )
+                                          ? Duration.zero
+                                          : const Duration(milliseconds: 350),
+                                    );
+                                },
                               ),
-                            if (e.puedeOmitir)
-                              ElevatedButton(
-                                onPressed: () =>
-                                    bloc.add(TiroOmitido(e.tirada.id)),
-                                child: const Text('Omitir tiro'),
-                              ),
-                            if (e.fase == FasePartida.rondaResuelta)
-                              ElevatedButton.icon(
-                                onPressed: () =>
-                                    bloc.add(MeteorosSolicitados(e.tirada.id)),
-                                icon: const Icon(Icons.bolt),
-                                label: const Text('Lanzar meteoros'),
-                              ),
+                            ),
                           ],
                         ),
-                        Positioned.fill(
-                          child: DadosPartida(
-                            key: ValueKey('dados_${e.tirada.id}'),
-                            estado: e,
-                            lienzo: _lienzo,
-                            arriba: _arriba,
-                            abajo: _impactos,
-                            onSeleccionar: (id) =>
-                                bloc.add(DadoSeleccionado(e.tirada.id, id)),
-                            onMovimientoCompletado: () {
-                              bloc.add(MovimientoDadosCompletado(e.tirada.id));
-                              if (_arriba.currentContext != null)
-                                Scrollable.ensureVisible(
-                                  _arriba.currentContext!,
-                                  alignment: .2,
-                                  duration:
-                                      MediaQuery.disableAnimationsOf(context)
-                                      ? Duration.zero
-                                      : const Duration(milliseconds: 350),
-                                );
-                            },
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
+            // Los meteoros caen sobre toda la pantalla sin bloquear toques.
+            if (e.animandoMeteoros)
+              Positioned.fill(
+                child: MeteoritosAnimacion(
+                  key: ValueKey(e.tirada.id),
+                  tiradaId: e.tirada.id,
+                  onImpacto: (id) => bloc.add(ImpactoConfirmado(id)),
+                  onCompletada: (id) => bloc.add(MeteorosCompletados(id)),
+                ),
+              ),
+          ],
         ),
       );
     },
