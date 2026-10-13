@@ -8,6 +8,7 @@ abstract class Tipo {
   Color get color;
   String get descripcion;
   bool esPosibleAgregar(List<int> actuales, int posible);
+
   /// Puntos por puesto al completar la zona: el primer jugador en hacerlo
   /// recibe `puntuaciones[1]`, el segundo `[2]` y el tercero `[3]`.
   Map<int, int> get puntuaciones;

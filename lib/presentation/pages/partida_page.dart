@@ -4,7 +4,6 @@ import '../../bloc/partida_bloc.dart';
 import '../../bloc/partida_estado.dart';
 import '../../bloc/partida_evento.dart';
 import '../../catalogo/definicion_tablero.dart';
-import '../../catalogo/puntuacion_zonas.dart';
 import '../widgets/boton_panel.dart';
 import '../widgets/dados_partida.dart';
 import '../widgets/dialogo_salir_partida.dart';
@@ -42,6 +41,11 @@ class _PartidaPageState extends State<PartidaPage> {
       return e.fase == FasePartida.tirando
           ? (e.tirada.id == 1 ? '¡El juego comenzó!' : 'Llegan los meteoros…')
           : 'Resultados: ${e.tirada.dados.map((d) => d.valor).join(' y ')}';
+    // Provisional hasta definir la celebración de victoria.
+    if (e.gano) return '¡Ganaste! Llegaste a ${e.puntos} de ${e.meta} puntos.';
+    if (e.reclamoRonda case final reclamo?)
+      return '¡Zona completada! +${reclamo.puntos} puntos. '
+          'Puedes cambiar tu jugada o lanzar.';
     if (e.puedeModificar)
       return 'Puedes cambiar tu jugada o lanzar los meteoros.';
     if (e.fase == FasePartida.rondaResuelta)
@@ -72,7 +76,7 @@ class _PartidaPageState extends State<PartidaPage> {
   /// El botón ocupa el lugar de los impactos cuando los dados ya subieron.
   Widget? _boton(PartidaEstado e, PartidaBloc bloc) {
     if (!e.dadosArriba) return null;
-    if (e.fase == FasePartida.rondaResuelta) {
+    if (e.fase == FasePartida.rondaResuelta && !e.gano) {
       return BotonPanel(
         key: const ValueKey('boton_lanzar'),
         texto: 'LANZAR METEOROS',
@@ -95,6 +99,7 @@ class _PartidaPageState extends State<PartidaPage> {
     definicion: widget.definicion,
     celdas: e.celdas,
     destinos: e.destinos,
+    puestosReclamados: e.puestosReclamados,
     interactiva: e.puedeSeleccionar,
     onCeldaSeleccionada: (id) => bloc.add(DestinoSeleccionado(e.tirada.id, id)),
   );
@@ -152,12 +157,7 @@ class _PartidaPageState extends State<PartidaPage> {
                       alignment: Alignment.bottomLeft,
                       child: Padding(
                         padding: const EdgeInsets.only(left: 8, bottom: 4),
-                        child: PanelPuntos(
-                          puntos: puntuacionRepresentativa(
-                            widget.definicion,
-                            e.celdas,
-                          ),
-                        ),
+                        child: PanelPuntos(puntos: e.puntos, meta: e.meta),
                       ),
                     ),
                   ),
@@ -338,14 +338,15 @@ class _PicoGlobo extends CustomPainter {
   bool shouldRepaint(_PicoGlobo oldDelegate) => oldDelegate.color != color;
 }
 
-/// Puntuación del jugador junto a la nave. Por ahora es representativa.
+/// Puntuación del jugador junto a la nave y meta para ganar.
 class PanelPuntos extends StatelessWidget {
   final int puntos;
-  const PanelPuntos({super.key, required this.puntos});
+  final int meta;
+  const PanelPuntos({super.key, required this.puntos, required this.meta});
 
   @override
   Widget build(BuildContext context) => Semantics(
-    label: 'Puntuación: $puntos',
+    label: 'Puntuación: $puntos de $meta para ganar',
     excludeSemantics: true,
     child: FittedBox(
       fit: BoxFit.scaleDown,
@@ -378,6 +379,14 @@ class PanelPuntos extends StatelessWidget {
                 height: 1.1,
                 fontWeight: FontWeight.w900,
                 color: Color(0xFFB6F6FF),
+              ),
+            ),
+            Text(
+              'META $meta',
+              style: const TextStyle(
+                fontSize: 10,
+                letterSpacing: 1.5,
+                color: Color(0xFF9FBACB),
               ),
             ),
           ],

@@ -34,7 +34,7 @@ void main() {
     await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
     await tester.pump();
     expect(find.text('Zona verde · 6 casillas'), findsOneWidget);
-    expect(find.text('Al completarla: 4 · 3 · 2 puntos'), findsOneWidget);
+    expect(find.text('Al completarla: 1.º 4 · 2.º 3 · 3.º 2'), findsOneWidget);
     expect(celda('f1_c2').enZonaResaltada, isTrue);
     expect(celda('f5_c1').enZonaResaltada, isTrue);
     expect(celda('f1_c1').atenuada, isTrue);
@@ -53,7 +53,7 @@ void main() {
     );
     await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
     expect(find.text('Zona amarilla · 5 casillas'), findsOneWidget);
-    expect(find.text('Al completarla: 8 · 6 · 4 puntos'), findsOneWidget);
+    expect(find.text('Al completarla: 1.º 8 · 2.º 6 · 3.º 4'), findsOneWidget);
     for (final id in ['f1_c1', 'f1_c7', 'f4_c4', 'f7_c1', 'f7_c7']) {
       expect(celda(id).enZonaResaltada, isTrue);
     }
@@ -61,5 +61,32 @@ void main() {
     await otro.up();
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('La ficha marca los puestos ya reclamados', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 390,
+            child: TableroView.partida(
+              definicion: tablero01,
+              celdas: tablero01.crearTablero().celdas,
+              destinos: const {},
+              puestosReclamados: const {'azul_1': 1},
+              onCeldaSeleccionada: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+    final gesto = await tester.startGesture(
+      tester.getCenter(find.byKey(const ValueKey('celda_f1_c3'))),
+    );
+    await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+    expect(find.text('Al completarla: 1.º 7 · 2.º 6 · 3.º 3'), findsOneWidget);
+    expect(find.text('1.º puesto ya reclamado'), findsOneWidget);
+    await gesto.up();
+    await tester.pumpAndSettle();
   });
 }

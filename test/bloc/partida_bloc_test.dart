@@ -145,60 +145,160 @@ void main() {
       expect(b.state.destinos, {'b'});
     },
   );
-  test('Tocar una casilla sin número elegido o no válida avisa sin colocar', () async {
-    final b = PartidaBloc(tablero(), azar: AzarFijo([2, 5]));
+  test(
+    'Tocar una casilla sin número elegido o no válida avisa sin colocar',
+    () async {
+      final b = PartidaBloc(tablero(), azar: AzarFijo([2, 5]));
+      addTearDown(b.close);
+      await enviar(b, const MeteorosCompletados(1));
+      await enviar(b, const DestinoSeleccionado(1, 'b'));
+      expect(b.state.error, 'Primero elige un número.');
+      await enviar(b, const DadoSeleccionado(1, 1));
+      await enviar(b, const MovimientoDadosCompletado(1));
+      expect(b.state.error, isNull);
+      await enviar(b, const DestinoSeleccionado(1, 'd'));
+      expect(b.state.error, contains('no es válida'));
+      expect(b.state.celdas['d']!.valor, isNull);
+      expect(b.state.historial, isEmpty);
+    },
+  );
+  test(
+    'La jugada se puede mover, retirar o cambiar de dado antes de lanzar',
+    () async {
+      final b = PartidaBloc(tablero(), azar: AzarFijo([2, 5]));
+      addTearDown(b.close);
+      await enviar(b, const MeteorosCompletados(1));
+      await enviar(b, const DadoSeleccionado(1, 0));
+      await enviar(b, const MovimientoDadosCompletado(1));
+      await enviar(b, const DestinoSeleccionado(1, 'd'));
+      expect(b.state.fase, FasePartida.rondaResuelta);
+      expect(b.state.puedeModificar, isTrue);
+      expect(b.state.destinos, {'b', 'd'});
+      // Mover a otro destino válido conserva un solo registro.
+      await enviar(b, const DestinoSeleccionado(1, 'b'));
+      expect(b.state.celdas['b']!.valor, 2);
+      expect(b.state.celdas['d']!.valor, isNull);
+      expect(b.state.historial.single.celdaId, 'b');
+      // Una casilla no válida avisa sin cambiar la jugada.
+      await enviar(b, const DestinoSeleccionado(1, 'a'));
+      expect(b.state.error, isNotNull);
+      expect(b.state.celdas['b']!.valor, 2);
+      // Tocar el número escrito lo retira.
+      await enviar(b, const DestinoSeleccionado(1, 'b'));
+      expect(b.state.fase, FasePartida.eligiendoDestino);
+      expect(b.state.celdas['b']!.valor, isNull);
+      expect(b.state.historial, isEmpty);
+      // Cambiar de dado tras colocar deshace la colocación.
+      await enviar(b, const DestinoSeleccionado(1, 'd'));
+      await enviar(b, const DadoSeleccionado(1, 1));
+      expect(b.state.fase, FasePartida.eligiendoDestino);
+      expect(b.state.celdas['d']!.valor, isNull);
+      expect(b.state.historial, isEmpty);
+      expect(b.state.destinos, {'b'});
+      await enviar(b, const DestinoSeleccionado(1, 'b'));
+      expect(b.state.historial.single.dadoId, 1);
+      await enviar(b, const TiroOmitido(1));
+      expect(b.state.historial.length, 1);
+      // Al lanzar, la jugada queda fija.
+      await enviar(b, const MeteorosSolicitados(1));
+      expect(b.state.puedeModificar, isFalse);
+      expect(b.state.celdas['b']!.valor, 5);
+      await enviar(b, const DestinoSeleccionado(1, 'b'));
+      expect(b.state.celdas['b']!.valor, 5);
+    },
+  );
+
+  test(
+    'Completar una zona reclama el primer puesto y suma sus puntos',
+    () async {
+      // Zona azul de dos casillas: al escribir la segunda queda completa.
+      final b = PartidaBloc(
+        Tablero(
+          id: 't',
+          zonas: [
+            Zona(
+              id: 'azul',
+              tipo: const TipoAzul(),
+              celdas: [
+                Celda(id: 'x', fila: 0, columna: 0, valorInicial: 2),
+                Celda(id: 'y', fila: 0, columna: 1),
+              ],
+            ),
+            Zona(
+              id: 'verde',
+              tipo: const TipoVerde(),
+              celdas: [Celda(id: 'z', fila: 1, columna: 0)],
+            ),
+          ],
+        ),
+        azar: AzarFijo([2, 2]),
+      );
+      addTearDown(b.close);
+      expect((b.state.puntos, b.state.meta), (0, 26));
+      await enviar(b, const MeteorosCompletados(1));
+      await enviar(b, const DadoSeleccionado(1, 0));
+      await enviar(b, const MovimientoDadosCompletado(1));
+      expect(b.state.destinos, {'y', 'z'});
+      await enviar(b, const DestinoSeleccionado(1, 'y'));
+      expect(b.state.puntos, 7);
+      expect(b.state.reclamoRonda!.puesto, 1);
+      expect(b.state.puestosReclamados, {'azul': 1});
+      // Mover la jugada a otra zona libera el reclamo.
+      await enviar(b, const DestinoSeleccionado(1, 'z'));
+      expect(b.state.puntos, 4);
+      expect(b.state.puestosReclamados, {'verde': 1});
+      await enviar(b, const DestinoSeleccionado(1, 'z'));
+      expect(b.state.puntos, 0);
+      expect(b.state.puestosReclamados, isEmpty);
+      await enviar(b, const DestinoSeleccionado(1, 'y'));
+      await enviar(b, const MeteorosSolicitados(1));
+      // Al lanzar, el reclamo queda fijo.
+      expect(b.state.puntos, 7);
+      expect(b.state.reclamoRonda, isNull);
+    },
+  );
+
+  test('Al alcanzar la meta no se lanzan más meteoros', () async {
+    // Con cinco jugadores la meta es 20: dos zonas amarillas (8 + 8) y una
+    // verde (4), completadas en tres rondas con dobles de 3.
+    Zona zona(String id, Tipo tipo, int columna, [int? valor]) => Zona(
+      id: id,
+      tipo: tipo,
+      celdas: [
+        Celda(id: 'c$columna', fila: 0, columna: columna, valorInicial: valor),
+      ],
+    );
+    final b = PartidaBloc(
+      Tablero(
+        id: 't',
+        zonas: [
+          zona('inicio', const TipoVerde(), 0, 3),
+          zona('amarillo_1', const TipoAmarillo(), 1),
+          zona('amarillo_2', const TipoAmarillo(), 2),
+          zona('verde', const TipoVerde(), 3),
+        ],
+      ),
+      azar: AzarFijo([3]),
+      jugadores: 5,
+    );
     addTearDown(b.close);
-    await enviar(b, const MeteorosCompletados(1));
-    await enviar(b, const DestinoSeleccionado(1, 'b'));
-    expect(b.state.error, 'Primero elige un número.');
-    await enviar(b, const DadoSeleccionado(1, 1));
-    await enviar(b, const MovimientoDadosCompletado(1));
-    expect(b.state.error, isNull);
-    await enviar(b, const DestinoSeleccionado(1, 'd'));
-    expect(b.state.error, contains('no es válida'));
-    expect(b.state.celdas['d']!.valor, isNull);
-    expect(b.state.historial, isEmpty);
-  });
-  test('La jugada se puede mover, retirar o cambiar de dado antes de lanzar', () async {
-    final b = PartidaBloc(tablero(), azar: AzarFijo([2, 5]));
-    addTearDown(b.close);
-    await enviar(b, const MeteorosCompletados(1));
-    await enviar(b, const DadoSeleccionado(1, 0));
-    await enviar(b, const MovimientoDadosCompletado(1));
-    await enviar(b, const DestinoSeleccionado(1, 'd'));
+    expect(b.state.meta, 20);
+    for (final (ronda, celda) in [(1, 'c1'), (2, 'c2'), (3, 'c3')]) {
+      await enviar(b, MeteorosCompletados(ronda));
+      await enviar(b, DadoSeleccionado(ronda, 0));
+      await enviar(b, MovimientoDadosCompletado(ronda));
+      await enviar(b, DestinoSeleccionado(ronda, celda));
+      expect(b.state.gano, ronda == 3);
+      await enviar(b, MeteorosSolicitados(ronda));
+    }
+    // Las zonas completas desde el inicio no se reclaman solas.
+    expect(b.state.puestosReclamados.keys, [
+      'amarillo_1',
+      'amarillo_2',
+      'verde',
+    ]);
+    expect(b.state.puntos, 20);
     expect(b.state.fase, FasePartida.rondaResuelta);
-    expect(b.state.puedeModificar, isTrue);
-    expect(b.state.destinos, {'b', 'd'});
-    // Mover a otro destino válido conserva un solo registro.
-    await enviar(b, const DestinoSeleccionado(1, 'b'));
-    expect(b.state.celdas['b']!.valor, 2);
-    expect(b.state.celdas['d']!.valor, isNull);
-    expect(b.state.historial.single.celdaId, 'b');
-    // Una casilla no válida avisa sin cambiar la jugada.
-    await enviar(b, const DestinoSeleccionado(1, 'a'));
-    expect(b.state.error, isNotNull);
-    expect(b.state.celdas['b']!.valor, 2);
-    // Tocar el número escrito lo retira.
-    await enviar(b, const DestinoSeleccionado(1, 'b'));
-    expect(b.state.fase, FasePartida.eligiendoDestino);
-    expect(b.state.celdas['b']!.valor, isNull);
-    expect(b.state.historial, isEmpty);
-    // Cambiar de dado tras colocar deshace la colocación.
-    await enviar(b, const DestinoSeleccionado(1, 'd'));
-    await enviar(b, const DadoSeleccionado(1, 1));
-    expect(b.state.fase, FasePartida.eligiendoDestino);
-    expect(b.state.celdas['d']!.valor, isNull);
-    expect(b.state.historial, isEmpty);
-    expect(b.state.destinos, {'b'});
-    await enviar(b, const DestinoSeleccionado(1, 'b'));
-    expect(b.state.historial.single.dadoId, 1);
-    await enviar(b, const TiroOmitido(1));
-    expect(b.state.historial.length, 1);
-    // Al lanzar, la jugada queda fija.
-    await enviar(b, const MeteorosSolicitados(1));
-    expect(b.state.puedeModificar, isFalse);
-    expect(b.state.celdas['b']!.valor, 5);
-    await enviar(b, const DestinoSeleccionado(1, 'b'));
-    expect(b.state.celdas['b']!.valor, 5);
+    expect(b.state.tirada.id, 3);
   });
 }

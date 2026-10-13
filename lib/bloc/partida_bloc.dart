@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:bloc/bloc.dart';
 import '../core/anclas.dart';
+import '../core/marcador.dart';
 import '../core/tablero.dart';
 import '../models/tirada.dart';
 import '../models/zona.dart';
@@ -17,7 +18,21 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
   /// Celda escrita en la ronda actual. Puede cambiarse hasta lanzar de nuevo.
   String? _colocacion;
 
-  factory PartidaBloc(Tablero tablero, {Random? azar}) {
+  /// Zonas reclamadas por los jugadores. Por ahora juega un solo jugador
+  /// local y la meta se toma como si fuera una partida de [jugadores].
+  final Marcador _marcador;
+  final String _jugador;
+
+  /// Zona completada con la colocación de esta ronda; se libera si la
+  /// jugada se cambia antes de lanzar.
+  Reclamo? _reclamoRonda;
+
+  factory PartidaBloc(
+    Tablero tablero, {
+    Random? azar,
+    int jugadores = 2,
+    String jugadorId = 'jugador_1',
+  }) {
     final copia = Tablero(
       id: tablero.id,
       zonas: [
@@ -31,16 +46,28 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
       ],
     );
     final fuente = azar ?? Random();
-    return PartidaBloc._(copia, fuente, Tirada.lanzar(1, fuente));
+    return PartidaBloc._(
+      copia,
+      fuente,
+      Tirada.lanzar(1, fuente),
+      Marcador(jugadores: jugadores),
+      jugadorId,
+    );
   }
 
-  PartidaBloc._(this._tablero, this._azar, Tirada primera)
-    : super(
+  PartidaBloc._(
+    this._tablero,
+    this._azar,
+    Tirada primera,
+    this._marcador,
+    this._jugador,
+  ) : super(
         PartidaEstado(
           fase: FasePartida.tirando,
           tirada: primera,
           celdas: _tablero.celdas,
           historial: const [],
+          meta: _marcador.meta,
         ),
       ) {
     _tirada = primera;
@@ -75,6 +102,8 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
     _tablero.vaciarCelda(colocacion);
     _historial.removeLast();
     _colocacion = null;
+    if (_reclamoRonda case final reclamo?) _marcador.liberar(reclamo);
+    _reclamoRonda = null;
   }
 
   bool get _sinMovimientos => _destinos(0).isEmpty && _destinos(1).isEmpty;
@@ -86,6 +115,13 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
     historial: _historial,
     dadoSeleccionado: _seleccion,
     celdaColocada: _colocacion,
+    puntos: _marcador.puntosDe(_jugador),
+    meta: _marcador.meta,
+    puestosReclamados: {
+      for (final zonaId in _marcador.reclamos.keys)
+        zonaId: _marcador.puestosReclamados(zonaId),
+    },
+    reclamoRonda: _reclamoRonda,
     destinos:
         (fase == FasePartida.eligiendoDestino || _colocacion != null) &&
             _seleccion != null
@@ -115,10 +151,11 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
     if (id != _tirada.id) return;
     switch (evento) {
       case MeteorosSolicitados():
-        if (state.fase != FasePartida.rondaResuelta) return;
+        if (state.fase != FasePartida.rondaResuelta || state.gano) return;
         _tirada = Tirada.lanzar(_tirada.id + 1, _azar);
         _seleccion = null;
         _colocacion = null;
+        _reclamoRonda = null;
         emit(_estado(FasePartida.tirando));
       case ImpactoConfirmado():
         if (state.fase == FasePartida.tirando)
@@ -174,6 +211,14 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
         _deshacerColocacion();
         _tablero.colocarValor(evento.celdaId, _tirada.dados[_seleccion!].valor);
         _colocacion = evento.celdaId;
+        final zona = _tablero.obtenerZonaDeCelda(evento.celdaId);
+        if (zona.estaCompletada) {
+          _reclamoRonda = _marcador.reclamar(
+            zonaId: zona.id,
+            tipo: zona.tipo,
+            jugadorId: _jugador,
+          );
+        }
         _historial.add(
           RegistroTirada.colocada(_tirada, _seleccion!, evento.celdaId),
         );

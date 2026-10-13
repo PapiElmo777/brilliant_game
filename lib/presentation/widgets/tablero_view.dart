@@ -19,6 +19,9 @@ class TableroView extends StatefulWidget {
   /// destino no es válido.
   final bool interactiva;
 
+  /// Puestos ya reclamados de cada zona completada.
+  final Map<String, int> puestosReclamados;
+
   const TableroView({
     super.key,
     required this.definicion,
@@ -27,7 +30,8 @@ class TableroView extends StatefulWidget {
     this.clavesCeldas = const {},
   }) : celdasPartida = null,
        destinos = const {},
-       interactiva = true;
+       interactiva = true,
+       puestosReclamados = const {};
 
   const TableroView.partida({
     super.key,
@@ -36,6 +40,7 @@ class TableroView extends StatefulWidget {
     required this.destinos,
     required this.onCeldaSeleccionada,
     this.interactiva = true,
+    this.puestosReclamados = const {},
   }) : estado = null,
        celdasPartida = celdas,
        clavesCeldas = const {};
@@ -140,7 +145,12 @@ class _TableroViewState extends State<TableroView> {
                   right: fichaAngosta ? espacio.maxWidth / 7 + 2 : 6,
                   top: _zonaArriba(resaltada) ? null : 6,
                   bottom: _zonaArriba(resaltada) ? 6 : null,
-                  child: IgnorePointer(child: FichaZona(zona: resaltada)),
+                  child: IgnorePointer(
+                    child: FichaZona(
+                      zona: resaltada,
+                      reclamados: widget.puestosReclamados[resaltada.id] ?? 0,
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -158,7 +168,10 @@ class _TableroViewState extends State<TableroView> {
 /// Tipo, regla y puntos representativos de una zona.
 class FichaZona extends StatelessWidget {
   final DefinicionZona zona;
-  const FichaZona({super.key, required this.zona});
+
+  /// Puestos ya reclamados; sus puntos se muestran tachados.
+  final int reclamados;
+  const FichaZona({super.key, required this.zona, this.reclamados = 0});
 
   static String nombreTipo(Tipo tipo) => switch (tipo) {
     TipoAzul() => 'azul',
@@ -204,14 +217,41 @@ class FichaZona extends StatelessWidget {
             ),
             if (puntos.isNotEmpty) ...[
               const SizedBox(height: 4),
-              Text(
-                'Al completarla: ${puntos.join(' · ')} puntos',
+              Text.rich(
+                TextSpan(
+                  children: [
+                    const TextSpan(text: 'Al completarla: '),
+                    for (var i = 0; i < puntos.length; i++) ...[
+                      if (i > 0) const TextSpan(text: ' · '),
+                      TextSpan(
+                        text: '${i + 1}.º ${puntos[i]}',
+                        style: i < reclamados
+                            ? const TextStyle(
+                                decoration: TextDecoration.lineThrough,
+                                color: Color(0xFF6F8798),
+                              )
+                            : null,
+                      ),
+                    ],
+                  ],
+                ),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontWeight: FontWeight.w700,
                   color: Color(0xFFB6F6FF),
                 ),
               ),
+              if (reclamados > 0)
+                Text(
+                  reclamados == 1
+                      ? '1.º puesto ya reclamado'
+                      : '${[for (var i = 1; i <= reclamados && i <= puntos.length; i++) '$i.º'].join(' y ')} puestos ya reclamados',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFFFFC66B),
+                  ),
+                ),
             ],
           ],
         ),
