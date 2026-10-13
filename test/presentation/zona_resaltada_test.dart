@@ -53,7 +53,7 @@ void main() {
     );
     await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
     expect(find.text('Zona amarilla · 5 casillas'), findsOneWidget);
-    expect(find.text('Al completarla: 2 · 1 · 0 puntos'), findsOneWidget);
+    expect(find.text('Al completarla: 6 · 4 · 2 puntos'), findsOneWidget);
     for (final id in ['f1_c1', 'f1_c7', 'f4_c4', 'f7_c1', 'f7_c7']) {
       expect(celda(id).enZonaResaltada, isTrue);
     }

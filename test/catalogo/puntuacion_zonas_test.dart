@@ -5,7 +5,7 @@ void main() {
   test('Los puntos dependen del tamaño de la zona', () {
     final zonas = {for (final z in tablero01Zonas()) z.id: z};
     expect(zonas['amarillo']!.celdas.length, 5);
-    expect(puntosDeZona(zonas['amarillo']!), [2, 1, 0]);
+    expect(puntosDeZona(zonas['amarillo']!), [6, 4, 2]);
     expect(puntosDeZona(zonas['azul_1']!), [5, 3, 1]);
     expect(puntosDeZona(zonas['verde_1']!), [7, 5, 3]);
     expect(puntosPorTamano[5], [6, 4, 2]);
@@ -29,11 +29,11 @@ void main() {
     }
     expect(puntuacionRepresentativa(definicion, tablero.celdas), 0);
     tablero.colocarValor('f7_c7', 5);
-    expect(puntuacionRepresentativa(definicion, tablero.celdas), 2);
+    expect(puntuacionRepresentativa(definicion, tablero.celdas), 6);
     for (final id in ['f1_c3', 'f2_c3', 'f2_c4', 'f3_c4']) {
       tablero.colocarValor(id, 4);
     }
-    expect(puntuacionRepresentativa(definicion, tablero.celdas), 2 + 5);
+    expect(puntuacionRepresentativa(definicion, tablero.celdas), 6 + 5);
   });
 }
 

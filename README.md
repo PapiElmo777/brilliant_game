@@ -364,7 +364,7 @@ Pruebas: `test/core/anclas_test.dart`, `test/bloc/partida_bloc_test.dart`,
 - Mantener presionada cualquier celda resalta su zona completa, atenúa las
   demás y muestra su regla y los puntos al completarla.
 - Los puntos dependen del tamaño de la zona (`lib/catalogo/puntuacion_zonas.dart`):
-  1 casilla 2·1·0, 4 casillas 5·3·1, 5 casillas 6·4·2, 6 casillas 7·5·3 y
-  7 casillas 8·6·4. La zona amarilla usa 2·1·0. Por ahora son representativos: la puntuación junto a la
+  4 casillas 5·3·1, 5 casillas 6·4·2 (la amarilla), 6 casillas 7·5·3 y
+  7 casillas 8·6·4. Por ahora son representativos: la puntuación junto a la
   nave suma la mayor puntuación de cada zona completa.
 
