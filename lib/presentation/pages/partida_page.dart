@@ -4,6 +4,7 @@ import '../../bloc/partida_bloc.dart';
 import '../../bloc/partida_estado.dart';
 import '../../bloc/partida_evento.dart';
 import '../../catalogo/definicion_tablero.dart';
+import '../../catalogo/puntuacion_zonas.dart';
 import '../widgets/boton_panel.dart';
 import '../widgets/dados_partida.dart';
 import '../widgets/dialogo_salir_partida.dart';
@@ -137,9 +138,30 @@ class _PartidaPageState extends State<PartidaPage> {
               ),
               // La nave crece con la altura disponible sin quitarle demasiado
               // espacio al tablero.
-              SizedBox(
-                width: (alto * .18).clamp(110.0, 180.0),
-                child: const NaveMarciano(),
+              // La puntuación acompaña a la nave por la derecha.
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  const Spacer(),
+                  SizedBox(
+                    width: (alto * .18).clamp(110.0, 180.0),
+                    child: const NaveMarciano(),
+                  ),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.bottomLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 8, bottom: 4),
+                        child: PanelPuntos(
+                          puntos: puntuacionRepresentativa(
+                            widget.definicion,
+                            e.celdas,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               Text(
                 widget.jugador == null
@@ -314,4 +336,53 @@ class _PicoGlobo extends CustomPainter {
 
   @override
   bool shouldRepaint(_PicoGlobo oldDelegate) => oldDelegate.color != color;
+}
+
+/// Puntuación del jugador junto a la nave. Por ahora es representativa.
+class PanelPuntos extends StatelessWidget {
+  final int puntos;
+  const PanelPuntos({super.key, required this.puntos});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    label: 'Puntuación: $puntos',
+    excludeSemantics: true,
+    child: FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Container(
+        key: const ValueKey('puntuacion'),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xCC0C2640),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFF72E9FF), width: 1.5),
+          boxShadow: const [
+            BoxShadow(color: Color(0x4472E9FF), blurRadius: 10),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'PUNTOS',
+              style: TextStyle(
+                fontSize: 10,
+                letterSpacing: 2,
+                color: Color(0xFF9FBACB),
+              ),
+            ),
+            Text(
+              '$puntos',
+              style: const TextStyle(
+                fontSize: 26,
+                height: 1.1,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFFB6F6FF),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }

@@ -2,6 +2,7 @@ import 'package:brilliant_game/brilliant_game.dart';
 import 'package:brilliant_game/bloc/partida_bloc.dart';
 import 'package:brilliant_game/bloc/partida_estado.dart';
 import 'package:brilliant_game/presentation/pages/partida_page.dart';
+import 'package:brilliant_game/presentation/widgets/nave_marciano.dart';
 import 'package:brilliant_game/presentation/widgets/tablero_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,6 +31,9 @@ void main() {
       tester.view.physicalSize=size;tester.view.devicePixelRatio=1;
       addTearDown(tester.view.resetPhysicalSize);addTearDown(tester.view.resetDevicePixelRatio);
       final b=await abrir(tester);
+      final nave=tester.getRect(find.byType(NaveMarciano));final panel=tester.getRect(find.byType(PanelPuntos));
+      expect(panel.left,greaterThanOrEqualTo(nave.right));expect(panel.right,lessThanOrEqualTo(size.width));
+      expect(find.text('PUNTOS'),findsOneWidget);
       final antes=tester.getCenter(find.byKey(const ValueKey('dado_0')));
       await tester.ensureVisible(find.byKey(const ValueKey('dado_0')));await tester.tap(find.byKey(const ValueKey('dado_0')));await tester.pumpAndSettle();
       expect(find.descendant(of:find.byType(GloboAlien),matching:find.text('Tu ancla es el 5')),findsOneWidget);
