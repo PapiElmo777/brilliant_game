@@ -8,7 +8,7 @@ void main() {
     const TipoAzul(): (
       const Color(0xFF2196F3),
       'Todos los números deben de ser iguales',
-      {1: 7, 2: 5, 3: 3},
+      {1: 7, 2: 6, 3: 3},
     ),
     const TipoAmarillo(): (
       const Color(0xFFFFC107),
@@ -18,7 +18,7 @@ void main() {
     const TipoRojo(): (
       const Color(0xFFF44336),
       'Todos los números deben de ser distintos',
-      {1: 8, 2: 6, 3: 4},
+      {1: 6, 2: 4, 3: 2},
     ),
     const TipoVerde(): (
       const Color(0xFF4CAF50),
@@ -28,7 +28,7 @@ void main() {
     const TipoMorado(): (
       const Color(0xFF9C27B0),
       'Máximo dos números diferentes por zona',
-      {1: 8, 2: 6, 3: 4},
+      {1: 6, 2: 4, 3: 2},
     ),
   };
 

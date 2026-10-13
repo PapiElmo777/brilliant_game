@@ -1,19 +1,14 @@
 import '../models/celda.dart';
 import 'definicion_tablero.dart';
 
-/// Puntos representativos al completar una zona, según su número de casillas.
-/// Cada lista va de la puntuación mayor a la menor.
-const puntosPorTamano = <int, List<int>>{
-  4: [5, 3, 1],
-  5: [6, 4, 2],
-  6: [7, 5, 3],
-  7: [8, 6, 4],
-};
+/// Puntos de la zona ordenados por puesto: primero, segundo y tercero.
+List<int> puntosDeZona(DefinicionZona zona) {
+  final puestos = zona.tipo.puntuaciones.keys.toList()..sort();
+  return [for (final puesto in puestos) zona.tipo.puntuaciones[puesto]!];
+}
 
-List<int> puntosDeZona(DefinicionZona zona) =>
-    puntosPorTamano[zona.celdas.length] ?? const [];
-
-/// Puntuación provisional: suma la mayor puntuación de cada zona completa.
+/// Puntuación provisional: suma los puntos del primer puesto de cada zona
+/// completa.
 int puntuacionRepresentativa(
   DefinicionTablero definicion,
   Map<String, Celda> celdas,

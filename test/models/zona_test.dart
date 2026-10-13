@@ -42,7 +42,7 @@ void main() {
     final zona = crearZona(const TipoAzul());
     expect(zona.tipo, isA<TipoAzul>());
     expect(zona.tipo.descripcion, 'Todos los números deben de ser iguales');
-    expect(zona.tipo.puntuaciones, {1: 7, 2: 5, 3: 3});
+    expect(zona.tipo.puntuaciones, {1: 7, 2: 6, 3: 3});
   });
 
   test('Completada refleja ocupación real y cambia al vaciar', () {

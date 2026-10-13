@@ -27,14 +27,14 @@ void main() {
     CeldaView celda(String id) =>
         tester.widget<CeldaView>(find.byKey(ValueKey('celda_$id')));
 
-    // verde_1 tiene seis casillas: 7 · 5 · 3 puntos.
+    // Las zonas verdes dan 4 · 3 · 2 puntos.
     final gesto = await tester.startGesture(
       tester.getCenter(find.byKey(const ValueKey('celda_f2_c1'))),
     );
     await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
     await tester.pump();
     expect(find.text('Zona verde · 6 casillas'), findsOneWidget);
-    expect(find.text('Al completarla: 7 · 5 · 3 puntos'), findsOneWidget);
+    expect(find.text('Al completarla: 4 · 3 · 2 puntos'), findsOneWidget);
     expect(celda('f1_c2').enZonaResaltada, isTrue);
     expect(celda('f5_c1').enZonaResaltada, isTrue);
     expect(celda('f1_c1').atenuada, isTrue);
@@ -53,7 +53,7 @@ void main() {
     );
     await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
     expect(find.text('Zona amarilla · 5 casillas'), findsOneWidget);
-    expect(find.text('Al completarla: 6 · 4 · 2 puntos'), findsOneWidget);
+    expect(find.text('Al completarla: 8 · 6 · 4 puntos'), findsOneWidget);
     for (final id in ['f1_c1', 'f1_c7', 'f4_c4', 'f7_c1', 'f7_c7']) {
       expect(celda(id).enZonaResaltada, isTrue);
     }

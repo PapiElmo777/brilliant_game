@@ -8,6 +8,8 @@ abstract class Tipo {
   Color get color;
   String get descripcion;
   bool esPosibleAgregar(List<int> actuales, int posible);
+  /// Puntos por puesto al completar la zona: el primer jugador en hacerlo
+  /// recibe `puntuaciones[1]`, el segundo `[2]` y el tercero `[3]`.
   Map<int, int> get puntuaciones;
 }
 
@@ -25,7 +27,7 @@ class TipoAzul extends Tipo {
       actuales.isEmpty || actuales.every((elemento) => elemento == posible);
 
   @override
-  Map<int, int> get puntuaciones => const {1: 7, 2: 5, 3: 3};
+  Map<int, int> get puntuaciones => const {1: 7, 2: 6, 3: 3};
 }
 
 class TipoAmarillo extends Tipo {
@@ -59,7 +61,7 @@ class TipoRojo extends Tipo {
       actuales.isEmpty || actuales.every((elemento) => elemento != posible);
 
   @override
-  Map<int, int> get puntuaciones => const {1: 8, 2: 6, 3: 4};
+  Map<int, int> get puntuaciones => const {1: 6, 2: 4, 3: 2};
 }
 
 class TipoVerde extends Tipo {
@@ -94,5 +96,5 @@ class TipoMorado extends Tipo {
   }
 
   @override
-  Map<int, int> get puntuaciones => const {1: 8, 2: 6, 3: 4};
+  Map<int, int> get puntuaciones => const {1: 6, 2: 4, 3: 2};
 }

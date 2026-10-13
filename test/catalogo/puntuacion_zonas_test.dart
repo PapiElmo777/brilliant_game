@@ -2,14 +2,13 @@ import 'package:brilliant_game/brilliant_game.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('Los puntos dependen del tamaño de la zona', () {
+  test('Los puntos dependen del color de la zona', () {
     final zonas = {for (final z in tablero01Zonas()) z.id: z};
-    expect(zonas['amarillo']!.celdas.length, 5);
-    expect(puntosDeZona(zonas['amarillo']!), [6, 4, 2]);
-    expect(puntosDeZona(zonas['azul_1']!), [5, 3, 1]);
-    expect(puntosDeZona(zonas['verde_1']!), [7, 5, 3]);
-    expect(puntosPorTamano[5], [6, 4, 2]);
-    expect(puntosPorTamano[7], [8, 6, 4]);
+    expect(puntosDeZona(zonas['azul_1']!), [7, 6, 3]);
+    expect(puntosDeZona(zonas['morado_1']!), [6, 4, 2]);
+    expect(puntosDeZona(zonas['verde_1']!), [4, 3, 2]);
+    expect(puntosDeZona(zonas['amarillo']!), [8, 6, 4]);
+    expect(puntosDeZona(zonas['rojo_2']!), [6, 4, 2]);
   });
 
   test('La puntuación suma sólo las zonas completas', () {
@@ -29,11 +28,11 @@ void main() {
     }
     expect(puntuacionRepresentativa(definicion, tablero.celdas), 0);
     tablero.colocarValor('f7_c7', 5);
-    expect(puntuacionRepresentativa(definicion, tablero.celdas), 6);
+    expect(puntuacionRepresentativa(definicion, tablero.celdas), 8);
     for (final id in ['f1_c3', 'f2_c3', 'f2_c4', 'f3_c4']) {
       tablero.colocarValor(id, 4);
     }
-    expect(puntuacionRepresentativa(definicion, tablero.celdas), 6 + 5);
+    expect(puntuacionRepresentativa(definicion, tablero.celdas), 8 + 7);
   });
 }
 
