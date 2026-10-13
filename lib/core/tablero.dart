@@ -78,11 +78,29 @@ class Tablero {
 
   List<int> extraerValoresDeZona(String zonaId) => obtenerZona(zonaId).valores;
 
-  bool puedeColocarValor(String celdaId, int valor) =>
-      obtenerZonaDeCelda(celdaId).puedeColocarValor(celdaId, valor);
+  bool puedeColocarValor(String celdaId, int valor) {
+    final zona = obtenerZonaDeCelda(celdaId);
+    if (!zona.puedeColocarValor(celdaId, valor)) return false;
+    if (!zona.tipo.reglaEntreZonas) return true;
+    // La regla se evalúa con los valores de todas las zonas del mismo tipo.
+    final otros = [
+      for (final otra in _zonas.values)
+        if (otra.tipo.runtimeType == zona.tipo.runtimeType)
+          for (final celda in otra.celdas.values)
+            if (celda.id != celdaId && celda.valor != null) celda.valor!,
+    ];
+    return zona.tipo.esPosibleAgregar(otros, valor);
+  }
 
-  void colocarValor(String celdaId, int valor) =>
-      obtenerZonaDeCelda(celdaId).colocarValor(celdaId, valor);
+  void colocarValor(String celdaId, int valor) {
+    if (!puedeColocarValor(celdaId, valor)) {
+      throw ArgumentError(
+        'El valor $valor incumple la regla de la zona '
+        '${obtenerZonaDeCelda(celdaId).id}.',
+      );
+    }
+    obtenerZonaDeCelda(celdaId).colocarValor(celdaId, valor);
+  }
 
   void vaciarCelda(String celdaId) =>
       obtenerZonaDeCelda(celdaId).vaciarCelda(celdaId);

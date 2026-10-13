@@ -9,6 +9,10 @@ abstract class Tipo {
   String get descripcion;
   bool esPosibleAgregar(List<int> actuales, int posible);
   Map<int, int> get puntuaciones;
+
+  /// Si la restricción abarca todas las zonas de este tipo en el tablero, y
+  /// no sólo la zona de la casilla.
+  bool get reglaEntreZonas => false;
 }
 
 class TipoAzul extends Tipo {
@@ -28,14 +32,20 @@ class TipoAzul extends Tipo {
   Map<int, int> get puntuaciones => const {1: 7, 2: 5, 3: 3};
 }
 
+/// Cada zona amarilla tiene una sola casilla; la regla de números distintos se
+/// aplica entre todas las casillas amarillas del tablero.
 class TipoAmarillo extends Tipo {
   const TipoAmarillo();
+
+  @override
+  bool get reglaEntreZonas => true;
 
   @override
   Color get color => const Color(0xFFFFC107);
 
   @override
-  String get descripcion => 'Todos los números deben de ser distintos';
+  String get descripcion =>
+      'Todas las casillas amarillas deben tener números distintos';
 
   @override
   bool esPosibleAgregar(List<int> actuales, int posible) =>
