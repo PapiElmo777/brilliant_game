@@ -47,6 +47,13 @@ void main() {
       final destino=find.byKey(ValueKey('celda_${b.state.destinos.first}'));
       await tester.ensureVisible(destino);await tester.pumpAndSettle();await tester.tap(destino);await tester.pumpAndSettle();
       expect(b.state.historial.length,1);expect(b.state.historial.single.dadoId,1);
+      expect(find.text('Puedes cambiar tu jugada o lanzar los meteoros.'),findsOneWidget);
+      // Tocar el número escrito lo retira y permite volver a colocarlo.
+      final colocadaId=b.state.celdaColocada!;
+      await tester.ensureVisible(find.byKey(ValueKey('celda_$colocadaId')));await tester.tap(find.byKey(ValueKey('celda_$colocadaId')));await tester.pumpAndSettle();
+      expect(b.state.historial,isEmpty);expect(b.state.celdas[colocadaId]!.valor,isNull);
+      await tester.ensureVisible(find.byKey(ValueKey('celda_$colocadaId')));await tester.tap(find.byKey(ValueKey('celda_$colocadaId')));await tester.pumpAndSettle();
+      expect(b.state.historial.single.celdaId,colocadaId);
       expect(find.text('LANZAR METEOROS'),findsOneWidget);
       final tablero=tester.getRect(find.byType(TableroView));
       expect(tester.getRect(find.byKey(const ValueKey('boton_lanzar'))).top,greaterThanOrEqualTo(tablero.bottom));

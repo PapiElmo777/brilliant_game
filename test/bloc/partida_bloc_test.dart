@@ -159,4 +159,46 @@ void main() {
     expect(b.state.celdas['d']!.valor, isNull);
     expect(b.state.historial, isEmpty);
   });
+  test('La jugada se puede mover, retirar o cambiar de dado antes de lanzar', () async {
+    final b = PartidaBloc(tablero(), azar: AzarFijo([2, 5]));
+    addTearDown(b.close);
+    await enviar(b, const MeteorosCompletados(1));
+    await enviar(b, const DadoSeleccionado(1, 0));
+    await enviar(b, const MovimientoDadosCompletado(1));
+    await enviar(b, const DestinoSeleccionado(1, 'd'));
+    expect(b.state.fase, FasePartida.rondaResuelta);
+    expect(b.state.puedeModificar, isTrue);
+    expect(b.state.destinos, {'b', 'd'});
+    // Mover a otro destino válido conserva un solo registro.
+    await enviar(b, const DestinoSeleccionado(1, 'b'));
+    expect(b.state.celdas['b']!.valor, 2);
+    expect(b.state.celdas['d']!.valor, isNull);
+    expect(b.state.historial.single.celdaId, 'b');
+    // Una casilla no válida avisa sin cambiar la jugada.
+    await enviar(b, const DestinoSeleccionado(1, 'a'));
+    expect(b.state.error, isNotNull);
+    expect(b.state.celdas['b']!.valor, 2);
+    // Tocar el número escrito lo retira.
+    await enviar(b, const DestinoSeleccionado(1, 'b'));
+    expect(b.state.fase, FasePartida.eligiendoDestino);
+    expect(b.state.celdas['b']!.valor, isNull);
+    expect(b.state.historial, isEmpty);
+    // Cambiar de dado tras colocar deshace la colocación.
+    await enviar(b, const DestinoSeleccionado(1, 'd'));
+    await enviar(b, const DadoSeleccionado(1, 1));
+    expect(b.state.fase, FasePartida.eligiendoDestino);
+    expect(b.state.celdas['d']!.valor, isNull);
+    expect(b.state.historial, isEmpty);
+    expect(b.state.destinos, {'b'});
+    await enviar(b, const DestinoSeleccionado(1, 'b'));
+    expect(b.state.historial.single.dadoId, 1);
+    await enviar(b, const TiroOmitido(1));
+    expect(b.state.historial.length, 1);
+    // Al lanzar, la jugada queda fija.
+    await enviar(b, const MeteorosSolicitados(1));
+    expect(b.state.puedeModificar, isFalse);
+    expect(b.state.celdas['b']!.valor, 5);
+    await enviar(b, const DestinoSeleccionado(1, 'b'));
+    expect(b.state.celdas['b']!.valor, 5);
+  });
 }

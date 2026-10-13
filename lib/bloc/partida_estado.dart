@@ -15,6 +15,9 @@ class PartidaEstado {
   final FasePartida fase;
   final Tirada tirada;
   final int? dadoSeleccionado;
+
+  /// Celda escrita en esta ronda, todavía modificable hasta lanzar de nuevo.
+  final String? celdaColocada;
   final Map<String, Celda> celdas;
   final Set<String> destinos;
   final bool puedeOmitir;
@@ -27,6 +30,7 @@ class PartidaEstado {
     required Map<String, Celda> celdas,
     required Iterable<RegistroTirada> historial,
     this.dadoSeleccionado,
+    this.celdaColocada,
     Set<String> destinos = const {},
     this.puedeOmitir = false,
     this.error,
@@ -43,7 +47,12 @@ class PartidaEstado {
   bool get puedeSeleccionar =>
       fase == FasePartida.eligiendoNumero ||
       fase == FasePartida.eligiendoDestino ||
-      fase == FasePartida.sinMovimientos;
+      fase == FasePartida.sinMovimientos ||
+      puedeModificar;
+
+  /// Tras colocar, la jugada se puede cambiar hasta lanzar los meteoros.
+  bool get puedeModificar =>
+      fase == FasePartida.rondaResuelta && celdaColocada != null;
 
   /// Los dados suben bajo la nave al elegir uno, o cuando ya no hay elección
   /// posible para dejar libre el lugar del botón bajo el tablero.

@@ -34,6 +34,8 @@ class _PartidaPageState extends State<PartidaPage> {
       return e.fase == FasePartida.tirando
           ? (e.tirada.id == 1 ? '¡El juego comenzó!' : 'Llegan los meteoros…')
           : 'Resultados: ${e.tirada.dados.map((d) => d.valor).join(' y ')}';
+    if (e.puedeModificar)
+      return 'Puedes cambiar tu jugada o lanzar los meteoros.';
     if (e.fase == FasePartida.rondaResuelta)
       return '¡Listo! Lanza otra vez los meteoros.';
     if (e.ancla != null) {
