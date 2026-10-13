@@ -32,7 +32,7 @@ void main() {
       final b=await abrir(tester);
       final antes=tester.getCenter(find.byKey(const ValueKey('dado_0')));
       await tester.ensureVisible(find.byKey(const ValueKey('dado_0')));await tester.tap(find.byKey(const ValueKey('dado_0')));await tester.pumpAndSettle();
-      expect(find.text('Tu ancla es el 5'),findsOneWidget);
+      expect(find.descendant(of:find.byType(GloboAlien),matching:find.text('Tu ancla es el 5')),findsOneWidget);
       expect(b.state.fase,FasePartida.eligiendoDestino);
       expect(tester.getCenter(find.byKey(const ValueKey('dado_0'))).dy,lessThan(antes.dy));
       await tester.ensureVisible(find.byKey(const ValueKey('dado_1')));await tester.tap(find.byKey(const ValueKey('dado_1')));await tester.pumpAndSettle();
@@ -45,6 +45,8 @@ void main() {
       expect(find.text('Lanzar meteoros'),findsOneWidget);
       await tester.ensureVisible(find.textContaining('Tiradas · 1'));await tester.tap(find.textContaining('Tiradas · 1'));await tester.pumpAndSettle();
       expect(find.text('Historial de tiradas'),findsOneWidget);
+      final colocada=b.state.celdas[b.state.historial.single.celdaId]!;
+      expect(find.text('Fila ${colocada.fila+1}, columna ${colocada.columna+1}'),findsOneWidget);
       expect(tester.takeException(),isNull);
     });
   }

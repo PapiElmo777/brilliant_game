@@ -88,14 +88,21 @@ class _PartidaPageState extends State<PartidaPage> {
                                 const Expanded(
                                   child: Text(
                                     'BRILLIANT',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       fontWeight: FontWeight.w800,
                                     ),
                                   ),
                                 ),
+                                Flexible(
+                                  child: HistorialTiradas(
+                                    registros: e.historial,
+                                    celdas: e.celdas,
+                                  ),
+                                ),
                               ],
                             ),
-                            HistorialTiradas(registros: e.historial),
                             const SizedBox(width: 130, child: NaveMarciano()),
                             Text(
                               widget.jugador == null
@@ -106,14 +113,7 @@ class _PartidaPageState extends State<PartidaPage> {
                             const SizedBox(height: 8),
                             Semantics(
                               liveRegion: true,
-                              child: Text(
-                                _mensaje(e),
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  color: Color(0xFFB6F6FF),
-                                ),
-                              ),
+                              child: GloboAlien(mensaje: _mensaje(e)),
                             ),
                             SizedBox(
                               key: _arriba,
@@ -159,8 +159,9 @@ class _PartidaPageState extends State<PartidaPage> {
                                       top: 8,
                                       left: 0,
                                       right: 0,
-                                      child: Semantics(
-                                        liveRegion: true,
+                                      // El globo del alien ya anuncia el
+                                      // mensaje; aquí sólo se repite a la vista.
+                                      child: ExcludeSemantics(
                                         child: Text(
                                           _mensaje(e),
                                           textAlign: TextAlign.center,
@@ -227,4 +228,46 @@ class _PartidaPageState extends State<PartidaPage> {
       );
     },
   );
+}
+
+/// Globo de diálogo que sale de la nave del alien.
+class GloboAlien extends StatelessWidget {
+  final String mensaje;
+  const GloboAlien({super.key, required this.mensaje});
+
+  @override
+  Widget build(BuildContext context) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      CustomPaint(size: const Size(18, 9), painter: _PicoGlobo()),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xE6102B4A),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFF72E9FF), width: 1.5),
+        ),
+        child: Text(
+          mensaje,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 18, color: Color(0xFFB6F6FF)),
+        ),
+      ),
+    ],
+  );
+}
+
+class _PicoGlobo extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final pico = Path()
+      ..moveTo(0, size.height + 1)
+      ..lineTo(size.width / 2, 0)
+      ..lineTo(size.width, size.height + 1)
+      ..close();
+    canvas.drawPath(pico, Paint()..color = const Color(0xFF72E9FF));
+  }
+
+  @override
+  bool shouldRepaint(_PicoGlobo oldDelegate) => false;
 }

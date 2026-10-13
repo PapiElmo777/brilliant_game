@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
+import '../../models/celda.dart';
 import '../../models/tirada.dart';
 import 'dados_partida.dart';
 
 class HistorialTiradas extends StatelessWidget {
   final List<RegistroTirada> registros;
-  const HistorialTiradas({super.key, required this.registros});
+  final Map<String, Celda> celdas;
+  const HistorialTiradas({
+    super.key,
+    required this.registros,
+    this.celdas = const {},
+  });
+
+  String _destino(String? celdaId) {
+    final celda = celdas[celdaId];
+    return celda == null
+        ? 'Colocado'
+        : 'Fila ${celda.fila + 1}, columna ${celda.columna + 1}';
+  }
 
   @override
   Widget build(BuildContext context) => TextButton(
@@ -51,7 +64,7 @@ class HistorialTiradas extends StatelessWidget {
                                 Text(
                                   r.resultado == ResultadoRonda.omitida
                                       ? 'Omitida'
-                                      : 'Colocado en ${r.celdaId}',
+                                      : _destino(r.celdaId),
                                 ),
                               ],
                             ),
@@ -66,6 +79,8 @@ class HistorialTiradas extends StatelessWidget {
     ),
     child: Text(
       'Tiradas · ${registros.length}${registros.isEmpty ? '' : '  (${registros.last.tirada.dados.map((d) => d.valor).join(' · ')})'}',
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     ),
   );
 }
