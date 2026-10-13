@@ -310,7 +310,7 @@ Las pruebas del reproductor están en
 Es una versión animada de 242 cuadros a 24 fps con el fondo cuadriculado
 retirado mediante un recorte aproximado; puede dejar restos en humo y bordes
 semitransparentes. `MeteoritosAnimacion` cubre toda la pantalla de partida,
-reproduce el clip a velocidad x5 (unos 2 s), decodifica el recurso una sola
+reproduce el clip a velocidad x7 (unos 1,4 s), decodifica el recurso una sola
 vez por tirada, confirma el impacto en el cuadro 120 y la finalización al
 terminar el clip. Con movimiento reducido, fallo de carga o una espera mayor de 30 segundos
 confirma ambos eventos sin bloquear la ronda. `example/meteoritos.dart` muestra
