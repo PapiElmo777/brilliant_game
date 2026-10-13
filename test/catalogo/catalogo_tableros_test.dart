@@ -45,7 +45,7 @@ void main() {
         'verde_2',
         'verde_2',
       ],
-      ['verde_1', 'rojo_1', 'morado_2', 'rojo_2', 'rojo_2', 'rojo_2', 'azul_2'],
+      ['verde_1', 'rojo_1', 'morado_2', 'morado_2', 'rojo_2', 'rojo_2', 'azul_2'],
       ['rojo_1', 'rojo_1', 'morado_2', 'rojo_2', 'rojo_2', 'azul_2', 'azul_2'],
       [
         'amarillo_4',
@@ -79,6 +79,17 @@ void main() {
         expect(celda.valor, isNull);
       }
     }
+  });
+
+  test('La zona rojo_2 puede completarse con los seis números distintos', () {
+    final tablero = catalogo.crearTablero('tablero_01');
+    final zona = tablero.obtenerZona('rojo_2');
+    expect(zona.celdas.length, 6);
+    var valor = 1;
+    for (final celda in zona.celdas.values) {
+      tablero.colocarValor(celda.id, valor++);
+    }
+    expect(zona.estaCompletada, isTrue);
   });
 
   test('Las seis iniciales coinciden y permiten completar la preparación', () {

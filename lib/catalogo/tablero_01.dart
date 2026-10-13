@@ -44,13 +44,13 @@ final tablero01 = DefinicionTablero(
     _zona('morado_2', const TipoMorado(), [
       (3, 2),
       (4, 2),
+      (4, 3),
       (5, 2),
       (6, 1),
       (6, 2),
     ]),
     _zona('amarillo_3', const TipoAmarillo(), [(3, 3)]),
     _zona('rojo_2', const TipoRojo(), [
-      (4, 3),
       (4, 4),
       (4, 5),
       (5, 3),
