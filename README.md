@@ -363,8 +363,33 @@ Pruebas: `test/core/anclas_test.dart`, `test/bloc/partida_bloc_test.dart`,
   esquinas y el centro); sus números deben ser distintos.
 - Mantener presionada cualquier celda resalta su zona completa, atenúa las
   demás y muestra su regla y los puntos al completarla.
-- Los puntos dependen del tamaño de la zona (`lib/catalogo/puntuacion_zonas.dart`):
-  4 casillas 5·3·1, 5 casillas 6·4·2 (la amarilla), 6 casillas 7·5·3 y
-  7 casillas 8·6·4. Por ahora son representativos: la puntuación junto a la
-  nave suma la mayor puntuación de cada zona completa.
+- Mantener presionada una celda muestra los puntos de su zona por puesto,
+  con los puestos ya reclamados tachados.
+
+## Puntuación y meta (bases del multijugador)
+
+Cada color da puntos según el orden en que los jugadores completan una zona
+(`Tipo.puntuaciones`, puesto → puntos):
+
+| Color | 1.º | 2.º | 3.º |
+|---|---|---|---|
+| Azul | 7 | 6 | 3 |
+| Morado | 6 | 4 | 2 |
+| Verde | 4 | 3 | 2 |
+| Amarillo | 8 | 6 | 4 |
+| Rojo | 6 | 4 | 2 |
+
+`Marcador` (`lib/core/marcador.dart`) es el registro compartido entre
+jugadores: `reclamar` asigna el siguiente puesto libre de la zona y sus puntos
+(después del tercero da 0), `liberar` deshace el último reclamo y `puntosDe`
+suma los puntos de un jugador. Cada jugador reclama una zona una sola vez.
+
+La meta para ganar depende del número de jugadores (`metaDePuntos`): 2 → 26,
+3 → 24, 4 → 22 y 5 → 20. Mientras no exista el multijugador, `PartidaBloc`
+juega con un solo jugador local (`jugador_1`) y la meta de 2 jugadores.
+
+En la partida, escribir el número que completa una zona reclama el puesto y
+el alien anuncia los puntos; si la jugada se cambia antes de lanzar, el
+reclamo se libera. Al alcanzar la meta se dejan de lanzar meteoros y el alien
+lo anuncia; la celebración de victoria se definirá más adelante.
 
