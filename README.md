@@ -335,6 +335,12 @@ el ID de la tirada; las confirmaciones antiguas o duplicadas se ignoran.
   el BLoC vuelve a validar colocaciones y omisiones.
 - Tras colocar u omitir aparece `LANZAR METEOROS`, grande debajo del tablero; no
   se lanza otra tirada automáticamente.
+- Después de colocar y antes de lanzar, la jugada se puede cambiar: tocar otro
+  destino resaltado mueve el número, tocar el número escrito lo retira y tocar
+  el otro dado deshace la colocación para elegir de nuevo. El historial
+  conserva un solo registro de la ronda; al lanzar, la jugada queda fija.
+- Salir con la flecha o con el regreso del sistema pide confirmación, porque se
+  pierde el progreso; al aceptar se vuelve al menú principal.
 - La pantalla se ajusta al dispositivo sin desplazarse: el tablero toma el
   espacio restante. Sólo con menos de 480 puntos de alto se permite desplazar.
 - `Tiradas · N`, en el encabezado, abre el historial. Una colocación ilumina el
