@@ -18,7 +18,7 @@ class MeteoritosAnimacion extends StatefulWidget {
     required this.onImpacto,
     required this.onCompletada,
     this.cargar,
-    this.velocidad = 3,
+    this.velocidad = 5,
   });
 
   @override
