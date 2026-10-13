@@ -303,3 +303,38 @@ impacto. Esa integración corresponde a los siguientes pasos del plan.
 
 Las pruebas del reproductor están en
 `test/presentation/meteoritos_video_test.dart`.
+
+## Partida: tiradas, anclas e historial
+
+`assets/videos/meteoritos_transparente.webp` sustituye al MP4 en la partida.
+Es una versión animada de 242 cuadros a 24 fps con el fondo cuadriculado
+retirado mediante un recorte aproximado; puede dejar restos en humo y bordes
+semitransparentes. `MeteoritosAnimacion` decodifica el recurso una sola vez por
+tirada, confirma el impacto en el cuadro 120 y la finalización al terminar el
+clip. Con movimiento reducido, fallo de carga o una espera mayor de 30 segundos
+confirma ambos eventos sin bloquear la ronda. `example/meteoritos.dart` muestra
+ahora este recurso. `MeteoritosVideo` y el MP4 se conservan mientras se decide
+qué animación queda en la versión final.
+
+Al pulsar `INICIO`, la preparación entrega una copia del tablero a un nuevo
+`PartidaBloc` y se abre `PartidaPage` con el aviso «¡El juego comenzó!».
+`PartidaBloc` genera los dos dados antes de la animación y recorre las fases
+`tirando`, `revelandoResultados`, `eligiendoNumero`, `moviendoDados`,
+`eligiendoDestino`, `sinMovimientos` y `rondaResuelta`. Todos los eventos llevan
+el ID de la tirada; las confirmaciones antiguas o duplicadas se ignoran.
+
+- Tocar un dado sube ambos bajo la nave. El seleccionado es el número que se
+  escribe y el otro es el ancla, que el alien anuncia en su globo.
+- `destinosConAncla` (en `lib/core/anclas.dart`) devuelve las celdas vacías
+  ortogonalmente adyacentes a un valor igual al ancla que aceptan el número
+  según su zona. Las casillas se resaltan en blanco con un signo ⊕.
+- `Omitir tiro` sólo aparece si ninguna de las dos elecciones tiene destinos;
+  el BLoC vuelve a validar colocaciones y omisiones.
+- Tras colocar u omitir aparece `Lanzar meteoros`; no se lanza otra tirada
+  automáticamente.
+- `Tiradas · N`, en el encabezado, abre el historial. Una colocación ilumina el
+  dado escrito e indica fila y columna; una omisión no ilumina ninguno.
+
+Pruebas: `test/core/anclas_test.dart`, `test/bloc/partida_bloc_test.dart`,
+`test/presentation/meteoritos_animacion_test.dart` y
+`test/presentation/partida_page_test.dart`.
