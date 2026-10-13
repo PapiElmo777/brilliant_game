@@ -349,3 +349,23 @@ el ID de la tirada; las confirmaciones antiguas o duplicadas se ignoran.
 Pruebas: `test/core/anclas_test.dart`, `test/bloc/partida_bloc_test.dart`,
 `test/presentation/meteoritos_animacion_test.dart` y
 `test/presentation/partida_page_test.dart`.
+
+## Preparación con intercambio, zonas y puntuación
+
+- Durante la preparación, tocar un número colocado lo elige; tocar otra celda
+  inicial lo mueve o lo intercambia con el número que haya ahí, y tocarlo de
+  nuevo lo retira. Un número de la bandeja sobre una celda ocupada la
+  reemplaza y el anterior vuelve a la bandeja. `PreparacionInicial.intercambiar`
+  valida el cambio sobre una copia antes de aplicarlo.
+- `Cancelar selección` (`PreparacionReiniciada`) aparece en cuanto hay una
+  selección o números colocados, y regresa todos los números a la bandeja.
+- Cada casilla amarilla es una zona de una casilla, pero la regla de números
+  distintos se aplica entre todas las amarillas del tablero
+  (`Tipo.reglaEntreZonas`, verificada en `Tablero.puedeColocarValor`).
+- Mantener presionada cualquier celda resalta su zona, atenúa las demás y
+  muestra su regla y los puntos al completarla.
+- Los puntos dependen del tamaño de la zona (`lib/catalogo/puntuacion_zonas.dart`):
+  1 casilla 2·1·0, 4 casillas 5·3·1, 5 casillas 6·4·2, 6 casillas 7·5·3 y
+  7 casillas 8·6·4. Por ahora son representativos: la puntuación junto a la
+  nave suma la mayor puntuación de cada zona completa.
+
