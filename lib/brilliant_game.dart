@@ -10,4 +10,5 @@ export 'bloc/inicio_evento.dart';
 export 'catalogo/catalogo_tableros.dart';
 export 'catalogo/definicion_tablero.dart';
 export 'catalogo/validador_tablero.dart';
+export 'catalogo/puntuacion_zonas.dart';
 export 'bloc/menu_bloc.dart';
