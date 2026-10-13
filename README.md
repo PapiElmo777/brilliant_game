@@ -309,9 +309,10 @@ Las pruebas del reproductor están en
 `assets/videos/meteoritos_transparente.webp` sustituye al MP4 en la partida.
 Es una versión animada de 242 cuadros a 24 fps con el fondo cuadriculado
 retirado mediante un recorte aproximado; puede dejar restos en humo y bordes
-semitransparentes. `MeteoritosAnimacion` decodifica el recurso una sola vez por
-tirada, confirma el impacto en el cuadro 120 y la finalización al terminar el
-clip. Con movimiento reducido, fallo de carga o una espera mayor de 30 segundos
+semitransparentes. `MeteoritosAnimacion` cubre toda la pantalla de partida,
+reproduce el clip a velocidad x3 (unos 3,4 s), decodifica el recurso una sola
+vez por tirada, confirma el impacto en el cuadro 120 y la finalización al
+terminar el clip. Con movimiento reducido, fallo de carga o una espera mayor de 30 segundos
 confirma ambos eventos sin bloquear la ronda. `example/meteoritos.dart` muestra
 ahora este recurso. `MeteoritosVideo` y el MP4 se conservan mientras se decide
 qué animación queda en la versión final.
@@ -328,10 +329,14 @@ el ID de la tirada; las confirmaciones antiguas o duplicadas se ignoran.
 - `destinosConAncla` (en `lib/core/anclas.dart`) devuelve las celdas vacías
   ortogonalmente adyacentes a un valor igual al ancla que aceptan el número
   según su zona. Las casillas se resaltan en blanco con un signo ⊕.
-- `Omitir tiro` sólo aparece si ninguna de las dos elecciones tiene destinos;
+- Tocar una casilla no válida, o una casilla antes de elegir número, muestra el
+  aviso en el globo del alien sin modificar el tablero.
+- `OMITIR TIRO` sólo aparece si ninguna de las dos elecciones tiene destinos;
   el BLoC vuelve a validar colocaciones y omisiones.
-- Tras colocar u omitir aparece `Lanzar meteoros`; no se lanza otra tirada
-  automáticamente.
+- Tras colocar u omitir aparece `LANZAR METEOROS`, grande debajo del tablero; no
+  se lanza otra tirada automáticamente.
+- La pantalla se ajusta al dispositivo sin desplazarse: el tablero toma el
+  espacio restante. Sólo con menos de 480 puntos de alto se permite desplazar.
 - `Tiradas · N`, en el encabezado, abre el historial. Una colocación ilumina el
   dado escrito e indica fila y columna; una omisión no ilumina ninguno.
 
