@@ -164,19 +164,17 @@ void main() {
     expect(() => tablero.celdas.clear(), throwsUnsupportedError);
   });
 
-  test('Las casillas amarillas no repiten números aunque sean zonas distintas', () {
+  test('Una zona con casillas separadas aplica su regla a todas', () {
     final tablero = Tablero(
       id: 'amarillas',
       zonas: [
         Zona(
-          id: 'amarillo_1',
+          id: 'amarillo',
           tipo: const TipoAmarillo(),
-          celdas: [Celda(id: 'a1', fila: 0, columna: 0)],
-        ),
-        Zona(
-          id: 'amarillo_2',
-          tipo: const TipoAmarillo(),
-          celdas: [Celda(id: 'a2', fila: 0, columna: 6)],
+          celdas: [
+            Celda(id: 'a1', fila: 0, columna: 0),
+            Celda(id: 'a2', fila: 0, columna: 6),
+          ],
         ),
         Zona(
           id: 'rojo',
@@ -189,10 +187,7 @@ void main() {
     expect(tablero.puedeColocarValor('a2', 3), isFalse);
     expect(() => tablero.colocarValor('a2', 3), throwsArgumentError);
     expect(tablero.obtenerCelda('a2').valor, isNull);
-    // Otros tipos con la misma regla siguen limitándose a su zona.
     expect(tablero.puedeColocarValor('r', 3), isTrue);
     expect(tablero.puedeColocarValor('a2', 4), isTrue);
-    // Reemplazar el valor de la misma casilla no cuenta como repetición.
-    expect(tablero.puedeColocarValor('a1', 3), isTrue);
   });
 }

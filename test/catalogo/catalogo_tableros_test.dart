@@ -6,17 +6,17 @@ void main() {
 
   setUp(() => catalogo = CatalogoTableros.predeterminado());
 
-  test('El primer tablero reproduce las 49 posiciones y las 13 zonas', () {
+  test('El primer tablero reproduce las 49 posiciones y las 9 zonas', () {
     final tablero = catalogo.crearTablero('tablero_01');
     const matriz = [
       [
-        'amarillo_1',
+        'amarillo',
         'verde_1',
         'azul_1',
         'morado_1',
         'morado_1',
         'morado_1',
-        'amarillo_2',
+        'amarillo',
       ],
       [
         'verde_1',
@@ -40,7 +40,7 @@ void main() {
         'verde_1',
         'rojo_1',
         'morado_2',
-        'amarillo_3',
+        'amarillo',
         'verde_2',
         'verde_2',
         'verde_2',
@@ -48,13 +48,13 @@ void main() {
       ['verde_1', 'rojo_1', 'morado_2', 'morado_2', 'rojo_2', 'rojo_2', 'azul_2'],
       ['rojo_1', 'rojo_1', 'morado_2', 'rojo_2', 'rojo_2', 'azul_2', 'azul_2'],
       [
-        'amarillo_4',
+        'amarillo',
         'morado_2',
         'morado_2',
         'rojo_2',
         'rojo_2',
         'azul_2',
-        'amarillo_5',
+        'amarillo',
       ],
     ];
     final tipos = <String, Tipo>{
@@ -66,7 +66,7 @@ void main() {
     };
     expect(tablero.id, 'tablero_01');
     expect(tablero.celdas.length, 49);
-    expect(tablero.zonas.length, 13);
+    expect(tablero.zonas.length, 9);
     for (var fila = 0; fila < 7; fila++) {
       for (var columna = 0; columna < 7; columna++) {
         final celda = tablero.obtenerCeldaEn(fila, columna)!;
@@ -140,7 +140,7 @@ void main() {
     final zonas = original.zonas.toList();
     final copia = DefinicionTablero(id: 'copia', zonas: zonas);
     zonas.clear();
-    expect(copia.zonas.length, 13);
+    expect(copia.zonas.length, 9);
     final celdas = original.zonas.first.celdas.toList();
     final zona = DefinicionZona(
       id: 'copia',
@@ -148,7 +148,7 @@ void main() {
       celdas: celdas,
     );
     celdas.clear();
-    expect(zona.celdas.length, 1);
+    expect(zona.celdas.length, 5);
     final definiciones = [copia];
     final otro = CatalogoTableros(definiciones: definiciones);
     definiciones.clear();

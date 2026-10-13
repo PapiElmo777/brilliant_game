@@ -12,7 +12,7 @@ void main() {
     ),
     const TipoAmarillo(): (
       const Color(0xFFFFC107),
-      'Todas las casillas amarillas deben tener números distintos',
+      'Todos los números deben de ser distintos',
       {1: 8, 2: 6, 3: 4},
     ),
     const TipoRojo(): (

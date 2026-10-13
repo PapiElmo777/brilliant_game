@@ -44,7 +44,7 @@ void main() {
     expect(celda('f1_c1').atenuada, isFalse);
     expect(tocadas, isEmpty);
 
-    // Una casilla amarilla es una zona de una casilla: 2 · 1 · 0 puntos.
+    // La zona amarilla es una sola, con cinco casillas separadas.
     await tester.longPress(find.byKey(const ValueKey('celda_f1_c1')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('ficha_zona')), findsNothing);
@@ -52,12 +52,8 @@ void main() {
       tester.getCenter(find.byKey(const ValueKey('celda_f7_c7'))),
     );
     await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
-    // Todas las casillas amarillas se resaltan juntas porque comparten regla.
-    expect(find.text('5 zonas amarillas de 1 casilla'), findsOneWidget);
-    expect(
-      find.text('Cada una al completarla: 2 · 1 · 0 puntos'),
-      findsOneWidget,
-    );
+    expect(find.text('Zona amarilla · 5 casillas'), findsOneWidget);
+    expect(find.text('Al completarla: 2 · 1 · 0 puntos'), findsOneWidget);
     for (final id in ['f1_c1', 'f1_c7', 'f4_c4', 'f7_c1', 'f7_c7']) {
       expect(celda(id).enZonaResaltada, isTrue);
     }

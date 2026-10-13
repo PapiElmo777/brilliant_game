@@ -202,7 +202,7 @@ La integración de `flutter_bloc` ya está declarada. El punto de entrada y la p
 
 ## Catálogo de tableros: fase 2
 
-El catálogo predeterminado incluye `tablero_01`, con las 13 zonas, 49 celdas y seis posiciones iniciales del plan. Cada llamada crea un tablero con zonas independientes y sin valores colocados:
+El catálogo predeterminado incluye `tablero_01`, con las 9 zonas, 49 celdas y seis posiciones iniciales del plan. Cada llamada crea un tablero con zonas independientes y sin valores colocados:
 
 ```dart
 final catalogo = CatalogoTableros.predeterminado();
@@ -359,14 +359,12 @@ Pruebas: `test/core/anclas_test.dart`, `test/bloc/partida_bloc_test.dart`,
   valida el cambio sobre una copia antes de aplicarlo.
 - `Cancelar selección` (`PreparacionReiniciada`) aparece en cuanto hay una
   selección o números colocados, y regresa todos los números a la bandeja.
-- Cada casilla amarilla es una zona de una casilla, pero la regla de números
-  distintos se aplica entre todas las amarillas del tablero
-  (`Tipo.reglaEntreZonas`, verificada en `Tablero.puedeColocarValor`).
-- Mantener presionada cualquier celda resalta su zona (en una amarilla, todas
-  las amarillas, porque comparten la regla), atenúa las demás y
-  muestra su regla y los puntos al completarla.
+- La zona amarilla es una sola, con cinco casillas separadas (las cuatro
+  esquinas y el centro); sus números deben ser distintos.
+- Mantener presionada cualquier celda resalta su zona completa, atenúa las
+  demás y muestra su regla y los puntos al completarla.
 - Los puntos dependen del tamaño de la zona (`lib/catalogo/puntuacion_zonas.dart`):
   1 casilla 2·1·0, 4 casillas 5·3·1, 5 casillas 6·4·2, 6 casillas 7·5·3 y
-  7 casillas 8·6·4. Por ahora son representativos: la puntuación junto a la
+  7 casillas 8·6·4. La zona amarilla usa 2·1·0. Por ahora son representativos: la puntuación junto a la
   nave suma la mayor puntuación de cada zona completa.
 

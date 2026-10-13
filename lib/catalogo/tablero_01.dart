@@ -6,7 +6,14 @@ final tablero01 = DefinicionTablero(
   id: 'tablero_01',
   nombre: 'Tablero 1',
   zonas: [
-    _zona('amarillo_1', const TipoAmarillo(), [(0, 0)]),
+    // La zona amarilla es una sola, con sus cinco casillas separadas.
+    _zona('amarillo', const TipoAmarillo(), [
+      (0, 0),
+      (0, 6),
+      (3, 3),
+      (6, 0),
+      (6, 6),
+    ]),
     _zona('verde_1', const TipoVerde(), [
       (0, 1),
       (1, 0),
@@ -24,7 +31,6 @@ final tablero01 = DefinicionTablero(
       (1, 5),
       (2, 4),
     ]),
-    _zona('amarillo_2', const TipoAmarillo(), [(0, 6)]),
     _zona('verde_2', const TipoVerde(), [
       (1, 6),
       (2, 5),
@@ -49,7 +55,6 @@ final tablero01 = DefinicionTablero(
       (6, 1),
       (6, 2),
     ]),
-    _zona('amarillo_3', const TipoAmarillo(), [(3, 3)]),
     _zona('rojo_2', const TipoRojo(), [
       (4, 4),
       (4, 5),
@@ -59,8 +64,6 @@ final tablero01 = DefinicionTablero(
       (6, 4),
     ]),
     _zona('azul_2', const TipoAzul(), [(4, 6), (5, 5), (5, 6), (6, 5)]),
-    _zona('amarillo_4', const TipoAmarillo(), [(6, 0)]),
-    _zona('amarillo_5', const TipoAmarillo(), [(6, 6)]),
   ],
 );
 

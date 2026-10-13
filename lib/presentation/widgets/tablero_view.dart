@@ -67,19 +67,13 @@ class _TableroViewState extends State<TableroView> {
         return fila == 0 ? a.columna.compareTo(b.columna) : fila;
       });
     final resaltada = _zonaResaltada;
-    // Si la regla del tipo abarca varias zonas (amarillas), se resaltan todas.
-    final zonasResaltadas = resaltada == null
-        ? const <DefinicionZona>[]
-        : resaltada.tipo.reglaEntreZonas
-        ? [
-            for (final zona in definicion.zonas)
-              if (zona.tipo.runtimeType == resaltada.tipo.runtimeType) zona,
-          ]
-        : [resaltada];
-    final idsResaltados = {
-      for (final zona in zonasResaltadas)
-        for (final celda in zona.celdas) celda.id,
-    };
+    final idsResaltados = {...?resaltada?.celdas.map((celda) => celda.id)};
+    // Si la zona llega a las dos orillas (amarilla), la ficha deja libres la
+    // primera y la última columna para no taparla.
+    final fichaAngosta =
+        resaltada != null &&
+        resaltada.celdas.any((celda) => celda.columna == 0) &&
+        resaltada.celdas.any((celda) => celda.columna == 6);
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -141,23 +135,12 @@ class _TableroViewState extends State<TableroView> {
               ),
               if (resaltada != null)
                 // La ficha se muestra en la mitad contraria a la zona.
-                // Con varias zonas resaltadas (amarillas en las esquinas), la
-                // ficha deja libres la primera y la última columna.
                 Positioned(
-                  left: zonasResaltadas.length > 1
-                      ? espacio.maxWidth / 7 + 2
-                      : 6,
-                  right: zonasResaltadas.length > 1
-                      ? espacio.maxWidth / 7 + 2
-                      : 6,
+                  left: fichaAngosta ? espacio.maxWidth / 7 + 2 : 6,
+                  right: fichaAngosta ? espacio.maxWidth / 7 + 2 : 6,
                   top: _zonaArriba(resaltada) ? null : 6,
                   bottom: _zonaArriba(resaltada) ? 6 : null,
-                  child: IgnorePointer(
-                    child: FichaZona(
-                      zona: resaltada,
-                      zonasDelTipo: zonasResaltadas.length,
-                    ),
-                  ),
+                  child: IgnorePointer(child: FichaZona(zona: resaltada)),
                 ),
             ],
           ),
@@ -175,10 +158,7 @@ class _TableroViewState extends State<TableroView> {
 /// Tipo, regla y puntos representativos de una zona.
 class FichaZona extends StatelessWidget {
   final DefinicionZona zona;
-
-  /// Zonas resaltadas que comparten la regla del tipo (1 si no la comparten).
-  final int zonasDelTipo;
-  const FichaZona({super.key, required this.zona, this.zonasDelTipo = 1});
+  const FichaZona({super.key, required this.zona});
 
   static String nombreTipo(Tipo tipo) => switch (tipo) {
     TipoAzul() => 'azul',
@@ -208,11 +188,8 @@ class FichaZona extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              zonasDelTipo > 1
-                  ? '$zonasDelTipo zonas ${nombreTipo(zona.tipo)}s de $tamano '
-                        '${tamano == 1 ? 'casilla' : 'casillas'}'
-                  : 'Zona ${nombreTipo(zona.tipo)} · $tamano '
-                        '${tamano == 1 ? 'casilla' : 'casillas'}',
+              'Zona ${nombreTipo(zona.tipo)} · $tamano '
+              '${tamano == 1 ? 'casilla' : 'casillas'}',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontWeight: FontWeight.w800,
@@ -228,8 +205,7 @@ class FichaZona extends StatelessWidget {
             if (puntos.isNotEmpty) ...[
               const SizedBox(height: 4),
               Text(
-                '${zonasDelTipo > 1 ? 'Cada una al completarla' : 'Al completarla'}: '
-                '${puntos.join(' · ')} puntos',
+                'Al completarla: ${puntos.join(' · ')} puntos',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontWeight: FontWeight.w700,

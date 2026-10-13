@@ -1,4 +1,5 @@
 import '../models/celda.dart';
+import '../models/tipo.dart';
 import 'definicion_tablero.dart';
 
 /// Puntos representativos al completar una zona, según su número de casillas.
@@ -11,8 +12,13 @@ const puntosPorTamano = <int, List<int>>{
   7: [8, 6, 4],
 };
 
-List<int> puntosDeZona(DefinicionZona zona) =>
-    puntosPorTamano[zona.celdas.length] ?? const [];
+/// La zona amarilla tiene cinco casillas, pero puntúa como en la tabla
+/// original de amarillas.
+const puntosAmarillo = [2, 1, 0];
+
+List<int> puntosDeZona(DefinicionZona zona) => zona.tipo is TipoAmarillo
+    ? puntosAmarillo
+    : puntosPorTamano[zona.celdas.length] ?? const [];
 
 /// Puntuación provisional: suma la mayor puntuación de cada zona completa.
 int puntuacionRepresentativa(
