@@ -110,16 +110,9 @@ class _DadosPartidaState extends State<DadosPartida>
   void initState() {
     super.initState();
     _movimiento.addStatusListener((status) {
-      if (status == AnimationStatus.completed && !_notificado) {
-        _notificado = true;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) widget.onMovimientoCompletado();
-        });
-      }
+      if (status == AnimationStatus.completed) _confirmar();
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) setState(() {});
-    });
+    _medirDespuesDelDiseno();
   }
 
   @override
@@ -132,6 +125,15 @@ class _DadosPartidaState extends State<DadosPartida>
   void didUpdateWidget(DadosPartida oldWidget) {
     super.didUpdateWidget(oldWidget);
     _animar();
+    // Las posiciones se leen del diseño anterior; si el globo o el tablero
+    // cambian de tamaño en este cuadro, se corrigen en el siguiente.
+    _medirDespuesDelDiseno();
+  }
+
+  void _medirDespuesDelDiseno() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   void _animar() {
@@ -141,18 +143,28 @@ class _DadosPartidaState extends State<DadosPartida>
     } else if (!_movimiento.isAnimating && _movimiento.value == 0) {
       _movimiento.forward();
     }
+    _confirmar();
   }
 
-  Offset? _centro(GlobalKey key, RenderBox lienzo, {bool inferior = false}) {
+  /// Los dados pueden haber subido antes de elegir uno (sin movimientos); en
+  /// ese caso el movimiento solicitado se confirma de inmediato.
+  void _confirmar() {
+    if (_notificado ||
+        !_movimiento.isCompleted ||
+        widget.estado.fase != FasePartida.moviendoDados) {
+      return;
+    }
+    _notificado = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onMovimientoCompletado();
+    });
+  }
+
+  Offset? _centro(GlobalKey key, RenderBox lienzo) {
     final box = key.currentContext?.findRenderObject();
     if (box is! RenderBox || !box.hasSize) return null;
     return lienzo.globalToLocal(
-      box.localToGlobal(
-        Offset(
-          box.size.width / 2,
-          inferior ? box.size.height - 54 : box.size.height / 2,
-        ),
-      ),
+      box.localToGlobal(box.size.center(Offset.zero)),
     );
   }
 
@@ -169,7 +181,7 @@ class _DadosPartidaState extends State<DadosPartida>
       if (widget.estado.fase == FasePartida.tirando) return const SizedBox();
       final box = widget.lienzo.currentContext?.findRenderObject();
       if (box is! RenderBox || !box.hasSize) return const SizedBox();
-      final abajo = _centro(widget.abajo, box, inferior: true);
+      final abajo = _centro(widget.abajo, box);
       final arriba = _centro(widget.arriba, box);
       if (abajo == null || arriba == null) return const SizedBox();
       final t = Curves.easeInOutCubic.transform(_movimiento.value);
