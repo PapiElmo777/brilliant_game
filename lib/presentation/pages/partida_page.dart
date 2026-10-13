@@ -6,6 +6,7 @@ import '../../bloc/partida_evento.dart';
 import '../../catalogo/definicion_tablero.dart';
 import '../widgets/boton_panel.dart';
 import '../widgets/dados_partida.dart';
+import '../widgets/dialogo_salir_partida.dart';
 import '../widgets/fondo_espacial.dart';
 import '../widgets/historial_tiradas.dart';
 import '../widgets/meteoritos_animacion.dart';
@@ -28,6 +29,12 @@ class _PartidaPageState extends State<PartidaPage> {
   final _lienzo = GlobalKey();
   final _arriba = GlobalKey();
   final _impactos = GlobalKey();
+
+  /// Sale al menú principal sólo si el jugador acepta perder la partida.
+  Future<void> _confirmarSalida() async {
+    if (!await DialogoSalirPartida.mostrar(context) || !mounted) return;
+    Navigator.of(context).popUntil((ruta) => ruta.isFirst);
+  }
 
   String _mensaje(PartidaEstado e) {
     if (e.animandoMeteoros)
@@ -109,7 +116,7 @@ class _PartidaPageState extends State<PartidaPage> {
                 children: [
                   IconButton(
                     tooltip: 'Volver al menú',
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: _confirmarSalida,
                     icon: const Icon(Icons.arrow_back_rounded),
                   ),
                   const Expanded(
@@ -196,46 +203,53 @@ class _PartidaPageState extends State<PartidaPage> {
   Widget build(BuildContext context) => BlocBuilder<PartidaBloc, PartidaEstado>(
     builder: (context, e) {
       final bloc = context.read<PartidaBloc>();
-      return Scaffold(
-        body: Stack(
-          fit: StackFit.expand,
-          children: [
-            FondoEspacial(
-              child: SafeArea(
-                // La partida se ajusta a la pantalla sin desplazarse; sólo en
-                // alturas muy reducidas se permite el desplazamiento.
-                child: LayoutBuilder(
-                  builder: (context, espacio) {
-                    final fijo = espacio.maxHeight >= _alturaMinima;
-                    final contenido = Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 520),
-                        child: _contenido(
-                          e,
-                          bloc,
-                          fijo: fijo,
-                          alto: espacio.maxHeight,
+      // El gesto o botón de regresar del sistema también pide confirmación.
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (salio, _) {
+          if (!salio) _confirmarSalida();
+        },
+        child: Scaffold(
+          body: Stack(
+            fit: StackFit.expand,
+            children: [
+              FondoEspacial(
+                child: SafeArea(
+                  // La partida se ajusta a la pantalla sin desplazarse; sólo en
+                  // alturas muy reducidas se permite el desplazamiento.
+                  child: LayoutBuilder(
+                    builder: (context, espacio) {
+                      final fijo = espacio.maxHeight >= _alturaMinima;
+                      final contenido = Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 520),
+                          child: _contenido(
+                            e,
+                            bloc,
+                            fijo: fijo,
+                            alto: espacio.maxHeight,
+                          ),
                         ),
-                      ),
-                    );
-                    return fijo
-                        ? contenido
-                        : SingleChildScrollView(child: contenido);
-                  },
+                      );
+                      return fijo
+                          ? contenido
+                          : SingleChildScrollView(child: contenido);
+                    },
+                  ),
                 ),
               ),
-            ),
-            // Los meteoros caen sobre toda la pantalla sin bloquear toques.
-            if (e.animandoMeteoros)
-              Positioned.fill(
-                child: MeteoritosAnimacion(
-                  key: ValueKey(e.tirada.id),
-                  tiradaId: e.tirada.id,
-                  onImpacto: (id) => bloc.add(ImpactoConfirmado(id)),
-                  onCompletada: (id) => bloc.add(MeteorosCompletados(id)),
+              // Los meteoros caen sobre toda la pantalla sin bloquear toques.
+              if (e.animandoMeteoros)
+                Positioned.fill(
+                  child: MeteoritosAnimacion(
+                    key: ValueKey(e.tirada.id),
+                    tiradaId: e.tirada.id,
+                    onImpacto: (id) => bloc.add(ImpactoConfirmado(id)),
+                    onCompletada: (id) => bloc.add(MeteorosCompletados(id)),
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       );
     },

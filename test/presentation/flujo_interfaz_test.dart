@@ -128,7 +128,18 @@ void main() {
     expect(find.byKey(const ValueKey('boton_inicio')), findsNothing);
     await pulsar(tester, find.byKey(const ValueKey('celda_f1_c2')));
     expect(anterior.state.celdas['f1_c2']!.valor, 1);
+    // Salir pide confirmación; cancelar conserva la partida.
     await pulsar(tester, find.byTooltip('Volver al menú'));
+    expect(find.text('Se perderá el progreso de la partida.'), findsOneWidget);
+    await pulsar(tester, find.byKey(const ValueKey('cancelar_salida')));
+    expect(find.byType(PartidaPage), findsOneWidget);
+    expect(anterior.isClosed, isFalse);
+    // El regreso del sistema también pregunta antes de salir.
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(PartidaPage), findsOneWidget);
+    await pulsar(tester, find.byKey(const ValueKey('confirmar_salida')));
+    expect(find.byType(PartidaPage), findsNothing);
     expect(anterior.isClosed, isTrue);
     await pulsar(tester, find.text('NUEVA PARTIDA'));
     expect(find.text('Ana'), findsOneWidget);
