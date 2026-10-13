@@ -15,6 +15,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/videos/meteoritos.mp4
+    - assets/videos/meteoritos_transparente.webp
     - assets/images/backgrounds/
     - assets/images/characters/
     - assets/images/branding/
