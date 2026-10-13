@@ -362,7 +362,8 @@ Pruebas: `test/core/anclas_test.dart`, `test/bloc/partida_bloc_test.dart`,
 - Cada casilla amarilla es una zona de una casilla, pero la regla de números
   distintos se aplica entre todas las amarillas del tablero
   (`Tipo.reglaEntreZonas`, verificada en `Tablero.puedeColocarValor`).
-- Mantener presionada cualquier celda resalta su zona, atenúa las demás y
+- Mantener presionada cualquier celda resalta su zona (en una amarilla, todas
+  las amarillas, porque comparten la regla), atenúa las demás y
   muestra su regla y los puntos al completarla.
 - Los puntos dependen del tamaño de la zona (`lib/catalogo/puntuacion_zonas.dart`):
   1 casilla 2·1·0, 4 casillas 5·3·1, 5 casillas 6·4·2, 6 casillas 7·5·3 y

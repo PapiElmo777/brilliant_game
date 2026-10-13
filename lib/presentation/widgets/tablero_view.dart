@@ -67,7 +67,19 @@ class _TableroViewState extends State<TableroView> {
         return fila == 0 ? a.columna.compareTo(b.columna) : fila;
       });
     final resaltada = _zonaResaltada;
-    final idsResaltados = {...?resaltada?.celdas.map((celda) => celda.id)};
+    // Si la regla del tipo abarca varias zonas (amarillas), se resaltan todas.
+    final zonasResaltadas = resaltada == null
+        ? const <DefinicionZona>[]
+        : resaltada.tipo.reglaEntreZonas
+        ? [
+            for (final zona in definicion.zonas)
+              if (zona.tipo.runtimeType == resaltada.tipo.runtimeType) zona,
+          ]
+        : [resaltada];
+    final idsResaltados = {
+      for (final zona in zonasResaltadas)
+        for (final celda in zona.celdas) celda.id,
+    };
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -84,57 +96,71 @@ class _TableroViewState extends State<TableroView> {
       ),
       child: AspectRatio(
         aspectRatio: 1,
-        child: Stack(
-          children: [
-            GridView.builder(
-              padding: EdgeInsets.zero,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: celdas.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 7,
-                crossAxisSpacing: 4,
-                mainAxisSpacing: 4,
+        child: LayoutBuilder(
+          builder: (context, espacio) => Stack(
+            children: [
+              GridView.builder(
+                padding: EdgeInsets.zero,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: celdas.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 7,
+                  crossAxisSpacing: 4,
+                  mainAxisSpacing: 4,
+                ),
+                itemBuilder: (context, index) {
+                  final celda = celdas[index];
+                  final zona = zonas[celda.id]!;
+                  return KeyedSubtree(
+                    key: widget.clavesCeldas[celda.id],
+                    child: CeldaView(
+                      key: ValueKey('celda_${celda.id}'),
+                      celda: celda,
+                      tipo: zona.tipo,
+                      esDestino: widget.destinos.contains(celda.id),
+                      seleccionada: estado?.celdaSeleccionada == celda.id,
+                      enPartida: estado == null,
+                      pista: estado == null
+                          ? null
+                          : widget._pistaPreparacion(celda),
+                      enZonaResaltada: idsResaltados.contains(celda.id),
+                      atenuada:
+                          resaltada != null &&
+                          !idsResaltados.contains(celda.id),
+                      onMantener: (presionada) =>
+                          _resaltar(presionada ? zona : null),
+                      onTap:
+                          (estado != null
+                              ? !estado.interaccionBloqueada
+                              : widget.interactiva)
+                          ? () => widget.onCeldaSeleccionada(celda.id)
+                          : null,
+                    ),
+                  );
+                },
               ),
-              itemBuilder: (context, index) {
-                final celda = celdas[index];
-                final zona = zonas[celda.id]!;
-                return KeyedSubtree(
-                  key: widget.clavesCeldas[celda.id],
-                  child: CeldaView(
-                    key: ValueKey('celda_${celda.id}'),
-                    celda: celda,
-                    tipo: zona.tipo,
-                    esDestino: widget.destinos.contains(celda.id),
-                    seleccionada: estado?.celdaSeleccionada == celda.id,
-                    enPartida: estado == null,
-                    pista: estado == null
-                        ? null
-                        : widget._pistaPreparacion(celda),
-                    enZonaResaltada: idsResaltados.contains(celda.id),
-                    atenuada:
-                        resaltada != null && !idsResaltados.contains(celda.id),
-                    onMantener: (presionada) =>
-                        _resaltar(presionada ? zona : null),
-                    onTap:
-                        (estado != null
-                            ? !estado.interaccionBloqueada
-                            : widget.interactiva)
-                        ? () => widget.onCeldaSeleccionada(celda.id)
-                        : null,
+              if (resaltada != null)
+                // La ficha se muestra en la mitad contraria a la zona.
+                // Con varias zonas resaltadas (amarillas en las esquinas), la
+                // ficha deja libres la primera y la última columna.
+                Positioned(
+                  left: zonasResaltadas.length > 1
+                      ? espacio.maxWidth / 7 + 2
+                      : 6,
+                  right: zonasResaltadas.length > 1
+                      ? espacio.maxWidth / 7 + 2
+                      : 6,
+                  top: _zonaArriba(resaltada) ? null : 6,
+                  bottom: _zonaArriba(resaltada) ? 6 : null,
+                  child: IgnorePointer(
+                    child: FichaZona(
+                      zona: resaltada,
+                      zonasDelTipo: zonasResaltadas.length,
+                    ),
                   ),
-                );
-              },
-            ),
-            if (resaltada != null)
-              // La ficha se muestra en la mitad contraria a la zona.
-              Positioned(
-                left: 6,
-                right: 6,
-                top: _zonaArriba(resaltada) ? null : 6,
-                bottom: _zonaArriba(resaltada) ? 6 : null,
-                child: IgnorePointer(child: FichaZona(zona: resaltada)),
-              ),
-          ],
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -149,7 +175,10 @@ class _TableroViewState extends State<TableroView> {
 /// Tipo, regla y puntos representativos de una zona.
 class FichaZona extends StatelessWidget {
   final DefinicionZona zona;
-  const FichaZona({super.key, required this.zona});
+
+  /// Zonas resaltadas que comparten la regla del tipo (1 si no la comparten).
+  final int zonasDelTipo;
+  const FichaZona({super.key, required this.zona, this.zonasDelTipo = 1});
 
   static String nombreTipo(Tipo tipo) => switch (tipo) {
     TipoAzul() => 'azul',
@@ -179,8 +208,11 @@ class FichaZona extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Zona ${nombreTipo(zona.tipo)} · $tamano '
-              '${tamano == 1 ? 'casilla' : 'casillas'}',
+              zonasDelTipo > 1
+                  ? '$zonasDelTipo zonas ${nombreTipo(zona.tipo)}s de $tamano '
+                        '${tamano == 1 ? 'casilla' : 'casillas'}'
+                  : 'Zona ${nombreTipo(zona.tipo)} · $tamano '
+                        '${tamano == 1 ? 'casilla' : 'casillas'}',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontWeight: FontWeight.w800,
@@ -196,7 +228,8 @@ class FichaZona extends StatelessWidget {
             if (puntos.isNotEmpty) ...[
               const SizedBox(height: 4),
               Text(
-                'Al completarla: ${puntos.join(' · ')} puntos',
+                '${zonasDelTipo > 1 ? 'Cada una al completarla' : 'Al completarla'}: '
+                '${puntos.join(' · ')} puntos',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontWeight: FontWeight.w700,
