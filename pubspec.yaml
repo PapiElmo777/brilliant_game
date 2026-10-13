@@ -9,10 +9,12 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
+  video_player: ^2.10.1
 
 flutter:
   uses-material-design: true
   assets:
+    - assets/videos/meteoritos.mp4
     - assets/images/backgrounds/
     - assets/images/characters/
     - assets/images/branding/
