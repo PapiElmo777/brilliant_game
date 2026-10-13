@@ -91,7 +91,12 @@ class _PartidaPageState extends State<PartidaPage> {
     onCeldaSeleccionada: (id) => bloc.add(DestinoSeleccionado(e.tirada.id, id)),
   );
 
-  Widget _contenido(PartidaEstado e, PartidaBloc bloc, {required bool fijo}) {
+  Widget _contenido(
+    PartidaEstado e,
+    PartidaBloc bloc, {
+    required bool fijo,
+    required double alto,
+  }) {
     final boton = _boton(e, bloc);
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
@@ -123,7 +128,12 @@ class _PartidaPageState extends State<PartidaPage> {
                   ),
                 ],
               ),
-              const SizedBox(width: 100, child: NaveMarciano()),
+              // La nave crece con la altura disponible sin quitarle demasiado
+              // espacio al tablero.
+              SizedBox(
+                width: (alto * .18).clamp(110.0, 180.0),
+                child: const NaveMarciano(),
+              ),
               Text(
                 widget.jugador == null
                     ? 'MISIÓN INICIADA'
@@ -200,7 +210,12 @@ class _PartidaPageState extends State<PartidaPage> {
                     final contenido = Center(
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 520),
-                        child: _contenido(e, bloc, fijo: fijo),
+                        child: _contenido(
+                          e,
+                          bloc,
+                          fijo: fijo,
+                          alto: espacio.maxHeight,
+                        ),
                       ),
                     );
                     return fijo
