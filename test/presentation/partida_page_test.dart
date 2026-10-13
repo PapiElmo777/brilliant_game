@@ -47,7 +47,18 @@ void main() {
       final destino=find.byKey(ValueKey('celda_${b.state.destinos.first}'));
       await tester.ensureVisible(destino);await tester.pumpAndSettle();await tester.tap(destino);await tester.pumpAndSettle();
       expect(b.state.historial.length,1);expect(b.state.historial.single.dadoId,1);
-      expect(find.text('Lanzar meteoros'),findsOneWidget);
+      expect(find.text('LANZAR METEOROS'),findsOneWidget);
+      final tablero=tester.getRect(find.byType(TableroView));
+      expect(tester.getRect(find.byKey(const ValueKey('boton_lanzar'))).top,greaterThanOrEqualTo(tablero.bottom));
+      final globo=tester.getRect(find.byType(GloboAlien));
+      for(final id in [0,1]) {
+        final dado=tester.getRect(find.byKey(ValueKey('dado_$id')));
+        expect(dado.top,greaterThan(globo.bottom+8));expect(dado.bottom,lessThanOrEqualTo(tablero.top));
+      }
+      if(size.height>=480) {
+        expect(find.byType(SingleChildScrollView),findsNothing);
+        expect(tester.getRect(find.byKey(const ValueKey('boton_lanzar'))).bottom,lessThanOrEqualTo(size.height));
+      }
       await tester.ensureVisible(find.textContaining('Tiradas · 1'));await tester.tap(find.textContaining('Tiradas · 1'));await tester.pumpAndSettle();
       expect(find.text('Historial de tiradas'),findsOneWidget);
       final colocada=b.state.celdas[b.state.historial.single.celdaId]!;
@@ -57,10 +68,10 @@ void main() {
   }
   testWidgets('Omitir conserva tablero y habilita solo un nuevo lanzamiento', (tester) async {
     final b=await abrir(tester,lleno:true);final antes=b.state.celdas;
-    final omitir=find.text('Omitir tiro');await tester.ensureVisible(omitir);await tester.tap(omitir);await tester.pumpAndSettle();
+    final omitir=find.text('OMITIR TIRO');await tester.ensureVisible(omitir);await tester.tap(omitir);await tester.pumpAndSettle();
     expect(b.state.celdas,antes);expect(b.state.historial.single.dadoId,isNull);
-    final lanzar=find.text('Lanzar meteoros');await tester.ensureVisible(lanzar);await tester.tap(lanzar);await tester.pumpAndSettle();
+    final lanzar=find.text('LANZAR METEOROS');await tester.ensureVisible(lanzar);await tester.tap(lanzar);await tester.pumpAndSettle();
     expect(b.state.tirada.id,2);expect(b.state.historial.length,1);
-    expect(find.text('Lanzar meteoros'),findsNothing);
+    expect(find.text('LANZAR METEOROS'),findsNothing);
   });
 }

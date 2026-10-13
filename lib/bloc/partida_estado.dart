@@ -44,5 +44,11 @@ class PartidaEstado {
       fase == FasePartida.eligiendoNumero ||
       fase == FasePartida.eligiendoDestino ||
       fase == FasePartida.sinMovimientos;
-  bool get dadosArriba => dadoSeleccionado != null;
+
+  /// Los dados suben bajo la nave al elegir uno, o cuando ya no hay elección
+  /// posible para dejar libre el lugar del botón bajo el tablero.
+  bool get dadosArriba =>
+      dadoSeleccionado != null ||
+      fase == FasePartida.sinMovimientos ||
+      fase == FasePartida.rondaResuelta;
 }
