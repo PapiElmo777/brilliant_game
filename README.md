@@ -263,3 +263,27 @@ Al pulsar `NUEVA PARTIDA` se pide el nombre del jugador. `MenuBloc` pasa a la fa
 `Acomodo aleatorio` envía `ColocacionAleatoriaSolicitada`. `PreparacionInicial.distribucionAleatoria` busca, sobre una copia, una colocación de los números faltantes que cumpla las reglas de zona; los números ya colocados se conservan. `InicioBloc` dispara las colocaciones una por una, del número menor al mayor, con la misma animación y confirmación que la colocación manual. Si no existe una distribución válida se publica un error sin disparar.
 
 Al completar la preparación, `PanelInicio` presenta `INICIO` fijo en la parte inferior de la pantalla, sin necesidad de desplazar. El botón entra desde abajo con rebote y emite dos pulsos de resplandor; con movimiento reducido aparece directamente. Tras iniciar, el panel confirma las posiciones.
+
+## Prueba provisional de meteoritos
+
+El primer paso del plan de anclas incorpora `assets/videos/meteoritos.mp4` y el
+widget `MeteoritosVideo`. La prueba independiente se abre con:
+
+```sh
+flutter run -t example/meteoritos.dart
+```
+
+Reproduce una sola vez por ID de tirada, sin deformar el video y alineado abajo.
+La reproducción no se reinicia al reconstruir el widget. El resultado de cierre
+incluye el ID y distingue finalización, movimiento reducido y fallo. La carga,
+la reproducción fallida o una espera mayor de 25 segundos permiten continuar;
+el widget no genera dados ni modifica el tablero. Cambiar de tirada o salir
+invalida las confirmaciones anteriores.
+
+El fondo cuadriculado está grabado en el archivo y sigue visible. El audio se
+mantiene silenciado para esta prueba. La pantalla de ejemplo permite repetir el
+clip; todavía no conecta INICIO con una partida ni sincroniza dados con el
+impacto. Esa integración corresponde a los siguientes pasos del plan.
+
+Las pruebas del reproductor están en
+`test/presentation/meteoritos_video_test.dart`.
