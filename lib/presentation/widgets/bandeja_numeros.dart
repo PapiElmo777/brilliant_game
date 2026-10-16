@@ -75,6 +75,12 @@ class _BandejaNumerosState extends State<BandejaNumeros>
     final estado = widget.estado;
     final onSeleccionado = widget.onSeleccionado;
     final numeros = estado.numerosFaltantes.toList()..sort();
+    final alturaFicha =
+        56 *
+        (MediaQuery.textScalerOf(context).scale(22) / 22).clamp(
+          1.0,
+          double.infinity,
+        );
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, _) => Wrap(
@@ -84,7 +90,7 @@ class _BandejaNumerosState extends State<BandejaNumeros>
         children: [
           for (var numero = 1; numero <= 6; numero++)
             if (!numeros.contains(numero))
-              const SizedBox(width: 48, height: 56)
+              SizedBox(width: 48, height: alturaFicha)
             else
               _AparicionNumero(
                 progreso: Interval(
@@ -103,7 +109,7 @@ class _BandejaNumerosState extends State<BandejaNumeros>
                   excludeSemantics: true,
                   child: SizedBox(
                     width: 48,
-                    height: 56,
+                    height: alturaFicha,
                     child: OutlinedButton(
                       key: ValueKey('numero_$numero'),
                       style: OutlinedButton.styleFrom(

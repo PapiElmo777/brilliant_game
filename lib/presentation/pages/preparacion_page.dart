@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -20,8 +22,14 @@ import '../widgets/bandeja_numeros.dart';
 class PreparacionPage extends StatefulWidget {
   final DefinicionTablero definicion;
   final String? jugador;
+  final Random? azarPartida;
 
-  const PreparacionPage({super.key, required this.definicion, this.jugador});
+  const PreparacionPage({
+    super.key,
+    required this.definicion,
+    this.jugador,
+    this.azarPartida,
+  });
 
   @override
   State<PreparacionPage> createState() => _PreparacionPageState();
@@ -44,8 +52,10 @@ class _PreparacionPageState extends State<PreparacionPage> {
       builder: (context, estado) {
         if (estado.fase == FaseInicio.iniciado) {
           return BlocProvider(
-            create: (_) =>
-                PartidaBloc(context.read<InicioBloc>().crearTableroParaJuego()),
+            create: (_) => PartidaBloc(
+              context.read<InicioBloc>().crearTableroParaJuego(),
+              azar: widget.azarPartida,
+            ),
             child: PartidaPage(
               definicion: widget.definicion,
               jugador: widget.jugador,

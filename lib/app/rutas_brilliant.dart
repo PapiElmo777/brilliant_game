@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -11,7 +13,7 @@ abstract final class RutasBrilliant {
   static const menu = '/';
   static const preparacion = '/preparacion';
 
-  static Route<void> generar(RouteSettings settings) {
+  static Route<void> generar(RouteSettings settings, {Random? azarPartida}) {
     if (settings.arguments case (
       DefinicionTablero definicion,
       String jugador,
@@ -21,7 +23,11 @@ abstract final class RutasBrilliant {
         builder: (_) => BlocProvider(
           create: (_) =>
               InicioBloc(definicion.crearTablero(), animarEntrada: true),
-          child: PreparacionPage(definicion: definicion, jugador: jugador),
+          child: PreparacionPage(
+            definicion: definicion,
+            jugador: jugador,
+            azarPartida: azarPartida,
+          ),
         ),
       );
     }

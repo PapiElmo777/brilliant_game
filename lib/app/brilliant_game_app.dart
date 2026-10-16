@@ -1,10 +1,14 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import 'rutas_brilliant.dart';
 import 'tema_brilliant.dart';
 
 class BrilliantGameApp extends StatelessWidget {
-  const BrilliantGameApp({super.key});
+  final Random? azarPartida;
+
+  const BrilliantGameApp({super.key, this.azarPartida});
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +17,8 @@ class BrilliantGameApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: TemaBrilliant.oscuro,
       initialRoute: RutasBrilliant.menu,
-      onGenerateRoute: RutasBrilliant.generar,
+      onGenerateRoute: (settings) =>
+          RutasBrilliant.generar(settings, azarPartida: azarPartida),
     );
   }
 }

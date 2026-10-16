@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/partida_bloc.dart';
@@ -17,14 +19,22 @@ import '../widgets/tablero_view.dart';
 class PartidaPage extends StatefulWidget {
   final DefinicionTablero definicion;
   final String? jugador;
-  const PartidaPage({super.key, required this.definicion, this.jugador});
+  final Future<ui.Codec> Function()? cargarMeteoritos;
+
+  const PartidaPage({
+    super.key,
+    required this.definicion,
+    this.jugador,
+    this.cargarMeteoritos,
+  });
   @override
   State<PartidaPage> createState() => _PartidaPageState();
 }
 
 class _PartidaPageState extends State<PartidaPage> {
-  /// Debajo de esta altura no cabe la partida completa y se permite desplazar.
-  static const _alturaMinima = 480.0;
+  /// Reserva para encabezado, nave, mensajes, dados y controles. El tablero
+  /// necesita además su ancho completo para conservar casillas utilizables.
+  static const _alturaControles = 480.0;
 
   final _lienzo = GlobalKey();
   final _arriba = GlobalKey();
@@ -237,11 +247,19 @@ class _PartidaPageState extends State<PartidaPage> {
             children: [
               FondoEspacial(
                 child: SafeArea(
-                  // La partida se ajusta a la pantalla sin desplazarse; sólo en
-                  // alturas muy reducidas se permite el desplazamiento.
+                  // Si no cabe el tablero a su ancho completo, se permite
+                  // desplazar en lugar de encoger sus casillas.
                   child: LayoutBuilder(
                     builder: (context, espacio) {
-                      final fijo = espacio.maxHeight >= _alturaMinima;
+                      final anchoTablero =
+                          espacio.maxWidth.clamp(0.0, 520.0) - 24;
+                      final textoExtra =
+                          (MediaQuery.textScalerOf(context).scale(16) - 16)
+                              .clamp(0.0, double.infinity) *
+                          8;
+                      final fijo =
+                          espacio.maxHeight >=
+                          _alturaControles + anchoTablero + textoExtra;
                       final contenido = Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 520),
@@ -266,6 +284,7 @@ class _PartidaPageState extends State<PartidaPage> {
                   child: MeteoritosAnimacion(
                     key: ValueKey(e.tirada.id),
                     tiradaId: e.tirada.id,
+                    cargar: widget.cargarMeteoritos,
                     onImpacto: (id) => bloc.add(ImpactoConfirmado(id)),
                     onCompletada: (id) => bloc.add(MeteorosCompletados(id)),
                   ),
