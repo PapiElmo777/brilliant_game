@@ -341,8 +341,9 @@ el ID de la tirada; las confirmaciones antiguas o duplicadas se ignoran.
   conserva un solo registro de la ronda; al lanzar, la jugada queda fija.
 - Salir con la flecha o con el regreso del sistema pide confirmación, porque se
   pierde el progreso; al aceptar se vuelve al menú principal.
-- La pantalla se ajusta al dispositivo sin desplazarse: el tablero toma el
-  espacio restante. Sólo con menos de 480 puntos de alto se permite desplazar.
+- La pantalla permite desplazarse cuando no cabe el tablero a su ancho
+  completo junto con los controles y el texto ampliado. Así las casillas no
+  se reducen hasta resultar difíciles de tocar.
 - `Tiradas · N`, en el encabezado, abre el historial. Una colocación ilumina el
   dado escrito e indica fila y columna; una omisión no ilumina ninguno.
 
@@ -392,4 +393,26 @@ En la partida, escribir el número que completa una zona reclama el puesto y
 el alien anuncia los puntos; si la jugada se cambia antes de lanzar, el
 reclamo se libera. Al alcanzar la meta se dejan de lanzar meteoros y el alien
 lo anuncia; la celebración de victoria se definirá más adelante.
+
+## Pruebas del recorrido completo del usuario
+
+`test/presentation/flujo_completo_usuario_test.dart` recorre la aplicación
+desde el menú: captura del nombre, seis colocaciones manuales en `tablero_01`,
+INICIO, elección e intercambio de dados, destinos concretos e historial.
+En 390×844 continúa hasta ganar a 26 puntos en 20 rondas; en 320×568, con texto
+ampliado, completa dos rondas. Ambos recorridos vuelven a una preparación
+vacía y comprueban un tamaño mínimo de casilla de 32 puntos.
+
+Los escenarios complementarios comprueban dobles, omisión, suma y reversión
+de puntos, puestos reclamados y victoria a 26 puntos en pantalla. Una prueba
+con movimiento habilitado verifica impacto, revelado y bloqueo de selección
+hasta terminar el movimiento de los dados. Se programan los resultados del
+azar; las acciones se realizan mediante controles de la interfaz, sin enviar
+eventos de juego directamente al BLoC. El clip de esa prueba usa cuadros
+simulados: no sustituye la revisión del recurso real en Android e iOS.
+
+`test/golden/partida_capturas_test.dart` conserva referencias visuales de los
+resultados, los destinos resaltados y el historial. Comparte la carga de
+fuentes con las capturas de menú y preparación. Las comparaciones se ejecutan
+en macOS y deben revisarse visualmente antes de actualizar referencias.
 
