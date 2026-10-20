@@ -52,7 +52,7 @@ class _PartidaPageState extends State<PartidaPage> {
           ? (e.tirada.id == 1 ? '¡El juego comenzó!' : 'Llegan los meteoros…')
           : 'Resultados: ${e.tirada.dados.map((d) => d.valor).join(' y ')}';
     // Provisional hasta definir la celebración de victoria.
-    if (e.gano) return '¡Ganaste! Llegaste a ${e.puntos} de ${e.meta} puntos.';
+    if (e.partidaTerminada) return '¡Llegaste a la meta de ${e.meta} puntos!';
     if (e.reclamoRonda case final reclamo?)
       return '¡Zona completada! +${reclamo.puntos} puntos. '
           'Puedes cambiar tu jugada o lanzar.';

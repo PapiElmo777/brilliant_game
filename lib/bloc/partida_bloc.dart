@@ -22,6 +22,7 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
   /// local y la meta se toma como si fuera una partida de [jugadores].
   final Marcador _marcador;
   final String _jugador;
+  final String _nombreJugador;
 
   /// Zona completada con la colocación de esta ronda; se libera si la
   /// jugada se cambia antes de lanzar.
@@ -32,6 +33,7 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
     Random? azar,
     int jugadores = 2,
     String jugadorId = 'jugador_1',
+    String? nombreJugador,
   }) {
     final copia = Tablero(
       id: tablero.id,
@@ -52,6 +54,7 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
       Tirada.lanzar(1, fuente),
       Marcador(jugadores: jugadores),
       jugadorId,
+      nombreJugador ?? 'Jugador',
     );
   }
 
@@ -61,6 +64,7 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
     Tirada primera,
     this._marcador,
     this._jugador,
+    this._nombreJugador,
   ) : super(
         PartidaEstado(
           fase: FasePartida.tirando,
@@ -122,8 +126,13 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
         zonaId: _marcador.puestosReclamados(zonaId),
     },
     reclamoRonda: _reclamoRonda,
+    resultados: fase == FasePartida.mostrandoResultados
+        ? _resultados()
+        : const [],
     destinos:
         (fase == FasePartida.eligiendoDestino || _colocacion != null) &&
+            fase != FasePartida.celebrandoVictoria &&
+            fase != FasePartida.mostrandoResultados &&
             _seleccion != null
         ? _destinos(_seleccion!)
         : const {},
@@ -133,10 +142,25 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
           FasePartida.revelandoResultados,
           FasePartida.moviendoDados,
           FasePartida.rondaResuelta,
+          FasePartida.celebrandoVictoria,
+          FasePartida.mostrandoResultados,
         }.contains(fase) &&
         _sinMovimientos,
     error: error,
   );
+
+  /// Ranking con nombres. Por ahora sólo participa el jugador local.
+  List<ResultadoJugador> _resultados() => [
+    for (final posicion in _marcador.ranking([_jugador]))
+      ResultadoJugador(
+        jugadorId: posicion.jugadorId,
+        nombre: _nombreJugador,
+        puntos: posicion.puntos,
+        zonasCompletadas: posicion.zonasCompletadas,
+        posicion: posicion.posicion,
+        esLocal: posicion.jugadorId == _jugador,
+      ),
+  ];
 
   void _procesar(PartidaEvento evento, Emitter<PartidaEstado> emit) {
     final id = switch (evento) {
@@ -147,9 +171,20 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
       MovimientoDadosCompletado() => evento.tiradaId,
       DestinoSeleccionado() => evento.tiradaId,
       TiroOmitido() => evento.tiradaId,
+      CelebracionCompletada() => evento.tiradaId,
     };
     if (id != _tirada.id) return;
+    // Al terminar la partida sólo se espera el cierre de la celebración.
+    if (state.partidaTerminada) {
+      if (evento is CelebracionCompletada &&
+          state.fase == FasePartida.celebrandoVictoria) {
+        emit(_estado(FasePartida.mostrandoResultados));
+      }
+      return;
+    }
     switch (evento) {
+      case CelebracionCompletada():
+        return;
       case MeteorosSolicitados():
         if (state.fase != FasePartida.rondaResuelta || state.gano) return;
         _tirada = Tirada.lanzar(_tirada.id + 1, _azar);
@@ -222,7 +257,14 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
         _historial.add(
           RegistroTirada.colocada(_tirada, _seleccion!, evento.celdaId),
         );
-        emit(_estado(FasePartida.rondaResuelta));
+        // Llegar a la meta termina la partida: la jugada ya no se cambia.
+        emit(
+          _estado(
+            _marcador.haGanado(_jugador)
+                ? FasePartida.celebrandoVictoria
+                : FasePartida.rondaResuelta,
+          ),
+        );
       case TiroOmitido():
         if (!state.puedeSeleccionar || state.fase == FasePartida.rondaResuelta)
           return;

@@ -258,7 +258,7 @@ void main() {
     },
   );
 
-  test('Al alcanzar la meta no se lanzan más meteoros', () async {
+  test('Llegar a la meta termina la partida y muestra el ranking', () async {
     // Con cinco jugadores la meta es 20: dos zonas amarillas (8 + 8) y una
     // verde (4), completadas en tres rondas con dobles de 3.
     Zona zona(String id, Tipo tipo, int columna, [int? valor]) => Zona(
@@ -280,6 +280,7 @@ void main() {
       ),
       azar: AzarFijo([3]),
       jugadores: 5,
+      nombreJugador: 'Babo',
     );
     addTearDown(b.close);
     expect(b.state.meta, 20);
@@ -298,7 +299,38 @@ void main() {
       'verde',
     ]);
     expect(b.state.puntos, 20);
-    expect(b.state.fase, FasePartida.rondaResuelta);
+    expect(b.state.fase, FasePartida.celebrandoVictoria);
+    expect(b.state.partidaTerminada, isTrue);
     expect(b.state.tirada.id, 3);
+    expect(b.state.historial.length, 3);
+    // La jugada ganadora es definitiva: no se retira, ni se cambia de dado,
+    // ni se omite, ni se lanza otra tirada.
+    for (final evento in <PartidaEvento>[
+      const DestinoSeleccionado(3, 'c3'),
+      const DadoSeleccionado(3, 1),
+      const TiroOmitido(3),
+      const MeteorosSolicitados(3),
+      const CelebracionCompletada(2),
+    ]) {
+      await enviar(b, evento);
+      expect(b.state.fase, FasePartida.celebrandoVictoria);
+      expect(b.state.celdas['c3']!.valor, 3);
+      expect(b.state.puntos, 20);
+    }
+    expect(b.state.destinos, isEmpty);
+    expect(b.state.puedeSeleccionar, isFalse);
+    expect(b.state.resultados, isEmpty);
+    // La celebración se confirma una sola vez.
+    await enviar(b, const CelebracionCompletada(3));
+    expect(b.state.fase, FasePartida.mostrandoResultados);
+    final estado = b.state;
+    await enviar(b, const CelebracionCompletada(3));
+    expect(identical(b.state, estado), isTrue);
+    expect(
+      b.state.resultados.map(
+        (r) => (r.nombre, r.puntos, r.zonasCompletadas, r.posicion, r.esLocal),
+      ),
+      [('Babo', 20, 3, 1, true)],
+    );
   });
 }

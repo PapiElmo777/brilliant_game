@@ -55,6 +55,7 @@ class _PreparacionPageState extends State<PreparacionPage> {
             create: (_) => PartidaBloc(
               context.read<InicioBloc>().crearTableroParaJuego(),
               azar: widget.azarPartida,
+              nombreJugador: widget.jugador,
             ),
             child: PartidaPage(
               definicion: widget.definicion,

@@ -264,7 +264,7 @@ void main() {
             );
           }
           expect(
-            find.text('¡Ganaste! Llegaste a 26 de 26 puntos.'),
+            find.text('¡Llegaste a la meta de 26 puntos!'),
             findsOneWidget,
           );
           expect(find.text('LANZAR METEOROS'), findsNothing);
@@ -364,7 +364,7 @@ void main() {
         }
       }
       expect(
-        find.text('¡Ganaste! Llegaste a 26 de 26 puntos.'),
+        find.text('¡Llegaste a la meta de 26 puntos!'),
         findsOneWidget,
       );
       expect(find.text('LANZAR METEOROS'), findsNothing);

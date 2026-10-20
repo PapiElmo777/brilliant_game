@@ -38,3 +38,9 @@ class TiroOmitido extends PartidaEvento {
   final int tiradaId;
   const TiroOmitido(this.tiradaId);
 }
+
+/// La celebración de victoria terminó o el jugador la omitió.
+class CelebracionCompletada extends PartidaEvento {
+  final int tiradaId;
+  const CelebracionCompletada(this.tiradaId);
+}
