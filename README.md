@@ -391,8 +391,45 @@ juega con un solo jugador local (`jugador_1`) y la meta de 2 jugadores.
 
 En la partida, escribir el número que completa una zona reclama el puesto y
 el alien anuncia los puntos; si la jugada se cambia antes de lanzar, el
-reclamo se libera. Al alcanzar la meta se dejan de lanzar meteoros y el alien
-lo anuncia; la celebración de victoria se definirá más adelante.
+reclamo se libera.
+
+## Victoria y resultados
+
+Llegar a la meta termina la partida. La jugada ganadora es definitiva:
+`PartidaBloc` pasa a `FasePartida.celebrandoVictoria` e ignora selecciones,
+destinos, omisiones y lanzamientos. `CelebracionCompletada(tiradaId)` lleva a
+`FasePartida.mostrandoResultados` una sola vez; las confirmaciones repetidas o
+de otra tirada se ignoran.
+
+`CelebracionVictoria` (`lib/presentation/widgets/celebracion_victoria.dart`)
+dibuja la secuencia en Flutter, sin recursos externos, en unos 6,4 s:
+
+1. El tablero brilla al alcanzar la meta.
+2. La nave concentra energía y el tablero tiembla.
+3. Un rayo baja al centro del tablero con un destello.
+4. El tablero estalla: bola de fuego, dos ondas expansivas, chispas, brasas,
+   humo y las 49 casillas saliendo disparadas con giro en 3D.
+5. La nave vuela al centro con estela y dice «¡Buen trabajo, has ganado!» con
+   la puntuación final, entre confeti y rayos de luz.
+6. La nave sale hacia arriba y aparece el menú de resultados.
+
+La celebración dibuja copias de la nave y del tablero en su posición real
+mientras la página oculta los originales (`ControlCelebracion`), y hace
+temblar y atenúa el resto de la partida. Las partículas usan semillas fijas.
+Tocar la pantalla o el regreso del sistema la omiten. Con movimiento reducido
+sólo se muestra la felicitación durante 1,8 s.
+
+`ResultadosPartida` muestra el trofeo, la meta y el ranking
+(`Marcador.ranking`, por ahora sólo con el jugador local, su nombre, puntos y
+zonas completadas). «EMPEZAR DE NUEVO» abre una preparación nueva del mismo
+tablero con el mismo nombre, sin volver a pedirlo. «SALIR AL MENÚ» y el
+regreso del sistema vuelven al menú sin confirmación. Los empates comparten
+posición hasta que se defina el desempate del multijugador.
+
+Pruebas: `test/core/marcador_test.dart`, `test/bloc/partida_bloc_test.dart`,
+`test/presentation/celebracion_victoria_test.dart`,
+`test/presentation/resultados_partida_test.dart` y la captura
+`test/golden/capturas/partida_victoria.png`.
 
 ## Pruebas del recorrido completo del usuario
 
