@@ -6,8 +6,11 @@ import 'dart:math';
 
 import 'package:brilliant_game/app/tema_brilliant.dart';
 import 'package:brilliant_game/bloc/partida_bloc.dart';
+import 'package:brilliant_game/bloc/partida_estado.dart';
 import 'package:brilliant_game/catalogo/tablero_01.dart';
 import 'package:brilliant_game/presentation/pages/partida_page.dart';
+import 'package:brilliant_game/presentation/widgets/fondo_espacial.dart';
+import 'package:brilliant_game/presentation/widgets/resultados_partida.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -70,4 +73,47 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets('Victoria: menú de resultados', skip: !Platform.isMacOS, (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    await tester.pumpWidget(
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: TemaBrilliant.oscuro,
+        home: Scaffold(
+          body: FondoEspacial(
+            child: SafeArea(
+              child: ResultadosPartida(
+                resultados: const [
+                  ResultadoJugador(
+                    jugadorId: 'jugador_1',
+                    nombre: 'Ana',
+                    puntos: 26,
+                    zonasCompletadas: 4,
+                    posicion: 1,
+                    esLocal: true,
+                  ),
+                ],
+                meta: 26,
+                onEmpezarDeNuevo: () {},
+                onSalirAlMenu: () {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('capturas/partida_victoria.png'),
+    );
+  });
 }
