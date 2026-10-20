@@ -16,7 +16,7 @@ abstract final class RutasBrilliant {
   static Route<void> generar(RouteSettings settings, {Random? azarPartida}) {
     if (settings.arguments case (
       DefinicionTablero definicion,
-      String jugador,
+      String? jugador,
     ) when settings.name == preparacion) {
       return MaterialPageRoute<void>(
         settings: settings,

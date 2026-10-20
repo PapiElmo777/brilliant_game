@@ -115,12 +115,17 @@ Future<void> _abrirPartida(
   _DadosProgramados azar, {
   Future<ui.Codec> Function()? cargar,
 }) async {
+  // La partida queda sobre una pantalla de menú para poder volver a ella.
   await tester.pumpWidget(
     MaterialApp(
-      home: BlocProvider(
-        create: (_) => PartidaBloc(tablero, azar: azar),
-        child: PartidaPage(definicion: tablero01, cargarMeteoritos: cargar),
-      ),
+      initialRoute: '/partida',
+      routes: {
+        '/': (_) => const Scaffold(body: Text('MENÚ DE PRUEBA')),
+        '/partida': (_) => BlocProvider(
+          create: (_) => PartidaBloc(tablero, azar: azar),
+          child: PartidaPage(definicion: tablero01, cargarMeteoritos: cargar),
+        ),
+      },
     ),
   );
 }
@@ -269,11 +274,47 @@ void main() {
           );
           expect(find.text('LANZAR METEOROS'), findsNothing);
           expect(find.text('OMITIR TIRO'), findsNothing);
+          // Tocar salta la celebración y muestra el ranking.
+          await _pulsar(
+            tester,
+            find.byKey(const ValueKey('saltar_celebracion')),
+          );
+          expect(find.text('RESULTADOS'), findsOneWidget);
+          expect(find.text('Meta: 26 puntos'), findsOneWidget);
+          expect(
+            find.descendant(
+              of: find.byKey(const ValueKey('ranking_jugador_1')),
+              matching: find.text('Ana'),
+            ),
+            findsOneWidget,
+          );
+          expect(
+            find.bySemanticsLabel(RegExp(r'^Lugar 1: Ana, 26 puntos')),
+            findsOneWidget,
+          );
         }
         final llamadasEsperadas = terminarPartida ? 40 : 4;
         expect(azar.llamadas, llamadasEsperadas);
-        await _pulsar(tester, find.byTooltip('Volver al menú'));
-        await _pulsar(tester, find.byKey(const ValueKey('confirmar_salida')));
+        if (terminarPartida) {
+          // Empezar de nuevo conserva el nombre y va directo a la preparación.
+          await _pulsar(
+            tester,
+            find.byKey(const ValueKey('boton_empezar_de_nuevo')),
+          );
+          expect(find.byType(PartidaPage), findsNothing);
+          expect(find.byType(TextField), findsNothing);
+          expect(find.text('PREPARA TU MISIÓN, ANA'), findsOneWidget);
+          expect(
+            tester
+                .widgetList<CeldaView>(find.byType(CeldaView))
+                .every((celda) => celda.celda.valor == null),
+            isTrue,
+          );
+          await _pulsar(tester, find.byTooltip('Volver al menú'));
+        } else {
+          await _pulsar(tester, find.byTooltip('Volver al menú'));
+          await _pulsar(tester, find.byKey(const ValueKey('confirmar_salida')));
+        }
         await _pulsar(tester, find.text('NUEVA PARTIDA'));
         expect(
           tester.widget<TextField>(find.byType(TextField)).controller!.text,
@@ -363,15 +404,21 @@ void main() {
           await _pulsar(tester, find.text('LANZAR METEOROS'));
         }
       }
-      expect(
-        find.text('¡Llegaste a la meta de 26 puntos!'),
-        findsOneWidget,
-      );
+      expect(find.text('¡Llegaste a la meta de 26 puntos!'), findsOneWidget);
       expect(find.text('LANZAR METEOROS'), findsNothing);
       expect(find.text('OMITIR TIRO'), findsNothing);
       expect(find.text('Tiradas · 4  (5 · 3)'), findsOneWidget);
       await tester.pump(const Duration(seconds: 3));
       expect(azar.llamadas, 8);
+      // El regreso del sistema omite la celebración y luego sale sin
+      // pedir confirmación.
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('RESULTADOS'), findsOneWidget);
+      await _pulsar(tester, find.byKey(const ValueKey('boton_salir_menu')));
+      expect(find.byType(PartidaPage), findsNothing);
+      expect(find.text('MENÚ DE PRUEBA'), findsOneWidget);
+      expect(find.byKey(const ValueKey('confirmar_salida')), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );

@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../app/rutas_brilliant.dart';
 import '../../bloc/partida_bloc.dart';
 import '../../bloc/partida_estado.dart';
 import '../../bloc/partida_evento.dart';
@@ -14,6 +15,7 @@ import '../widgets/historial_tiradas.dart';
 import '../widgets/meteoritos_animacion.dart';
 import '../widgets/nave_marciano.dart';
 import '../widgets/respuesta_error.dart';
+import '../widgets/resultados_partida.dart';
 import '../widgets/tablero_view.dart';
 
 class PartidaPage extends StatefulWidget {
@@ -21,11 +23,15 @@ class PartidaPage extends StatefulWidget {
   final String? jugador;
   final Future<ui.Codec> Function()? cargarMeteoritos;
 
+  /// Por omisión abre una preparación nueva con el mismo jugador.
+  final VoidCallback? onEmpezarDeNuevo;
+
   const PartidaPage({
     super.key,
     required this.definicion,
     this.jugador,
     this.cargarMeteoritos,
+    this.onEmpezarDeNuevo,
   });
   @override
   State<PartidaPage> createState() => _PartidaPageState();
@@ -43,7 +49,31 @@ class _PartidaPageState extends State<PartidaPage> {
   /// Sale al menú principal sólo si el jugador acepta perder la partida.
   Future<void> _confirmarSalida() async {
     if (!await DialogoSalirPartida.mostrar(context) || !mounted) return;
-    Navigator.of(context).popUntil((ruta) => ruta.isFirst);
+    _salirAlMenu();
+  }
+
+  void _salirAlMenu() => Navigator.of(context).popUntil((ruta) => ruta.isFirst);
+
+  /// Conserva el nombre y va directo a acomodar los números.
+  void _empezarDeNuevo() {
+    if (widget.onEmpezarDeNuevo case final empezar?) return empezar();
+    Navigator.of(context).pushReplacementNamed(
+      RutasBrilliant.preparacion,
+      arguments: (widget.definicion, widget.jugador),
+    );
+  }
+
+  /// Regresar del sistema: con la partida en curso pide confirmación; en la
+  /// celebración la omite y en los resultados vuelve al menú.
+  void _regresar(PartidaEstado e, PartidaBloc bloc) {
+    switch (e.fase) {
+      case FasePartida.celebrandoVictoria:
+        bloc.add(CelebracionCompletada(e.tirada.id));
+      case FasePartida.mostrandoResultados:
+        _salirAlMenu();
+      default:
+        _confirmarSalida();
+    }
   }
 
   String _mensaje(PartidaEstado e) {
@@ -132,7 +162,7 @@ class _PartidaPageState extends State<PartidaPage> {
                 children: [
                   IconButton(
                     tooltip: 'Volver al menú',
-                    onPressed: _confirmarSalida,
+                    onPressed: () => _regresar(e, bloc),
                     icon: const Icon(Icons.arrow_back_rounded),
                   ),
                   const Expanded(
@@ -235,11 +265,30 @@ class _PartidaPageState extends State<PartidaPage> {
   Widget build(BuildContext context) => BlocBuilder<PartidaBloc, PartidaEstado>(
     builder: (context, e) {
       final bloc = context.read<PartidaBloc>();
-      // El gesto o botón de regresar del sistema también pide confirmación.
+      if (e.fase == FasePartida.mostrandoResultados) {
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (salio, _) {
+            if (!salio) _regresar(e, bloc);
+          },
+          child: Scaffold(
+            body: FondoEspacial(
+              child: SafeArea(
+                child: ResultadosPartida(
+                  resultados: e.resultados,
+                  meta: e.meta,
+                  onEmpezarDeNuevo: _empezarDeNuevo,
+                  onSalirAlMenu: _salirAlMenu,
+                ),
+              ),
+            ),
+          ),
+        );
+      }
       return PopScope(
         canPop: false,
         onPopInvokedWithResult: (salio, _) {
-          if (!salio) _confirmarSalida();
+          if (!salio) _regresar(e, bloc);
         },
         child: Scaffold(
           body: Stack(
@@ -278,6 +327,15 @@ class _PartidaPageState extends State<PartidaPage> {
                   ),
                 ),
               ),
+              // Provisional: tocar continúa a los resultados.
+              if (e.fase == FasePartida.celebrandoVictoria)
+                Positioned.fill(
+                  child: GestureDetector(
+                    key: const ValueKey('saltar_celebracion'),
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => bloc.add(CelebracionCompletada(e.tirada.id)),
+                  ),
+                ),
               // Los meteoros caen sobre toda la pantalla sin bloquear toques.
               if (e.animandoMeteoros)
                 Positioned.fill(
