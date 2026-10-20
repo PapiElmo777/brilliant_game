@@ -109,4 +109,62 @@ void main() {
     expect(marcador.haGanado('ana'), isTrue);
     expect(marcador.haGanado('beto'), isFalse);
   });
+
+  test('El ranking ordena por puntos e incluye a quien no tiene', () {
+    final marcador = Marcador(jugadores: 3);
+    marcador.reclamar(
+      zonaId: 'azul_1',
+      tipo: const TipoAzul(),
+      jugadorId: 'beto',
+    );
+    marcador.reclamar(
+      zonaId: 'verde_1',
+      tipo: const TipoVerde(),
+      jugadorId: 'beto',
+    );
+    marcador.reclamar(
+      zonaId: 'azul_1',
+      tipo: const TipoAzul(),
+      jugadorId: 'ana',
+    );
+    marcador.reclamar(
+      zonaId: 'verde_2',
+      tipo: const TipoVerde(),
+      jugadorId: 'caro',
+    );
+    marcador.reclamar(
+      zonaId: 'rojo_1',
+      tipo: const TipoRojo(),
+      jugadorId: 'caro',
+    );
+    final ranking = marcador.ranking(['ana', 'beto', 'caro', 'dani']);
+    expect(ranking.map((p) => (p.jugadorId, p.puntos, p.posicion)), [
+      ('beto', 11, 1),
+      ('caro', 10, 2),
+      ('ana', 6, 3),
+      ('dani', 0, 4),
+    ]);
+    expect(ranking.first.zonasCompletadas, 2);
+    expect(ranking.last.zonasCompletadas, 0);
+    expect(() => ranking.clear(), throwsUnsupportedError);
+  });
+
+  test('Los empates comparten posición por ahora', () {
+    final marcador = Marcador(jugadores: 3);
+    marcador.reclamar(
+      zonaId: 'verde_1',
+      tipo: const TipoVerde(),
+      jugadorId: 'ana',
+    );
+    marcador.reclamar(
+      zonaId: 'verde_2',
+      tipo: const TipoVerde(),
+      jugadorId: 'beto',
+    );
+    expect(marcador.ranking(['ana', 'beto', 'caro']).map((p) => p.posicion), [
+      1,
+      1,
+      3,
+    ]);
+  });
 }
