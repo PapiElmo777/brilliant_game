@@ -67,6 +67,15 @@ Future<void> _pulsar(WidgetTester tester, Finder objetivo) async {
   await tester.pumpAndSettle();
 }
 
+/// Toca sin esperar a que terminen las animaciones: la jugada ganadora
+/// inicia la celebración, que termina sola en los resultados.
+Future<void> _pulsarSinEsperar(WidgetTester tester, Finder objetivo) async {
+  await tester.ensureVisible(objetivo);
+  await tester.tap(objetivo);
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 100));
+}
+
 void _valorVisible(WidgetTester tester, String id, int valor) {
   expect(
     find.descendant(of: _celda(id), matching: find.text('$valor')),
@@ -254,7 +263,11 @@ void main() {
             final (destino, valor, puntos) = _caminoVictoria[i];
             await _pulsar(tester, find.text('LANZAR METEOROS'));
             await _pulsar(tester, _dado(0));
-            await _pulsar(tester, _celda(destino));
+            if (i == _caminoVictoria.length - 1) {
+              await _pulsarSinEsperar(tester, _celda(destino));
+            } else {
+              await _pulsar(tester, _celda(destino));
+            }
             _valorVisible(tester, destino, valor);
             expect(
               find.descendant(
@@ -366,7 +379,11 @@ void main() {
         ('f4_c3', 26, 6),
       ]) {
         await _pulsar(tester, _dado(0));
-        await _pulsar(tester, _celda(destino));
+        if (total == 26) {
+          await _pulsarSinEsperar(tester, _celda(destino));
+        } else {
+          await _pulsar(tester, _celda(destino));
+        }
         expect(
           find.descendant(of: panel, matching: find.text('$total')),
           findsOneWidget,
@@ -408,13 +425,14 @@ void main() {
       expect(find.text('LANZAR METEOROS'), findsNothing);
       expect(find.text('OMITIR TIRO'), findsNothing);
       expect(find.text('Tiradas · 4  (5 · 3)'), findsOneWidget);
-      await tester.pump(const Duration(seconds: 3));
       expect(azar.llamadas, 8);
       // El regreso del sistema omite la celebración y luego sale sin
       // pedir confirmación.
       await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
       expect(find.text('RESULTADOS'), findsOneWidget);
+      await tester.pumpAndSettle();
       await _pulsar(tester, find.byKey(const ValueKey('boton_salir_menu')));
       expect(find.byType(PartidaPage), findsNothing);
       expect(find.text('MENÚ DE PRUEBA'), findsOneWidget);

@@ -8,6 +8,7 @@ import '../../bloc/partida_estado.dart';
 import '../../bloc/partida_evento.dart';
 import '../../catalogo/definicion_tablero.dart';
 import '../widgets/boton_panel.dart';
+import '../widgets/celebracion_victoria.dart';
 import '../widgets/dados_partida.dart';
 import '../widgets/dialogo_salir_partida.dart';
 import '../widgets/fondo_espacial.dart';
@@ -45,6 +46,25 @@ class _PartidaPageState extends State<PartidaPage> {
   final _lienzo = GlobalKey();
   final _arriba = GlobalKey();
   final _impactos = GlobalKey();
+  final _nave = GlobalKey();
+  final _tableroClave = GlobalKey();
+  final _celebracion = ControlCelebracion();
+
+  @override
+  void dispose() {
+    _celebracion.dispose();
+    super.dispose();
+  }
+
+  /// Durante la celebración, la nave y el tablero originales se ocultan
+  /// mientras la animación dibuja sus copias en el mismo lugar.
+  Widget _ocultable(Widget child, {required bool Function() oculto}) =>
+      ListenableBuilder(
+        listenable: _celebracion,
+        child: child,
+        builder: (context, child) =>
+            Opacity(opacity: oculto() ? 0 : 1, child: child),
+      );
 
   /// Sale al menú principal sólo si el jugador acepta perder la partida.
   Future<void> _confirmarSalida() async {
@@ -135,13 +155,20 @@ class _PartidaPageState extends State<PartidaPage> {
     return null;
   }
 
-  Widget _tablero(PartidaEstado e, PartidaBloc bloc) => TableroView.partida(
-    definicion: widget.definicion,
-    celdas: e.celdas,
-    destinos: e.destinos,
-    puestosReclamados: e.puestosReclamados,
-    interactiva: e.puedeSeleccionar,
-    onCeldaSeleccionada: (id) => bloc.add(DestinoSeleccionado(e.tirada.id, id)),
+  Widget _tablero(PartidaEstado e, PartidaBloc bloc) => _ocultable(
+    oculto: () => _celebracion.ocultarTablero,
+    KeyedSubtree(
+      key: _tableroClave,
+      child: TableroView.partida(
+        definicion: widget.definicion,
+        celdas: e.celdas,
+        destinos: e.destinos,
+        puestosReclamados: e.puestosReclamados,
+        interactiva: e.puedeSeleccionar,
+        onCeldaSeleccionada: (id) =>
+            bloc.add(DestinoSeleccionado(e.tirada.id, id)),
+      ),
+    ),
   );
 
   Widget _contenido(
@@ -188,9 +215,13 @@ class _PartidaPageState extends State<PartidaPage> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   const Spacer(),
-                  SizedBox(
-                    width: (alto * .18).clamp(110.0, 180.0),
-                    child: const NaveMarciano(),
+                  _ocultable(
+                    oculto: () => _celebracion.ocultarNave,
+                    SizedBox(
+                      key: _nave,
+                      width: (alto * .18).clamp(110.0, 180.0),
+                      child: const NaveMarciano(),
+                    ),
                   ),
                   Expanded(
                     child: Align(
@@ -243,19 +274,20 @@ class _PartidaPageState extends State<PartidaPage> {
               ),
             ],
           ),
-          Positioned.fill(
-            child: DadosPartida(
-              key: ValueKey('dados_${e.tirada.id}'),
-              estado: e,
-              lienzo: _lienzo,
-              arriba: _arriba,
-              abajo: _impactos,
-              onSeleccionar: (id) =>
-                  bloc.add(DadoSeleccionado(e.tirada.id, id)),
-              onMovimientoCompletado: () =>
-                  bloc.add(MovimientoDadosCompletado(e.tirada.id)),
+          if (!e.partidaTerminada)
+            Positioned.fill(
+              child: DadosPartida(
+                key: ValueKey('dados_${e.tirada.id}'),
+                estado: e,
+                lienzo: _lienzo,
+                arriba: _arriba,
+                abajo: _impactos,
+                onSeleccionar: (id) =>
+                    bloc.add(DadoSeleccionado(e.tirada.id, id)),
+                onMovimientoCompletado: () =>
+                    bloc.add(MovimientoDadosCompletado(e.tirada.id)),
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -320,20 +352,38 @@ class _PartidaPageState extends State<PartidaPage> {
                           ),
                         ),
                       );
-                      return fijo
+                      final pantalla = fijo
                           ? contenido
                           : SingleChildScrollView(child: contenido);
+                      // La celebración hace temblar la partida y atenúa lo
+                      // que no participa en ella.
+                      return ListenableBuilder(
+                        listenable: _celebracion,
+                        child: pantalla,
+                        builder: (context, child) => Transform.translate(
+                          offset: _celebracion.temblor,
+                          child: Opacity(
+                            opacity: 1 - _celebracion.atenuacion,
+                            child: child,
+                          ),
+                        ),
+                      );
                     },
                   ),
                 ),
               ),
-              // Provisional: tocar continúa a los resultados.
               if (e.fase == FasePartida.celebrandoVictoria)
                 Positioned.fill(
-                  child: GestureDetector(
-                    key: const ValueKey('saltar_celebracion'),
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => bloc.add(CelebracionCompletada(e.tirada.id)),
+                  child: CelebracionVictoria(
+                    key: ValueKey('celebracion_${e.tirada.id}'),
+                    definicion: widget.definicion,
+                    celdas: e.celdas,
+                    puntos: e.puntos,
+                    nave: _nave,
+                    tablero: _tableroClave,
+                    control: _celebracion,
+                    onCompletada: () =>
+                        bloc.add(CelebracionCompletada(e.tirada.id)),
                   ),
                 ),
               // Los meteoros caen sobre toda la pantalla sin bloquear toques.
