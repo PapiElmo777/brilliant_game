@@ -135,7 +135,15 @@ void main() {
 
   testWidgets('Tocar la pantalla omite la celebración', (tester) async {
     final bloc = await _ganar(tester);
-    await tester.pump(const Duration(milliseconds: 1900));
+    // Un toque inmediato, como un doble toque en la casilla, se ignora.
+    await tester.pump(const Duration(milliseconds: 150));
+    await tester.tap(find.byKey(const ValueKey('saltar_celebracion')));
+    await tester.pump();
+    await tester.pump();
+    expect(bloc.state.fase, FasePartida.celebrandoVictoria);
+    expect(find.text('Toca para continuar'), findsNothing);
+    await tester.pump(const Duration(milliseconds: 1750));
+    expect(find.text('Toca para continuar'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('saltar_celebracion')));
     await tester.pump();
     await tester.pump();

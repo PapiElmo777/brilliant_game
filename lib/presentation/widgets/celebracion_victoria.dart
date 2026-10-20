@@ -23,6 +23,10 @@ const _inicioVuelo = 3.1;
 const _inicioFelicitacion = 3.9;
 const _inicioSalida = 5.7;
 
+/// Tiempo durante el que se ignoran los toques, para que un doble toque en
+/// la casilla ganadora no omita la celebración apenas empieza.
+const esperaParaOmitir = 1.5;
+
 /// Estado que la celebración comparte con la página de partida: temblor de
 /// pantalla, originales ocultos y atenuación del resto de la interfaz.
 class ControlCelebracion extends ChangeNotifier {
@@ -217,6 +221,14 @@ class _CelebracionVictoriaState extends State<CelebracionVictoria>
     ];
   }
 
+  /// Omite la celebración sólo si ya pasó la espera inicial.
+  void _omitir() {
+    final transcurrido = _linea.value * _linea.duration!.inMilliseconds / 1000;
+    final espera = _reducido ? .6 : esperaParaOmitir;
+    if (transcurrido < espera) return;
+    _completar();
+  }
+
   void _completar() {
     if (_completada) return;
     _completada = true;
@@ -296,7 +308,7 @@ class _CelebracionVictoriaState extends State<CelebracionVictoria>
             child: GestureDetector(
               key: const ValueKey('saltar_celebracion'),
               behavior: HitTestBehavior.opaque,
-              onTap: _completar,
+              onTap: _omitir,
             ),
           ),
         ),
@@ -423,7 +435,7 @@ class _CelebracionVictoriaState extends State<CelebracionVictoria>
           Positioned.fill(
             child: ColoredBox(color: Colors.white.withValues(alpha: destello)),
           ),
-        if (t > 1)
+        if (t > esperaParaOmitir)
           Positioned(
             left: 0,
             right: 0,
