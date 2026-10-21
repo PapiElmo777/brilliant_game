@@ -89,4 +89,41 @@ void main() {
     await gesto.up();
     await tester.pumpAndSettle();
   });
+
+  testWidgets('Las zonas completas se marcan sin perder su color', (
+    tester,
+  ) async {
+    final tablero = tablero01.crearTablero();
+    for (final id in ['f1_c3', 'f2_c3', 'f2_c4', 'f3_c4']) {
+      tablero.colocarValor(id, 4);
+    }
+    tablero.colocarValor('f1_c4', 2);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 390,
+            child: TableroView.partida(
+              definicion: tablero01,
+              celdas: tablero.celdas,
+              destinos: const {},
+              onCeldaSeleccionada: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+    CeldaView celda(String id) =>
+        tester.widget<CeldaView>(find.byKey(ValueKey('celda_$id')));
+    // azul_1 está completa; morado_1 tiene una sola casilla ocupada.
+    for (final id in ['f1_c3', 'f2_c3', 'f2_c4', 'f3_c4']) {
+      expect(celda(id).completada, isTrue);
+    }
+    expect(celda('f1_c4').completada, isFalse);
+    expect(celda('f1_c1').completada, isFalse);
+    expect(
+      find.bySemanticsLabel(RegExp('Fila 1, columna 3.*zona completa')),
+      findsOneWidget,
+    );
+  });
 }

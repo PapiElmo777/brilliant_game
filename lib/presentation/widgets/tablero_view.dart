@@ -73,6 +73,15 @@ class _TableroViewState extends State<TableroView> {
       });
     final resaltada = _zonaResaltada;
     final idsResaltados = {...?resaltada?.celdas.map((celda) => celda.id)};
+    final mapaCeldas = estado?.celdas ?? widget.celdasPartida!;
+    // Las zonas con todas sus casillas ocupadas se oscurecen un poco.
+    final idsCompletos = {
+      for (final zona in definicion.zonas)
+        if (zona.celdas.every(
+          (celda) => mapaCeldas[celda.id]?.estaOcupada ?? false,
+        ))
+          for (final celda in zona.celdas) celda.id,
+    };
     // Si la zona llega a las dos orillas (amarilla), la ficha deja libres la
     // primera y la última columna para no taparla.
     final fichaAngosta =
@@ -126,6 +135,7 @@ class _TableroViewState extends State<TableroView> {
                       atenuada:
                           resaltada != null &&
                           !idsResaltados.contains(celda.id),
+                      completada: idsCompletos.contains(celda.id),
                       onMantener: (presionada) =>
                           _resaltar(presionada ? zona : null),
                       onTap:
@@ -293,6 +303,9 @@ class CeldaView extends StatelessWidget {
   final bool enZonaResaltada;
   final bool atenuada;
 
+  /// Su zona ya tiene todas las casillas ocupadas.
+  final bool completada;
+
   /// Avisa al empezar (`true`) y terminar (`false`) de mantener presionado.
   final ValueChanged<bool>? onMantener;
 
@@ -307,13 +320,17 @@ class CeldaView extends StatelessWidget {
     this.seleccionada = false,
     this.enZonaResaltada = false,
     this.atenuada = false,
+    this.completada = false,
     this.onMantener,
   });
 
   @override
   Widget build(BuildContext context) {
-    final texto =
-        ThemeData.estimateBrightnessForColor(tipo.color) == Brightness.dark
+    // Una zona completa conserva su color, sólo un poco más oscuro.
+    final color = completada
+        ? Color.lerp(tipo.color, Colors.black, .28)!
+        : tipo.color;
+    final texto = ThemeData.estimateBrightnessForColor(color) == Brightness.dark
         ? Colors.white
         : const Color(0xFF071226);
     final estado = celda.valor == null ? 'vacía' : 'número ${celda.valor}';
@@ -324,7 +341,7 @@ class CeldaView extends StatelessWidget {
       enabled: onTap != null,
       onTap: onTap,
       label:
-          'Fila ${celda.fila + 1}, columna ${celda.columna + 1}${celda.esInicio ? ', celda inicial' : ''}, $estado. ${tipo.descripcion}${esDestino ? ', destino disponible' : ''}',
+          'Fila ${celda.fila + 1}, columna ${celda.columna + 1}${celda.esInicio ? ', celda inicial' : ''}, $estado. ${tipo.descripcion}${completada ? ', zona completa' : ''}${esDestino ? ', destino disponible' : ''}',
       hint: pista != null
           ? pista!
           : enPartida
@@ -350,9 +367,9 @@ class CeldaView extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color.lerp(tipo.color, Colors.white, .18)!,
-                    tipo.color,
-                    Color.lerp(tipo.color, Colors.black, .2)!,
+                    Color.lerp(color, Colors.white, completada ? .1 : .18)!,
+                    color,
+                    Color.lerp(color, Colors.black, .2)!,
                   ],
                 ),
                 borderRadius: BorderRadius.circular(8),
