@@ -334,10 +334,12 @@ void main() {
     );
   });
 
-  test('Volver a tirar da dos dados nuevos una vez por ronda', () async {
-    final azar = AzarFijo([2, 5, 6, 6, 2, 2, 1, 1, 3, 3]);
-    final b = PartidaBloc(tablero(), azar: azar);
+  test('Volver a tirar omite la tirada y lanza la siguiente', () async {
+    final azar = AzarFijo([2, 5, 6, 6, 2, 2]);
+    final fuente = tablero();
+    final b = PartidaBloc(fuente, azar: azar);
     addTearDown(b.close);
+    final antes = b.state.celdas;
     // No se puede mientras caen los meteoros.
     await enviar(b, const DadosRelanzados(1));
     expect(azar.llamadas, 2);
@@ -346,31 +348,32 @@ void main() {
     await enviar(b, const DadoSeleccionado(1, 0));
     await enviar(b, const MovimientoDadosCompletado(1));
     await enviar(b, const DadosRelanzados(1));
-    // Nueva tirada: vuelven a caer los meteoros y se limpia la selección.
+    // Cuenta como tirada omitida y comienza directamente la siguiente.
+    expect(b.state.historial.single.resultado, ResultadoRonda.omitida);
+    expect(b.state.historial.single.tirada.dados.map((d) => d.valor), [2, 5]);
+    expect(b.state.celdas, antes);
     expect(b.state.fase, FasePartida.tirando);
     expect(b.state.tirada.id, 2);
     expect(b.state.tirada.dados.map((d) => d.valor), [6, 6]);
     expect(b.state.dadoSeleccionado, isNull);
-    expect(b.state.relanzamientosRestantes, 0);
+    // Una confirmación antigua no avanza la nueva tirada.
     await enviar(b, const MeteorosCompletados(1));
     expect(b.state.fase, FasePartida.tirando);
+    // En la siguiente tirada se puede volver a usar.
     await enviar(b, const MeteorosCompletados(2));
-    expect(b.state.puedeRelanzar, isFalse);
-    await enviar(b, const DadosRelanzados(2));
-    expect(azar.llamadas, 4);
-    // Tirando 6 y 6 no hay destinos: se omite y la ronda cuenta una vez.
-    await enviar(b, const TiroOmitido(2));
-    expect(b.state.historial.single.tirada.dados.map((d) => d.valor), [6, 6]);
-    // La siguiente ronda vuelve a permitirlo, pero no después de escribir.
-    await enviar(b, const MeteorosSolicitados(2));
-    await enviar(b, const MeteorosCompletados(3));
     expect(b.state.puedeRelanzar, isTrue);
+    await enviar(b, const DadosRelanzados(2));
+    expect(b.state.historial.length, 2);
+    expect(b.state.tirada.id, 3);
+    // Después de escribir el número ya no está disponible.
+    await enviar(b, const MeteorosCompletados(3));
     await enviar(b, const DadoSeleccionado(3, 0));
     await enviar(b, const MovimientoDadosCompletado(3));
     await enviar(b, const DestinoSeleccionado(3, 'b'));
     expect(b.state.puedeRelanzar, isFalse);
     await enviar(b, const DadosRelanzados(3));
     expect(b.state.fase, FasePartida.rondaResuelta);
+    expect(b.state.historial.length, 3);
     expect(azar.llamadas, 6);
   });
 }

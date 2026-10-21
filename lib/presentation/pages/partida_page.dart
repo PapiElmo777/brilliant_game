@@ -537,7 +537,7 @@ class PanelPuntos extends StatelessWidget {
   );
 }
 
-/// Botón compacto para volver a tirar los dados una vez por ronda.
+/// Botón compacto para omitir la tirada y pasar directamente a la siguiente.
 class BotonRelanzar extends StatelessWidget {
   final VoidCallback onPressed;
   const BotonRelanzar({super.key, required this.onPressed});

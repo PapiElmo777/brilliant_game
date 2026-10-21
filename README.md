@@ -400,10 +400,10 @@ reclamo se libera.
   `ExplosionPainter` de la victoria. Los toques de los primeros 300 ms se
   ignoran por si el lanzamiento fue un doble toque, y el toque también llega a
   la flecha de regreso y al historial.
-- «VOLVER A TIRAR», a la derecha de los dados, lanza dos dados nuevos si no
-  convence ninguno (`DadosRelanzados`). Se puede una vez por ronda
-  (`PartidaBloc.relanzamientosPorRonda`) y sólo antes de escribir el número.
-  Los meteoros vuelven a caer y en el historial cuenta como una sola ronda.
+- «VOLVER A TIRAR», a la derecha de los dados, funciona como omitir: si no
+  convence ninguno de los dos números, la tirada se registra como omitida sin
+  cambiar el tablero y comienza directamente la siguiente, sin pulsar «LANZAR
+  METEOROS» (`DadosRelanzados`). Está disponible antes de escribir el número.
 - Las zonas con todas sus casillas ocupadas se oscurecen un poco sin perder su
   color, y el lector de pantalla las anuncia como «zona completa».
 

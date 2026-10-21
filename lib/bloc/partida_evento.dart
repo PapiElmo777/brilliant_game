@@ -39,7 +39,8 @@ class TiroOmitido extends PartidaEvento {
   const TiroOmitido(this.tiradaId);
 }
 
-/// El jugador no quiere ninguno de los dos números y vuelve a tirar.
+/// El jugador no quiere ninguno de los dos números: omite la tirada y pasa
+/// directamente a la siguiente.
 class DadosRelanzados extends PartidaEvento {
   final int tiradaId;
   const DadosRelanzados(this.tiradaId);

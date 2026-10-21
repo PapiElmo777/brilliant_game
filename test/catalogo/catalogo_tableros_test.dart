@@ -45,7 +45,15 @@ void main() {
         'verde_2',
         'verde_2',
       ],
-      ['verde_1', 'rojo_1', 'morado_2', 'morado_2', 'rojo_2', 'rojo_2', 'azul_2'],
+      [
+        'verde_1',
+        'rojo_1',
+        'morado_2',
+        'morado_2',
+        'rojo_2',
+        'rojo_2',
+        'azul_2',
+      ],
       ['rojo_1', 'rojo_1', 'morado_2', 'rojo_2', 'rojo_2', 'azul_2', 'azul_2'],
       [
         'amarillo',

@@ -219,10 +219,13 @@ void main() {
       await tester.ensureVisible(boton);
       await tester.tap(boton);
       await tester.pumpAndSettle();
+      // Omite la tirada, la registra y lanza la siguiente sin más pasos.
       expect(b.state.tirada.id, 2);
       expect(b.state.dadoSeleccionado, isNull);
-      expect(boton, findsNothing);
-      expect(find.bySemanticsLabel('Volver a tirar los dados'), findsNothing);
+      expect(b.state.historial.single.dadoId, isNull);
+      expect(find.text('Tiradas · 1  (2 · 5)'), findsOneWidget);
+      expect(find.text('LANZAR METEOROS'), findsNothing);
+      expect(boton, findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   }

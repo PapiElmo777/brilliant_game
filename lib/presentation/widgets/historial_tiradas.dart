@@ -53,8 +53,6 @@ class HistorialTiradas extends StatelessWidget {
                               runSpacing: 8,
                               crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
-                                // Número de ronda; volver a tirar no cuenta
-                                // como una ronda nueva.
                                 Text('${registros.length - index}:'),
                                 for (final dado in r.tirada.dados)
                                   FichaDado(

@@ -9,15 +9,11 @@ import 'partida_estado.dart';
 import 'partida_evento.dart';
 
 class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
-  /// Veces que se puede volver a tirar en cada ronda.
-  static const relanzamientosPorRonda = 1;
-
   final Tablero _tablero;
   final Random _azar;
   final _historial = <RegistroTirada>[];
   late Tirada _tirada;
   int? _seleccion;
-  int _relanzamientos = relanzamientosPorRonda;
 
   /// Celda escrita en la ronda actual. Puede cambiarse hasta lanzar de nuevo.
   String? _colocacion;
@@ -133,7 +129,6 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
     resultados: fase == FasePartida.mostrandoResultados
         ? _resultados()
         : const [],
-    relanzamientosRestantes: _relanzamientos,
     destinos:
         (fase == FasePartida.eligiendoDestino || _colocacion != null) &&
             fase != FasePartida.celebrandoVictoria &&
@@ -197,14 +192,14 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
         _seleccion = null;
         _colocacion = null;
         _reclamoRonda = null;
-        _relanzamientos = relanzamientosPorRonda;
         emit(_estado(FasePartida.tirando));
       case DadosRelanzados():
         if (!state.puedeRelanzar) return;
-        // Nueva tirada de la misma ronda: los meteoros vuelven a caer.
+        // Como omitir: la tirada se registra sin escribir nada y comienza
+        // directamente la siguiente.
+        _historial.add(RegistroTirada.omitida(_tirada));
         _tirada = Tirada.lanzar(_tirada.id + 1, _azar);
         _seleccion = null;
-        _relanzamientos--;
         emit(_estado(FasePartida.tirando));
       case ImpactoConfirmado():
         if (state.fase == FasePartida.tirando)

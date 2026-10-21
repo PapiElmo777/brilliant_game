@@ -50,9 +50,7 @@ void main() {
       expect(find.text('Babo'), findsOneWidget);
       expect(find.text('4 zonas completadas'), findsOneWidget);
       expect(
-        find.bySemanticsLabel(
-          'Lugar 1: Babo, 26 puntos, 4 zonas completadas',
-        ),
+        find.bySemanticsLabel('Lugar 1: Babo, 26 puntos, 4 zonas completadas'),
         findsOneWidget,
       );
       for (final (clave, accion) in [
