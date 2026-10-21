@@ -189,4 +189,41 @@ void main() {
     expect(b.state.historial.length, 1);
     expect(find.text('LANZAR METEOROS'), findsNothing);
   });
+
+  for (final size in [const Size(320, 568), const Size(430, 932)]) {
+    testWidgets('Volver a tirar no estorba a los dados en $size', (
+      tester,
+    ) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final b = await abrir(tester);
+      final boton = find.byKey(const ValueKey('boton_relanzar'));
+      void sinEncimarse() {
+        final rect = tester.getRect(boton);
+        for (final id in [0, 1]) {
+          final dado = tester.getRect(find.byKey(ValueKey('dado_$id')));
+          expect(rect.overlaps(dado), isFalse, reason: 'dado_$id');
+        }
+        expect(rect.right, lessThanOrEqualTo(size.width));
+      }
+
+      sinEncimarse();
+      // Con los dados arriba, el botón sigue disponible y a un lado.
+      await tester.ensureVisible(find.byKey(const ValueKey('dado_0')));
+      await tester.tap(find.byKey(const ValueKey('dado_0')));
+      await tester.pumpAndSettle();
+      expect(boton, findsOneWidget);
+      sinEncimarse();
+      await tester.ensureVisible(boton);
+      await tester.tap(boton);
+      await tester.pumpAndSettle();
+      expect(b.state.tirada.id, 2);
+      expect(b.state.dadoSeleccionado, isNull);
+      expect(boton, findsNothing);
+      expect(find.bySemanticsLabel('Volver a tirar los dados'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  }
 }

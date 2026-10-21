@@ -60,6 +60,9 @@ class PartidaEstado {
   final List<RegistroTirada> historial;
   final String? error;
 
+  /// Veces que todavía se puede volver a tirar en esta ronda.
+  final int relanzamientosRestantes;
+
   /// Ranking de la partida; se llena al terminar.
   final List<ResultadoJugador> resultados;
 
@@ -78,6 +81,7 @@ class PartidaEstado {
     this.puedeOmitir = false,
     this.error,
     Iterable<ResultadoJugador> resultados = const [],
+    this.relanzamientosRestantes = 0,
   }) : celdas = Map.unmodifiable(celdas),
        resultados = List.unmodifiable(resultados),
        destinos = Set.unmodifiable(destinos),
@@ -99,6 +103,14 @@ class PartidaEstado {
   /// Tras colocar, la jugada se puede cambiar hasta lanzar los meteoros.
   bool get puedeModificar =>
       fase == FasePartida.rondaResuelta && celdaColocada != null;
+
+  /// Se puede volver a tirar mientras se elige y antes de escribir el número.
+  bool get puedeRelanzar =>
+      relanzamientosRestantes > 0 &&
+      celdaColocada == null &&
+      (fase == FasePartida.eligiendoNumero ||
+          fase == FasePartida.eligiendoDestino ||
+          fase == FasePartida.sinMovimientos);
 
   /// Alcanzó la meta de puntos.
   bool get gano => puntos >= meta;

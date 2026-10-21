@@ -244,8 +244,22 @@ class _PartidaPageState extends State<PartidaPage> {
                 style: const TextStyle(fontSize: 12, letterSpacing: 1.5),
               ),
               _globo(e),
-              // Lugar de los dados bajo la nave, separado del globo.
-              SizedBox(key: _arriba, height: 92, width: double.infinity),
+              // Lugar de los dados bajo la nave, separado del globo. A la
+              // derecha, sin estorbar a los dados, la opción de volver a tirar.
+              SizedBox(
+                key: _arriba,
+                height: 92,
+                width: double.infinity,
+                child: e.puedeRelanzar
+                    ? Align(
+                        alignment: Alignment.centerRight,
+                        child: BotonRelanzar(
+                          onPressed: () =>
+                              bloc.add(DadosRelanzados(e.tirada.id)),
+                        ),
+                      )
+                    : null,
+              ),
               if (fijo)
                 Expanded(
                   child: LayoutBuilder(
@@ -517,6 +531,62 @@ class PanelPuntos extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    ),
+  );
+}
+
+/// Botón compacto para volver a tirar los dados una vez por ronda.
+class BotonRelanzar extends StatelessWidget {
+  final VoidCallback onPressed;
+  const BotonRelanzar({super.key, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: 'Volver a tirar los dados',
+    excludeSemantics: true,
+    child: SizedBox(
+      key: const ValueKey('boton_relanzar'),
+      width: 78,
+      height: 78,
+      child: Material(
+        color: const Color(0xCC0C2640),
+        shape: const BeveledRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+          side: BorderSide(color: Color(0xFF72E9FF), width: 1.5),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onPressed,
+          child: const Padding(
+            padding: EdgeInsets.all(6),
+            child: FittedBox(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.casino_rounded,
+                    color: Color(0xFF72E9FF),
+                    size: 28,
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'VOLVER\nA TIRAR',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 11,
+                      height: 1.1,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1,
+                      color: Color(0xFFB6F6FF),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     ),
