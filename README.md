@@ -393,6 +393,20 @@ En la partida, escribir el número que completa una zona reclama el puesto y
 el alien anuncia los puntos; si la jugada se cambia antes de lanzar, el
 reclamo se libera.
 
+## Omitir la caída, volver a tirar y zonas completas
+
+- Tocar la pantalla mientras caen los meteoritos detiene el video, revela los
+  dos números y muestra sólo la explosión final, dibujada con el mismo
+  `ExplosionPainter` de la victoria. Los toques de los primeros 300 ms se
+  ignoran por si el lanzamiento fue un doble toque, y el toque también llega a
+  la flecha de regreso y al historial.
+- «VOLVER A TIRAR», a la derecha de los dados, lanza dos dados nuevos si no
+  convence ninguno (`DadosRelanzados`). Se puede una vez por ronda
+  (`PartidaBloc.relanzamientosPorRonda`) y sólo antes de escribir el número.
+  Los meteoros vuelven a caer y en el historial cuenta como una sola ronda.
+- Las zonas con todas sus casillas ocupadas se oscurecen un poco sin perder su
+  color, y el lector de pantalla las anuncia como «zona completa».
+
 ## Victoria y resultados
 
 Llegar a la meta termina la partida. La jugada ganadora es definitiva:
