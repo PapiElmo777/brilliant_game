@@ -1,7 +1,17 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+import 'explosion_painter.dart';
+
+/// Duración de la explosión que sustituye a la caída cuando se omite.
+const duracionExplosionOmitida = Duration(milliseconds: 1600);
+
+/// Tiempo inicial en el que se ignoran los toques, por si el toque que lanzó
+/// los meteoros fue doble.
+const esperaParaOmitirCaida = Duration(milliseconds: 300);
 
 class MeteoritosAnimacion extends StatefulWidget {
   final int tiradaId;
@@ -25,7 +35,8 @@ class MeteoritosAnimacion extends StatefulWidget {
   State<MeteoritosAnimacion> createState() => _MeteoritosAnimacionState();
 }
 
-class _MeteoritosAnimacionState extends State<MeteoritosAnimacion> {
+class _MeteoritosAnimacionState extends State<MeteoritosAnimacion>
+    with SingleTickerProviderStateMixin {
   ui.Codec? _codec;
   ui.Image? _imagen;
   Timer? _cuadro;
@@ -35,6 +46,12 @@ class _MeteoritosAnimacionState extends State<MeteoritosAnimacion> {
   bool _iniciada = false;
   bool _impacto = false;
   bool _terminada = false;
+  Timer? _espera;
+  bool _omitible = false;
+  final _particulas = ParticulasExplosion(math.Random(120));
+
+  /// Explosión dibujada que reemplaza al video al omitir la caída.
+  AnimationController? _explosion;
 
   @override
   void didChangeDependencies() {
@@ -43,6 +60,9 @@ class _MeteoritosAnimacionState extends State<MeteoritosAnimacion> {
       _finalizar();
     } else if (!_iniciada) {
       _iniciada = true;
+      _omitible = false;
+      _espera?.cancel();
+      _espera = Timer(esperaParaOmitirCaida, () => _omitible = true);
       _limite = Timer(const Duration(seconds: 30), _finalizar);
       _cargar(_version);
     }
@@ -57,6 +77,8 @@ class _MeteoritosAnimacionState extends State<MeteoritosAnimacion> {
       _impacto = false;
       _terminada = false;
       _iniciada = false;
+      _explosion?.dispose();
+      _explosion = null;
       didChangeDependencies();
     }
   }
@@ -118,6 +140,24 @@ class _MeteoritosAnimacionState extends State<MeteoritosAnimacion> {
     }
   }
 
+  /// Omite la caída: detiene el video, revela los números y muestra sólo la
+  /// explosión final.
+  void _omitir() {
+    if (_terminada || _impacto || _explosion != null) return;
+    if (!_omitible) return;
+    _liberar();
+    _impacto = true;
+    widget.onImpacto(widget.tiradaId);
+    setState(() {
+      _explosion =
+          AnimationController(vsync: this, duration: duracionExplosionOmitida)
+            ..addStatusListener((estado) {
+              if (estado == AnimationStatus.completed) _finalizar();
+            })
+            ..forward();
+    });
+  }
+
   void _finalizar() {
     if (_terminada) return;
     _terminada = true;
@@ -154,17 +194,89 @@ class _MeteoritosAnimacionState extends State<MeteoritosAnimacion> {
   @override
   void dispose() {
     _liberar();
+    _espera?.cancel();
+    _explosion?.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => IgnorePointer(
-    child: ExcludeSemantics(
-      child: RawImage(
-        image: _imagen,
-        fit: BoxFit.cover,
-        alignment: Alignment.bottomCenter,
-      ),
-    ),
-  );
+  Widget build(BuildContext context) {
+    final explosion = _explosion;
+    final puedeOmitir = !_terminada && !_impacto && explosion == null;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        IgnorePointer(
+          child: ExcludeSemantics(
+            child: RawImage(
+              image: _imagen,
+              fit: BoxFit.cover,
+              alignment: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        if (explosion != null)
+          IgnorePointer(
+            child: AnimatedBuilder(
+              animation: explosion,
+              builder: (context, _) {
+                final segundos =
+                    explosion.value *
+                    duracionExplosionOmitida.inMilliseconds /
+                    1000;
+                return Opacity(
+                  // El humo se desvanece antes de que se retire la capa.
+                  opacity: (1 - (segundos - 1.2) / .4).clamp(0.0, 1.0),
+                  child: LayoutBuilder(
+                    builder: (context, espacio) => CustomPaint(
+                      size: espacio.biggest,
+                      // Mismo lugar donde estalla el video.
+                      painter: ExplosionPainter(
+                        t: segundos,
+                        centro: Offset(
+                          espacio.maxWidth / 2,
+                          espacio.maxHeight * .84,
+                        ),
+                        radio: espacio.maxWidth * .42,
+                        particulas: _particulas,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        if (puedeOmitir) ...[
+          // Tocar durante la caída la omite. El toque también llega a lo que
+          // está debajo, como la flecha para volver al menú.
+          Semantics(
+            button: true,
+            label: 'Omitir la caída de los meteoritos',
+            onTap: _omitir,
+            child: Listener(
+              key: const ValueKey('omitir_meteoritos'),
+              behavior: HitTestBehavior.translucent,
+              onPointerUp: (_) => _omitir(),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: MediaQuery.paddingOf(context).bottom + 16,
+            child: const IgnorePointer(
+              child: Text(
+                'Toca para omitir',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  letterSpacing: 1.5,
+                  color: Color(0xCCB6F6FF),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
 }
