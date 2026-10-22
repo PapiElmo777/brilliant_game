@@ -160,6 +160,7 @@ void main() {
         await tester.pumpWidget(BrilliantGameApp(azarPartida: azar));
         await tester.pumpAndSettle();
         await _pulsar(tester, find.text('NUEVA PARTIDA'));
+        await _pulsar(tester, find.byKey(const ValueKey('elegir_tablero_01')));
         await tester.enterText(
           find.byKey(const ValueKey('campo_nombre')),
           'Ana',
@@ -329,6 +330,7 @@ void main() {
           await _pulsar(tester, find.byKey(const ValueKey('confirmar_salida')));
         }
         await _pulsar(tester, find.text('NUEVA PARTIDA'));
+        await _pulsar(tester, find.byKey(const ValueKey('elegir_tablero_01')));
         expect(
           tester.widget<TextField>(find.byType(TextField)).controller!.text,
           'Ana',

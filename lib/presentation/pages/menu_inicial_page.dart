@@ -4,44 +4,52 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/menu_bloc.dart';
 import '../../catalogo/definicion_tablero.dart';
 import '../widgets/boton_panel.dart';
-import '../widgets/dialogo_nombre_jugador.dart';
+import 'seleccion_nivel_page.dart';
 import '../widgets/fondo_espacial.dart';
 import '../widgets/logotipo_brilliant.dart';
 import '../widgets/nave_marciano.dart';
 
-class MenuInicialPage extends StatelessWidget {
+class MenuInicialPage extends StatefulWidget {
   final void Function(DefinicionTablero tablero, String jugador) onNuevaPartida;
 
   const MenuInicialPage({super.key, required this.onNuevaPartida});
 
+  @override
+  State<MenuInicialPage> createState() => _MenuInicialPageState();
+}
+
+class _MenuInicialPageState extends State<MenuInicialPage> {
+  bool _selectorAbierto = false;
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => MenuBloc(),
       child: BlocConsumer<MenuBloc, MenuEstado>(
         listener: (context, estado) async {
-          switch (estado.fase) {
-            case FaseMenu.pidiendoNombre:
-              final bloc = context.read<MenuBloc>();
-              final nombre = await DialogoNombreJugador.mostrar(
-                context,
-                inicial: estado.jugador,
-                error: estado.error,
-              );
-              if (bloc.isClosed) return;
-              bloc.add(
-                nombre == null
-                    ? const CapturaNombreCancelada()
-                    : NombreJugadorConfirmado(nombre),
-              );
-            case FaseMenu.partidaPreparada:
-              onNuevaPartida(estado.tablero!, estado.jugador!);
-            case FaseMenu.menuVisible when estado.error != null:
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(estado.error!)));
-            default:
-              break;
+          if (estado.fase == FaseMenu.seleccionandoNivel && !_selectorAbierto) {
+            _selectorAbierto = true;
+            final bloc = context.read<MenuBloc>();
+            final resultado = await Navigator.of(context)
+                .push<(DefinicionTablero, String)>(
+                  MaterialPageRoute(
+                    builder: (_) => BlocProvider.value(
+                      value: bloc,
+                      child: const SeleccionNivelPage(),
+                    ),
+                  ),
+                );
+            _selectorAbierto = false;
+            if (!mounted || bloc.isClosed) return;
+            if (resultado == null) {
+              bloc.add(const SeleccionNivelCancelada());
+            } else {
+              widget.onNuevaPartida(resultado.$1, resultado.$2);
+            }
+          } else if (estado.fase == FaseMenu.menuVisible &&
+              estado.error != null) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(estado.error!)));
           }
         },
         builder: (context, estado) => Scaffold(

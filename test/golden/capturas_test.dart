@@ -38,6 +38,8 @@ Future<void> _pulsar(WidgetTester tester, String clave) async {
 Future<void> _nuevaPartida(WidgetTester tester) async {
   await tester.tap(find.text('NUEVA PARTIDA'));
   await tester.pumpAndSettle();
+  await _pulsar(tester, 'elegir_tablero_01');
+  await tester.pumpAndSettle();
   await tester.enterText(find.byKey(const ValueKey('campo_nombre')), 'Ana');
   await tester.pump();
   await _pulsar(tester, 'confirmar_nombre');
@@ -70,6 +72,8 @@ void main() {
     testWidgets('Diálogo del nombre', skip: _omitir, (tester) async {
       await _abrir(tester, _telefono);
       await tester.tap(find.text('NUEVA PARTIDA'));
+      await tester.pumpAndSettle();
+      await _pulsar(tester, 'elegir_tablero_01');
       await tester.pumpAndSettle();
       await tester.enterText(find.byKey(const ValueKey('campo_nombre')), 'Ana');
       await tester.pump();

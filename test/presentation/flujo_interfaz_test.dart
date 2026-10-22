@@ -1,6 +1,7 @@
 import 'package:brilliant_game/app/brilliant_game_app.dart';
 import 'package:brilliant_game/brilliant_game.dart';
 import 'package:brilliant_game/presentation/pages/preparacion_page.dart';
+import 'package:brilliant_game/presentation/pages/seleccion_nivel_page.dart';
 import 'package:brilliant_game/presentation/pages/partida_page.dart';
 import 'package:brilliant_game/presentation/widgets/bandeja_numeros.dart';
 import 'package:brilliant_game/presentation/widgets/tablero_view.dart';
@@ -16,6 +17,7 @@ Future<void> pulsar(WidgetTester tester, Finder finder) async {
 
 Future<void> nuevaPartida(WidgetTester tester, {String nombre = 'Ana'}) async {
   await pulsar(tester, find.text('NUEVA PARTIDA'));
+  await pulsar(tester, find.byKey(const ValueKey('elegir_tablero_01')));
   await tester.enterText(find.byKey(const ValueKey('campo_nombre')), nombre);
   await tester.pump();
   await pulsar(tester, find.byKey(const ValueKey('confirmar_nombre')));
@@ -66,10 +68,14 @@ void main() {
     await tester.pumpWidget(const BrilliantGameApp());
     await tester.pumpAndSettle();
     await pulsar(tester, find.text('NUEVA PARTIDA'));
-    expect(find.text('¿Cómo te llamas?'), findsOneWidget);
+    await pulsar(tester, find.byKey(const ValueKey('elegir_tablero_01')));
+    expect(find.text('Nivel 1 · ¿Cómo te llamas?'), findsOneWidget);
     final confirmar = find.byKey(const ValueKey('confirmar_nombre'));
     expect(tester.widget<FilledButton>(confirmar).onPressed, isNull);
     await pulsar(tester, find.text('Cancelar'));
+    expect(find.byType(SeleccionNivelPage), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
     expect(find.byType(PreparacionPage), findsNothing);
     expect(find.text('NUEVA PARTIDA'), findsOneWidget);
     await nuevaPartida(tester, nombre: 'Alfredo');
@@ -153,6 +159,7 @@ void main() {
     expect(find.byType(PartidaPage), findsNothing);
     expect(anterior.isClosed, isTrue);
     await pulsar(tester, find.text('NUEVA PARTIDA'));
+    await pulsar(tester, find.byKey(const ValueKey('elegir_tablero_01')));
     expect(find.text('Ana'), findsOneWidget);
     await pulsar(tester, find.byKey(const ValueKey('confirmar_nombre')));
     expect(blocDe(tester).state.numerosFaltantes.length, 6);

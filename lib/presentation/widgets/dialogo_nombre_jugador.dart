@@ -8,16 +8,19 @@ import '../../bloc/menu_bloc.dart';
 class DialogoNombreJugador extends StatefulWidget {
   final String? inicial;
   final String? error;
+  final String? nivel;
 
-  const DialogoNombreJugador({super.key, this.inicial, this.error});
+  const DialogoNombreJugador({super.key, this.inicial, this.error, this.nivel});
 
   static Future<String?> mostrar(
     BuildContext context, {
     String? inicial,
     String? error,
+    String? nivel,
   }) => showDialog<String>(
     context: context,
-    builder: (_) => DialogoNombreJugador(inicial: inicial, error: error),
+    builder: (_) =>
+        DialogoNombreJugador(inicial: inicial, error: error, nivel: nivel),
   );
 
   @override
@@ -47,8 +50,10 @@ class _DialogoNombreJugadorState extends State<DialogoNombreJugador> {
         borderRadius: BorderRadius.all(Radius.circular(14)),
         side: BorderSide(color: ColoresBrilliant.cian, width: 1.5),
       ),
-      title: const Text(
-        '¿Cómo te llamas?',
+      title: Text(
+        widget.nivel == null
+            ? '¿Cómo te llamas?'
+            : '${widget.nivel} · ¿Cómo te llamas?',
         style: TextStyle(fontWeight: FontWeight.w800),
       ),
       content: TextField(
