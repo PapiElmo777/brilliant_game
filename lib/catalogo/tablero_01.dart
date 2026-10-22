@@ -1,10 +1,12 @@
+import 'recursos_nivel.dart';
 import '../models/celda.dart';
 import '../models/tipo.dart';
 import 'definicion_tablero.dart';
 
 final tablero01 = DefinicionTablero(
   id: 'tablero_01',
-  nombre: 'Tablero 1',
+  nombre: 'Nivel 1',
+  recursos: const RecursosNivel(1, 'Maul'),
   zonas: [
     // La zona amarilla es una sola, con sus cinco casillas separadas.
     _zona('amarillo', const TipoAmarillo(), [

@@ -163,6 +163,7 @@ class PreparacionInicial {
           id: zona.id,
           tipo: zona.tipo,
           campoPuntuacion: zona.campoPuntuacion,
+          puntuaciones: zona.puntuaciones,
           celdas: zona.celdas.values,
         ),
     ],

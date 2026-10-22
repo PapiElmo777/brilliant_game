@@ -1,6 +1,6 @@
 import 'dart:collection';
 
-import '../models/tipo.dart';
+import '../models/zona.dart';
 
 /// Puntos necesarios para ganar según el número de jugadores.
 const metaPorJugadores = {2: 26, 3: 24, 4: 22, 5: 20};
@@ -67,11 +67,8 @@ class Marcador {
 
   /// Asigna al jugador el siguiente puesto libre de la zona. Después del
   /// tercer puesto la zona ya no da puntos.
-  Reclamo reclamar({
-    required String zonaId,
-    required Tipo tipo,
-    required String jugadorId,
-  }) {
+  Reclamo reclamar({required Zona zona, required String jugadorId}) {
+    final zonaId = zona.id;
     final lista = _reclamos.putIfAbsent(zonaId, () => []);
     if (lista.any((reclamo) => reclamo.jugadorId == jugadorId)) {
       throw StateError('El jugador $jugadorId ya completó la zona $zonaId.');
@@ -84,7 +81,7 @@ class Marcador {
       zonaId: zonaId,
       jugadorId: jugadorId,
       puesto: puesto,
-      puntos: tipo.puntuaciones[puesto] ?? 0,
+      puntos: zona.puntuaciones[puesto] ?? 0,
     );
     lista.add(reclamo);
     return reclamo;

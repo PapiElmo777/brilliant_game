@@ -184,7 +184,9 @@ class FichaZona extends StatelessWidget {
   const FichaZona({super.key, required this.zona, this.reclamados = 0});
 
   static String nombreTipo(Tipo tipo) => switch (tipo) {
+    TipoBlanco() => 'blanca',
     TipoAzul() => 'azul',
+    TipoNaranja() => 'naranja',
     TipoAmarillo() => 'amarilla',
     TipoRojo() => 'roja',
     TipoVerde() => 'verde',
@@ -375,7 +377,9 @@ class CeldaView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: resaltada
-                      ? Colors.white
+                      ? (tipo is TipoBlanco
+                            ? const Color(0xFF123B56)
+                            : Colors.white)
                       : celda.esInicio
                       ? const Color(0xFFB6F6FF)
                       : const Color(0x33FFFFFF),

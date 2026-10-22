@@ -43,6 +43,7 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
             id: zona.id,
             tipo: zona.tipo,
             campoPuntuacion: zona.campoPuntuacion,
+            puntuaciones: zona.puntuaciones,
             celdas: zona.celdas.values,
           ),
       ],
@@ -257,11 +258,7 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
         _colocacion = evento.celdaId;
         final zona = _tablero.obtenerZonaDeCelda(evento.celdaId);
         if (zona.estaCompletada) {
-          _reclamoRonda = _marcador.reclamar(
-            zonaId: zona.id,
-            tipo: zona.tipo,
-            jugadorId: _jugador,
-          );
+          _reclamoRonda = _marcador.reclamar(zona: zona, jugadorId: _jugador);
         }
         _historial.add(
           RegistroTirada.colocada(_tirada, _seleccion!, evento.celdaId),

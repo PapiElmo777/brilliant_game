@@ -1,3 +1,6 @@
+import 'tablero_02.dart';
+import 'tablero_03.dart';
+import 'tablero_04.dart';
 import '../core/tablero.dart';
 import 'definicion_tablero.dart';
 import 'tablero_01.dart';
@@ -5,8 +8,9 @@ import 'tablero_01.dart';
 class CatalogoTableros {
   final Map<String, DefinicionTablero> definiciones;
 
-  factory CatalogoTableros.predeterminado() =>
-      CatalogoTableros(definiciones: [tablero01]);
+  factory CatalogoTableros.predeterminado() => CatalogoTableros(
+    definiciones: [tablero01, tablero02, tablero03, tablero04],
+  );
 
   CatalogoTableros({required Iterable<DefinicionTablero> definiciones})
     : definiciones = _indexar(definiciones);

@@ -1,6 +1,12 @@
 import 'package:brilliant_game/brilliant_game.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+Zona zonaPrueba(String id, Tipo tipo) => Zona(
+  id: id,
+  tipo: tipo,
+  celdas: [Celda(id: 'c', fila: 0, columna: 0)],
+);
+
 void main() {
   test('La meta depende del número de jugadores', () {
     expect(metaDePuntos(2), 26);
@@ -16,28 +22,25 @@ void main() {
     final marcador = Marcador(jugadores: 4);
     const azul = TipoAzul();
     final primero = marcador.reclamar(
-      zonaId: 'azul_1',
-      tipo: azul,
+      zona: zonaPrueba('azul_1', azul),
       jugadorId: 'ana',
     );
     expect((primero.puesto, primero.puntos), (1, 7));
     expect(
-      () => marcador.reclamar(zonaId: 'azul_1', tipo: azul, jugadorId: 'ana'),
+      () =>
+          marcador.reclamar(zona: zonaPrueba('azul_1', azul), jugadorId: 'ana'),
       throwsStateError,
     );
     final segundo = marcador.reclamar(
-      zonaId: 'azul_1',
-      tipo: azul,
+      zona: zonaPrueba('azul_1', azul),
       jugadorId: 'beto',
     );
     final tercero = marcador.reclamar(
-      zonaId: 'azul_1',
-      tipo: azul,
+      zona: zonaPrueba('azul_1', azul),
       jugadorId: 'caro',
     );
     final cuarto = marcador.reclamar(
-      zonaId: 'azul_1',
-      tipo: azul,
+      zona: zonaPrueba('azul_1', azul),
       jugadorId: 'dani',
     );
     expect([segundo.puntos, tercero.puntos, cuarto.puntos], [6, 3, 0]);
@@ -45,8 +48,7 @@ void main() {
     expect(marcador.puestosReclamados('verde_1'), 0);
     // Las zonas son independientes entre sí.
     final verde = marcador.reclamar(
-      zonaId: 'verde_1',
-      tipo: const TipoVerde(),
+      zona: zonaPrueba('verde_1', const TipoVerde()),
       jugadorId: 'beto',
     );
     expect(verde.puntos, 4);
@@ -63,13 +65,11 @@ void main() {
   test('Liberar el último reclamo devuelve el puesto', () {
     final marcador = Marcador(jugadores: 2);
     final reclamo = marcador.reclamar(
-      zonaId: 'amarillo',
-      tipo: const TipoAmarillo(),
+      zona: zonaPrueba('amarillo', const TipoAmarillo()),
       jugadorId: 'ana',
     );
     final otro = marcador.reclamar(
-      zonaId: 'amarillo',
-      tipo: const TipoAmarillo(),
+      zona: zonaPrueba('amarillo', const TipoAmarillo()),
       jugadorId: 'beto',
     );
     expect(() => marcador.liberar(reclamo), throwsStateError);
@@ -80,8 +80,7 @@ void main() {
     expect(
       marcador
           .reclamar(
-            zonaId: 'amarillo',
-            tipo: const TipoAmarillo(),
+            zona: zonaPrueba('amarillo', const TipoAmarillo()),
             jugadorId: 'beto',
           )
           .puntos,
@@ -96,13 +95,12 @@ void main() {
       ('azul_1', const TipoAzul()),
       ('azul_2', const TipoAzul()),
     ]) {
-      marcador.reclamar(zonaId: zona, tipo: tipo, jugadorId: 'ana');
+      marcador.reclamar(zona: zonaPrueba(zona, tipo), jugadorId: 'ana');
     }
     expect(marcador.puntosDe('ana'), 22);
     expect(marcador.haGanado('ana'), isFalse);
     marcador.reclamar(
-      zonaId: 'verde_1',
-      tipo: const TipoVerde(),
+      zona: zonaPrueba('verde_1', const TipoVerde()),
       jugadorId: 'ana',
     );
     expect(marcador.puntosDe('ana'), 26);
@@ -113,28 +111,23 @@ void main() {
   test('El ranking ordena por puntos e incluye a quien no tiene', () {
     final marcador = Marcador(jugadores: 3);
     marcador.reclamar(
-      zonaId: 'azul_1',
-      tipo: const TipoAzul(),
+      zona: zonaPrueba('azul_1', const TipoAzul()),
       jugadorId: 'beto',
     );
     marcador.reclamar(
-      zonaId: 'verde_1',
-      tipo: const TipoVerde(),
+      zona: zonaPrueba('verde_1', const TipoVerde()),
       jugadorId: 'beto',
     );
     marcador.reclamar(
-      zonaId: 'azul_1',
-      tipo: const TipoAzul(),
+      zona: zonaPrueba('azul_1', const TipoAzul()),
       jugadorId: 'ana',
     );
     marcador.reclamar(
-      zonaId: 'verde_2',
-      tipo: const TipoVerde(),
+      zona: zonaPrueba('verde_2', const TipoVerde()),
       jugadorId: 'caro',
     );
     marcador.reclamar(
-      zonaId: 'rojo_1',
-      tipo: const TipoRojo(),
+      zona: zonaPrueba('rojo_1', const TipoRojo()),
       jugadorId: 'caro',
     );
     final ranking = marcador.ranking(['ana', 'beto', 'caro', 'dani']);
@@ -152,13 +145,11 @@ void main() {
   test('Los empates comparten posición por ahora', () {
     final marcador = Marcador(jugadores: 3);
     marcador.reclamar(
-      zonaId: 'verde_1',
-      tipo: const TipoVerde(),
+      zona: zonaPrueba('verde_1', const TipoVerde()),
       jugadorId: 'ana',
     );
     marcador.reclamar(
-      zonaId: 'verde_2',
-      tipo: const TipoVerde(),
+      zona: zonaPrueba('verde_2', const TipoVerde()),
       jugadorId: 'beto',
     );
     expect(marcador.ranking(['ana', 'beto', 'caro']).map((p) => p.posicion), [

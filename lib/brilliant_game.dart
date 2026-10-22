@@ -13,3 +13,4 @@ export 'catalogo/definicion_tablero.dart';
 export 'catalogo/validador_tablero.dart';
 export 'catalogo/puntuacion_zonas.dart';
 export 'bloc/menu_bloc.dart';
+export 'catalogo/recursos_nivel.dart';

@@ -1,3 +1,4 @@
+import 'puntuaciones.dart';
 import 'dart:collection';
 
 import '../core/reglas.dart';
@@ -9,6 +10,7 @@ import 'tipo.dart';
 class Zona {
   final String id;
   final Tipo tipo;
+  final Map<int, int> puntuaciones;
   final String? campoPuntuacion;
   final Map<String, Celda> _celdas = {};
 
@@ -17,7 +19,10 @@ class Zona {
     required this.tipo,
     required Iterable<Celda> celdas,
     this.campoPuntuacion,
-  }) {
+    Map<int, int>? puntuaciones,
+  }) : puntuaciones = puntuacionesInmutables(
+         puntuaciones ?? tipo.puntuaciones,
+       ) {
     if (id.trim().isEmpty)
       throw ArgumentError('El ID de zona no puede estar vacío.');
     final posiciones = <(int, int)>{};

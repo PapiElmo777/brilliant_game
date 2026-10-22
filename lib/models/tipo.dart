@@ -99,3 +99,31 @@ class TipoMorado extends Tipo {
   @override
   Map<int, int> get puntuaciones => const {1: 6, 2: 4, 3: 2};
 }
+
+class TipoBlanco extends TipoAzul {
+  const TipoBlanco();
+  @override
+  Color get color => const Color(0xFFECEFF1);
+}
+
+enum GrupoNaranja { bajo, alto }
+
+class TipoNaranja extends Tipo {
+  final GrupoNaranja grupo;
+  const TipoNaranja(this.grupo);
+  @override
+  Color get color => const Color(0xFFFF9800);
+  @override
+  String get descripcion => grupo == GrupoNaranja.alto
+      ? 'Solo números del 4 al 6, con repeticiones'
+      : 'Solo números del 1 al 3, con repeticiones';
+  @override
+  bool esPosibleAgregar(List<int> actuales, int posible) {
+    bool permitido(int n) =>
+        grupo == GrupoNaranja.alto ? n >= 4 && n <= 6 : n >= 1 && n <= 3;
+    return permitido(posible) && actuales.every(permitido);
+  }
+
+  @override
+  Map<int, int> get puntuaciones => const {1: 6, 2: 4, 3: 3};
+}
