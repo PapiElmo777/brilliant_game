@@ -4,11 +4,27 @@ import 'package:flutter/material.dart';
 
 class FondoEspacial extends StatelessWidget {
   final Widget child;
+  final String? ruta;
 
-  const FondoEspacial({super.key, required this.child});
+  const FondoEspacial({super.key, required this.child, this.ruta});
 
   @override
   Widget build(BuildContext context) {
+    if (ruta != null) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(ruta!),
+            fit: BoxFit.cover,
+            colorFilter: const ColorFilter.mode(
+              Color(0x38000000),
+              BlendMode.darken,
+            ),
+          ),
+        ),
+        child: child,
+      );
+    }
     return DecoratedBox(
       decoration: const BoxDecoration(
         gradient: LinearGradient(

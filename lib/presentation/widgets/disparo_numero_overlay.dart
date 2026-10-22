@@ -9,6 +9,7 @@ class DisparoNumeroOverlay extends StatefulWidget {
   final GlobalKey origen;
   final GlobalKey destino;
   final VoidCallback onCompletado;
+  final Offset fraccionOrigen;
 
   const DisparoNumeroOverlay({
     super.key,
@@ -16,6 +17,7 @@ class DisparoNumeroOverlay extends StatefulWidget {
     required this.origen,
     required this.destino,
     required this.onCompletado,
+    this.fraccionOrigen = const Offset(.5, .68),
   });
 
   @override
@@ -64,11 +66,12 @@ class _DisparoNumeroOverlayState extends State<DisparoNumeroOverlay>
 
   Offset? _posicion(GlobalKey key, RenderBox lienzo, {bool nave = false}) {
     final objeto = key.currentContext?.findRenderObject();
-    if (objeto is! RenderBox || !objeto.hasSize || !objeto.attached)
+    if (objeto is! RenderBox || !objeto.hasSize || !objeto.attached) {
       return null;
+    }
     final punto = Offset(
-      objeto.size.width / 2,
-      objeto.size.height * (nave ? .68 : .5),
+      objeto.size.width * (nave ? widget.fraccionOrigen.dx : .5),
+      objeto.size.height * (nave ? widget.fraccionOrigen.dy : .5),
     );
     return lienzo.globalToLocal(objeto.localToGlobal(punto));
   }
@@ -89,14 +92,16 @@ class _DisparoNumeroOverlayState extends State<DisparoNumeroOverlay>
             animation: _controller,
             builder: (context, _) {
               final lienzo = _lienzo.currentContext?.findRenderObject();
-              if (lienzo is! RenderBox || !lienzo.hasSize)
+              if (lienzo is! RenderBox || !lienzo.hasSize) {
                 return const SizedBox();
+              }
               final origen = _posicion(widget.origen, lienzo, nave: true);
               final destino = _posicion(widget.destino, lienzo);
               if (origen == null ||
                   destino == null ||
-                  MediaQuery.disableAnimationsOf(context))
+                  MediaQuery.disableAnimationsOf(context)) {
                 return const SizedBox();
+              }
               final progreso = Curves.easeInOutCubic.transform(
                 _controller.value,
               );

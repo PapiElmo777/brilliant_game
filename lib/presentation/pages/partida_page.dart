@@ -97,19 +97,22 @@ class _PartidaPageState extends State<PartidaPage> {
   }
 
   String _mensaje(PartidaEstado e) {
-    if (e.animandoMeteoros)
+    if (e.animandoMeteoros) {
       return e.fase == FasePartida.tirando
           ? (e.tirada.id == 1 ? '¡El juego comenzó!' : 'Llegan los meteoros…')
           : 'Resultados: ${e.tirada.dados.map((d) => d.valor).join(' y ')}';
-    // Provisional hasta definir la celebración de victoria.
+    }
     if (e.partidaTerminada) return '¡Llegaste a la meta de ${e.meta} puntos!';
-    if (e.reclamoRonda case final reclamo?)
+    if (e.reclamoRonda case final reclamo?) {
       return '¡Zona completada! +${reclamo.puntos} puntos. '
           'Puedes cambiar tu jugada o lanzar.';
-    if (e.puedeModificar)
+    }
+    if (e.puedeModificar) {
       return 'Puedes cambiar tu jugada o lanzar los meteoros.';
-    if (e.fase == FasePartida.rondaResuelta)
+    }
+    if (e.fase == FasePartida.rondaResuelta) {
       return '¡Listo! Lanza otra vez los meteoros.';
+    }
     if (e.ancla != null) {
       return e.fase == FasePartida.eligiendoDestino &&
               e.destinos.isEmpty &&
@@ -220,7 +223,7 @@ class _PartidaPageState extends State<PartidaPage> {
                     SizedBox(
                       key: _nave,
                       width: (alto * .18).clamp(110.0, 180.0),
-                      child: const NaveMarciano(),
+                      child: NaveMarciano(recursos: widget.definicion.recursos),
                     ),
                   ),
                   Expanded(
@@ -319,6 +322,7 @@ class _PartidaPageState extends State<PartidaPage> {
           },
           child: Scaffold(
             body: FondoEspacial(
+              ruta: widget.definicion.recursos?.fondo,
               child: SafeArea(
                 child: ResultadosPartida(
                   resultados: e.resultados,
@@ -341,6 +345,7 @@ class _PartidaPageState extends State<PartidaPage> {
             fit: StackFit.expand,
             children: [
               FondoEspacial(
+                ruta: widget.definicion.recursos?.fondo,
                 child: SafeArea(
                   // Si no cabe el tablero a su ancho completo, se permite
                   // desplazar en lugar de encoger sus casillas.

@@ -31,8 +31,9 @@ class _BandejaNumerosState extends State<BandejaNumeros>
 
   void _notificar() {
     if (widget.estado.faseVisual != FaseVisualInicio.mostrandoNumeros ||
-        _notificada)
+        _notificada) {
       return;
+    }
     _notificada = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) widget.onPresentacionCompletada?.call();
@@ -56,8 +57,9 @@ class _BandejaNumerosState extends State<BandejaNumeros>
       _controller.value = 0;
     } else if (widget.estado.faseVisual == FaseVisualInicio.mostrandoNumeros &&
         !MediaQuery.disableAnimationsOf(context)) {
-      if (_controller.status == AnimationStatus.dismissed)
+      if (_controller.status == AnimationStatus.dismissed) {
         _controller.forward();
+      }
     } else {
       _controller.value = 1;
       _notificar();

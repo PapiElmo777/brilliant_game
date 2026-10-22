@@ -10,13 +10,16 @@ class SeleccionNivelPage extends StatelessWidget {
   const SeleccionNivelPage({super.key});
   @override
   Widget build(BuildContext context) => BlocConsumer<MenuBloc, MenuEstado>(
-    listenWhen: (anterior, actual) => anterior.fase != actual.fase,
+    listenWhen: (anterior, actual) =>
+        anterior.fase != actual.fase ||
+        (actual.fase == FaseMenu.pidiendoNombre && actual.error != null),
     listener: (context, estado) async {
       final bloc = context.read<MenuBloc>();
       if (estado.fase == FaseMenu.pidiendoNombre) {
         final nombre = await DialogoNombreJugador.mostrar(
           context,
           inicial: estado.jugador,
+          error: estado.error,
           nivel: estado.tablero?.nombre,
         );
         if (bloc.isClosed) return;
@@ -80,7 +83,12 @@ class SeleccionNivelPage extends StatelessWidget {
                             gridDelegate:
                                 SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: columnas,
-                            mainAxisExtent: columnas == 1 ? (espacio.maxHeight * .68).clamp(190.0, 330.0) : null,
+                                  mainAxisExtent: columnas == 1
+                                      ? (espacio.maxHeight * .68).clamp(
+                                          190.0,
+                                          330.0,
+                                        )
+                                      : null,
                                   crossAxisSpacing: 16,
                                   mainAxisSpacing: 16,
                                   childAspectRatio: .82,
@@ -106,7 +114,7 @@ class SeleccionNivelPage extends StatelessWidget {
                             padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
                             child: Column(
                               children: [
-                                if (estado.error != null)
+                                if (estado.error != null && habilitado)
                                   Text(
                                     estado.error!,
                                     style: const TextStyle(
@@ -154,6 +162,8 @@ class _TarjetaNivel extends StatelessWidget {
     button: true,
     selected: seleccionado,
     label: 'Elegir ${nivel.nombre}',
+    enabled: onTap != null,
+    onTap: onTap,
     excludeSemantics: true,
     child: Material(
       color: const Color(0xE6102B4A),

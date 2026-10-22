@@ -23,8 +23,9 @@ class Zona {
   }) : puntuaciones = puntuacionesInmutables(
          puntuaciones ?? tipo.puntuaciones,
        ) {
-    if (id.trim().isEmpty)
+    if (id.trim().isEmpty) {
       throw ArgumentError('El ID de zona no puede estar vacío.');
+    }
     final posiciones = <(int, int)>{};
     for (final celda in celdas) {
       if (_celdas.containsKey(celda.id)) {
@@ -37,8 +38,9 @@ class Zona {
       }
       _celdas[celda.id] = celda;
     }
-    if (_celdas.isEmpty)
+    if (_celdas.isEmpty) {
       throw ArgumentError('La zona $id debe contener celdas.');
+    }
     if (!validarValores(valores)) {
       throw ArgumentError(
         'Los valores iniciales de la zona $id incumplen su regla.',

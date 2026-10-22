@@ -203,8 +203,9 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
         _seleccion = null;
         emit(_estado(FasePartida.tirando));
       case ImpactoConfirmado():
-        if (state.fase == FasePartida.tirando)
+        if (state.fase == FasePartida.tirando) {
           emit(_estado(FasePartida.revelandoResultados));
+        }
       case MeteorosCompletados():
         if (!state.animandoMeteoros) return;
         emit(
@@ -215,8 +216,9 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
           ),
         );
       case DadoSeleccionado():
-        if (!state.puedeSeleccionar || evento.dadoId < 0 || evento.dadoId > 1)
+        if (!state.puedeSeleccionar || evento.dadoId < 0 || evento.dadoId > 1) {
           return;
+        }
         if (_colocacion != null) {
           // Cambiar de dado tras colocar deshace la jugada para rehacerla.
           if (evento.dadoId == _seleccion) return;
@@ -230,8 +232,9 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
           ),
         );
       case MovimientoDadosCompletado():
-        if (state.fase == FasePartida.moviendoDados)
+        if (state.fase == FasePartida.moviendoDados) {
           emit(_estado(FasePartida.eligiendoDestino));
+        }
       case DestinoSeleccionado():
         if (state.puedeSeleccionar && _seleccion == null) {
           emit(_estado(state.fase, error: 'Primero elige un número.'));
@@ -272,8 +275,10 @@ class PartidaBloc extends Bloc<PartidaEvento, PartidaEstado> {
           ),
         );
       case TiroOmitido():
-        if (!state.puedeSeleccionar || state.fase == FasePartida.rondaResuelta)
+        if (!state.puedeSeleccionar ||
+            state.fase == FasePartida.rondaResuelta) {
           return;
+        }
         if (!_sinMovimientos) {
           emit(
             _estado(

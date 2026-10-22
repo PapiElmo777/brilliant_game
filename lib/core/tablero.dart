@@ -11,8 +11,9 @@ class Tablero {
   final Map<(int, int), String> _celdaPorPosicion = {};
 
   Tablero({required this.id, required Iterable<Zona> zonas}) {
-    if (id.trim().isEmpty)
+    if (id.trim().isEmpty) {
       throw ArgumentError('El ID de tablero no puede estar vacío.');
+    }
     for (final zona in zonas) {
       if (_zonas.containsKey(zona.id)) {
         throw ArgumentError(
@@ -34,8 +35,9 @@ class Tablero {
         _celdaPorPosicion[posicion] = celda.id;
       }
     }
-    if (_zonas.isEmpty)
+    if (_zonas.isEmpty) {
       throw ArgumentError('El tablero $id debe contener zonas.');
+    }
   }
 
   Map<String, Zona> get zonas => UnmodifiableMapView(_zonas);
@@ -46,15 +48,17 @@ class Tablero {
 
   Zona obtenerZona(String zonaId) {
     final zona = _zonas[zonaId];
-    if (zona == null)
+    if (zona == null) {
       throw ArgumentError('La zona $zonaId no existe en el tablero $id.');
+    }
     return zona;
   }
 
   Zona obtenerZonaDeCelda(String celdaId) {
     final zona = _zonaPorCelda[celdaId];
-    if (zona == null)
+    if (zona == null) {
       throw ArgumentError('La celda $celdaId no existe en el tablero $id.');
+    }
     return zona;
   }
 

@@ -12,8 +12,9 @@ class Celda {
     this.esInicio = false,
     int? valorInicial,
   }) : valor = valorInicial {
-    if (id.trim().isEmpty)
+    if (id.trim().isEmpty) {
       throw ArgumentError('El ID de celda no puede estar vacío.');
+    }
     if (valorInicial != null && (valorInicial < 1 || valorInicial > 6)) {
       throw ArgumentError(
         'El valor debe estar entre 1 y 6. Se recibió: $valorInicial',

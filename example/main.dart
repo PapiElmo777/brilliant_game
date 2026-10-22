@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:brilliant_game/brilliant_game.dart';
 
 void main() {
@@ -28,10 +29,12 @@ void main() {
   tablero.colocarValor('C1', 4);
   tablero.colocarValor('C2', 2);
   tablero.colocarValor('C3', 5);
-  print('Zona 2: ${tablero.extraerValoresDeZona('2')}');
-  print('Zona 2 completada: ${tablero.obtenerZona('2').estaCompletada}');
-  print(
+  debugPrint('Zona 2: ${tablero.extraerValoresDeZona('2')}');
+  debugPrint('Zona 2 completada: ${tablero.obtenerZona('2').estaCompletada}');
+  debugPrint(
     '¿Se puede poner 3 en C4 (azul)? ${tablero.puedeColocarValor('C4', 3)}',
   );
-  print('Vecino derecho de C1: ${tablero.obtenerVecinos('C1')['derecha']?.id}');
+  debugPrint(
+    'Vecino derecho de C1: ${tablero.obtenerVecinos('C1')['derecha']?.id}',
+  );
 }

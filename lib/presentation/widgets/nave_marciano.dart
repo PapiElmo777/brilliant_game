@@ -1,12 +1,37 @@
+import '../../catalogo/recursos_nivel.dart';
 import 'package:flutter/material.dart';
 
 class NaveMarciano extends StatelessWidget {
   final bool hazActivo;
+  final RecursosNivel? recursos;
 
-  const NaveMarciano({super.key, this.hazActivo = true});
+  const NaveMarciano({super.key, this.hazActivo = true, this.recursos});
 
   @override
   Widget build(BuildContext context) {
+    final nivel = recursos;
+    if (nivel != null) {
+      return Semantics(
+        image: true,
+        label:
+            '${nivel.personaje} a bordo de su nave del Nivel ${nivel.numero}',
+        child: AspectRatio(
+          aspectRatio: nivel.proporcionNave,
+          child: Stack(
+            clipBehavior: Clip.none,
+            fit: StackFit.expand,
+            children: [
+              if (hazActivo) CustomPaint(painter: _HazImagen(nivel.emisionY)),
+              Image.asset(
+                nivel.nave,
+                fit: BoxFit.contain,
+                excludeFromSemantics: true,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     return Semantics(
       image: true,
       label: 'Marciano a bordo de su nave espacial',
@@ -111,4 +136,35 @@ class _NavePainter extends CustomPainter {
   @override
   bool shouldRepaint(_NavePainter oldDelegate) =>
       oldDelegate.intensidadHaz != intensidadHaz;
+}
+
+class _HazImagen extends CustomPainter {
+  final double emisionY;
+  const _HazImagen(this.emisionY);
+  @override
+  void paint(Canvas canvas, Size size) {
+    final inicio = Offset(size.width * .5, size.height * emisionY);
+    final haz = Path()
+      ..moveTo(inicio.dx - 4, inicio.dy)
+      ..lineTo(size.width * .22, size.height * 1.12)
+      ..lineTo(size.width * .78, size.height * 1.12)
+      ..lineTo(inicio.dx + 4, inicio.dy)
+      ..close();
+    canvas.drawPath(
+      haz,
+      Paint()
+        ..shader =
+            const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0x6672E9FF), Color(0x0072E9FF)],
+            ).createShader(
+              Rect.fromLTRB(0, inicio.dy, size.width, size.height * 1.12),
+            ),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_HazImagen oldDelegate) =>
+      oldDelegate.emisionY != emisionY;
 }

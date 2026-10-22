@@ -164,7 +164,7 @@ class _CelebracionVictoriaState extends State<CelebracionVictoria>
         Rect.fromCenter(
           center: Offset(pantalla.width / 2, pantalla.height * .15),
           width: 140,
-          height: 140 / 1.65,
+          height: 140 / (widget.definicion.recursos?.proporcionNave ?? 1.65),
         );
     setState(() {
       _medidas = _Medidas(pantalla, nave, tablero);
@@ -330,7 +330,7 @@ class _CelebracionVictoriaState extends State<CelebracionVictoria>
               children: [
                 SizedBox(
                   width: math.min(220, medidas.pantalla.width * .55),
-                  child: const NaveMarciano(),
+                  child: NaveMarciano(recursos: widget.definicion.recursos),
                 ),
                 _GloboVictoria(puntos: widget.puntos, aparicion: 1),
               ],
@@ -419,7 +419,10 @@ class _CelebracionVictoriaState extends State<CelebracionVictoria>
           rect: nave,
           child: Transform.rotate(
             angle: _inclinacionNave(t),
-            child: NaveMarciano(hazActivo: t < _inicioVuelo),
+            child: NaveMarciano(
+              recursos: widget.definicion.recursos,
+              hazActivo: t < _inicioVuelo,
+            ),
           ),
         ),
         if (t >= _inicioFelicitacion && t < _inicioSalida + .25)
@@ -459,8 +462,11 @@ class _CelebracionVictoriaState extends State<CelebracionVictoria>
   }
 
   /// Centro de la base de la nave, donde se concentra la energía.
-  Offset _orbe(Rect nave) =>
-      Offset(nave.center.dx, nave.top + nave.height * 125 / 182);
+  Offset _orbe(Rect nave) => Offset(
+    nave.center.dx,
+    nave.top +
+        nave.height * (widget.definicion.recursos?.emisionY ?? (125 / 182)),
+  );
 
   double _brilloLogro(double t) {
     if (t >= _inicioCarga) return 0;
@@ -598,8 +604,9 @@ class _CelebracionVictoriaState extends State<CelebracionVictoria>
       return math.sin(_tramo(t, _inicioVuelo, _inicioFelicitacion) * math.pi) *
           .22;
     }
-    if (t < _inicioSalida)
+    if (t < _inicioSalida) {
       return math.sin((t - _inicioFelicitacion) * 2.6) * .04;
+    }
     return -.28 *
         Curves.easeOut.transform(_tramo(t, _inicioSalida, _inicioSalida + .3));
   }

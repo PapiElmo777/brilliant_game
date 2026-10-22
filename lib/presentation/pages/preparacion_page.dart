@@ -68,6 +68,7 @@ class _PreparacionPageState extends State<PreparacionPage> {
             fit: StackFit.expand,
             children: [
               FondoEspacial(
+                ruta: widget.definicion.recursos?.fondo,
                 child: SafeArea(
                   child: LayoutBuilder(
                     builder: (context, constraints) => SingleChildScrollView(
@@ -120,6 +121,7 @@ class _PreparacionPageState extends State<PreparacionPage> {
                                         .read<InicioBloc>()
                                         .add(const LlegadaNaveCompletada()),
                                     child: NaveMarciano(
+                                      recursos: widget.definicion.recursos,
                                       hazActivo:
                                           estado.faseVisual !=
                                           FaseVisualInicio.llegandoNave,
@@ -207,6 +209,11 @@ class _PreparacionPageState extends State<PreparacionPage> {
                                     // los números a la bandeja.
                                     if (estado.puedeReiniciar)
                                       TextButton.icon(
+                                        style: TextButton.styleFrom(
+                                          backgroundColor: const Color(
+                                            0xCC0C2640,
+                                          ),
+                                        ),
                                         key: const ValueKey('boton_cancelar'),
                                         onPressed: estado.interaccionBloqueada
                                             ? null
@@ -228,6 +235,11 @@ class _PreparacionPageState extends State<PreparacionPage> {
                                       maintainAnimation: true,
                                       maintainSize: true,
                                       child: TextButton.icon(
+                                        style: TextButton.styleFrom(
+                                          backgroundColor: const Color(
+                                            0xCC0C2640,
+                                          ),
+                                        ),
                                         key: const ValueKey('boton_aleatorio'),
                                         onPressed: estado.interaccionBloqueada
                                             ? null
@@ -297,6 +309,10 @@ class _PreparacionPageState extends State<PreparacionPage> {
                   child: DisparoNumeroOverlay(
                     key: ValueKey(disparo.id),
                     disparo: disparo,
+                    fraccionOrigen: Offset(
+                      .5,
+                      widget.definicion.recursos?.emisionY ?? .68,
+                    ),
                     origen: _origenNave,
                     destino: _clavesCeldas[disparo.celdaId]!,
                     onCompletado: () => context.read<InicioBloc>().add(
