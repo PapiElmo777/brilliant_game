@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fuentes_prueba.dart';
+import '../support/flujo_niveles.dart';
 
 // Las capturas dependen de la rasterización del sistema; se generan en macOS
 // con `flutter test --update-goldens test/golden`.
@@ -25,7 +26,7 @@ Future<void> _abrir(WidgetTester tester, Size tamano) async {
   addTearDown(tester.view.reset);
   addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
   await tester.pumpWidget(const BrilliantGameApp());
-  await tester.pumpAndSettle();
+  await precargarRecursos(tester);
 }
 
 Future<void> _pulsar(WidgetTester tester, String clave) async {

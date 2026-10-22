@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/core/reglas.dart';
+import 'package:brilliant_game/core/reglas.dart';
 
 void main() {
   //-------------------------COLOR ROJO Y AMARILLO----------------------------------------

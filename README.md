@@ -1,6 +1,6 @@
 # Brilliant Game
 
-Motor de Brilliant organizado como **Tablero → Zona → Celda**. Cada zona tiene un objeto `Tipo` que define su color, descripción, restricción y puntuaciones. El paquete requiere Flutter porque utiliza `Color` de `dart:ui`; incluye la base ejecutable de la aplicación para Android e iOS. La interfaz jugable está en implementación.
+Juego Flutter organizado como **Tablero → Zona → Celda**, con cuatro niveles seleccionables, preparación, dados y anclas, puntuación, victoria y resultados. Cada zona recibe un `Tipo` para su color y restricción, y una tabla de puntuación propia del nivel. Incluye configuración para Android e iOS.
 
 ## Contrato de los tipos
 
@@ -17,17 +17,19 @@ abstract class Tipo {
 }
 ```
 
-Las cinco implementaciones están en `lib/models/tipo.dart`. Tienen constructores `const` y mapas de puntuación inmutables.
+Las siete implementaciones están en `lib/models/tipo.dart`. Tienen constructores `const` y mapas de puntuación inmutables.
 
 | Clase | Color ARGB | Restricción | Puntuaciones (claves 1, 2, 3) |
 |---|---|---|---|
-| `TipoAzul` | `0xFF2196F3` | Todos iguales | 7, 5, 3 |
+| `TipoAzul` | `0xFF2196F3` | Todos iguales | 7, 6, 3 |
 | `TipoAmarillo` | `0xFFFFC107` | Todos diferentes | 8, 6, 4 |
-| `TipoRojo` | `0xFFF44336` | Todos diferentes | 8, 6, 4 |
+| `TipoRojo` | `0xFFF44336` | Todos diferentes | 6, 4, 2 |
 | `TipoVerde` | `0xFF4CAF50` | Cualquier número | 4, 3, 2 |
-| `TipoMorado` | `0xFF9C27B0` | Máximo dos números distintos | 8, 6, 4 |
+| `TipoMorado` | `0xFF9C27B0` | Máximo dos números distintos | 6, 4, 2 |
+| `TipoBlanco` | `0xFFECEFF1` | Todos iguales | Configurada por zona y nivel |
+| `TipoNaranja` | `0xFFFF9800` | Solo 1–3 o solo 4–6, según su grupo | 6, 4, 3 |
 
-Las claves de puntuación se conservan como fueron especificadas. Todavía no se asignan puntos ni se determina qué clave corresponde a un evento de la partida. Naranja no forma parte del modelo.
+La tabla muestra los valores predeterminados de los tipos originales. `DefinicionZona.puntuaciones` y `Zona.puntuaciones` permiten sustituirlos por las del nivel. `Marcador.reclamar(zona: ..., jugadorId: ...)` consulta esa tabla efectiva, que también usa la ficha de puntos. Las claves 1, 2 y 3 corresponden al puesto al completar una zona. Las puntuaciones son inmutables y se conservan al copiar los tableros; los tipos personalizados sin puntuación conservan la posibilidad de no otorgar puntos.
 
 ## Responsabilidades
 
@@ -140,9 +142,9 @@ reaparecen copias con sufijos `2` o `3`, revisar si una herramienta de
 sincronización o copia está modificando la carpeta del proyecto. No renombrar
 recursos dentro de `build/`, porque se generan de nuevo al compilar.
 
-## Alcance
+## Alcance de la primera adaptación del motor
 
-Esta etapa no implementa turnos, dados, asignación de puntos, restricciones de adyacencia durante el juego, fin de partida, persistencia ni interfaz gráfica. Tampoco exige conectividad geométrica de una zona. Esas reglas pueden añadirse sobre el modelo actual.
+La primera adaptación cubrió las restricciones de color y el modelo de zonas sin exigir conectividad geométrica. Las etapas siguientes, descritas a continuación, incorporan la interfaz, dados, anclas, puntuación, victoria y cuatro niveles. Multijugador y persistencia siguen fuera del alcance actual.
 
 Validación de esta adaptación: **74 pruebas aprobadas con Flutter**, incluido el ejemplo y las puntuaciones de los cinco tipos.
 
@@ -467,3 +469,27 @@ resultados, los destinos resaltados y el historial. Comparte la carga de
 fuentes con las capturas de menú y preparación. Las comparaciones se ejecutan
 en macOS y deben revisarse visualmente antes de actualizar referencias.
 
+
+
+## Cuatro niveles, fondos y personajes
+
+`NUEVA PARTIDA` abre primero el selector de niveles, con cuatro tarjetas y sus miniaturas. Tocar una tarjeta o `NIVEL ALEATORIO` solicita el nombre y crea la preparación del mapa elegido. El sorteo es uniforme entre los cuatro y se ejecuta una sola vez por selección. Cancelar el nombre vuelve al selector; volver desde el selector regresa al menú.
+
+| Nivel | Definición | Zonas | Nave y personaje |
+|---|---|---:|---|
+| 1 | `tablero_01` | 9 | `Maul N1.png` |
+| 2 | `tablero_02` | 10 | `Obi N2.png` |
+| 3 | `tablero_03` | 8 | `Anakin N3.png` |
+| 4 | `tablero_04` | 8 | `Luke N4.png` |
+
+Los cuatro mapas reproducen 49 celdas y sus seis posiciones iniciales. Blanco y amarillo forman una sola zona por mapa aunque sus celdas estén separadas; blanco exige números iguales y amarillo números distintos. En Nivel 4, la fila 1 es una zona naranja que acepta 4–6 y la fila 7 es otra que acepta 1–3; ambas permiten repeticiones y puntúan independientemente 6/4/3. Las demás agrupaciones y las tablas de puntos están definidas en `docs/reglas_mapas.md`.
+
+`RecursosNivel` relaciona cada mapa con `Nivel N.png`, `Mini N.png` y su nave con personaje. Preparación, partida y resultados conservan el fondo seleccionado. La nave se muestra en preparación, partida y celebración con su proporción original, y el origen de los disparos se ajusta al recurso. Nave y personaje son una ilustración única: se anima el conjunto. El menú y el selector conservan el escenario neutro. `EMPEZAR DE NUEVO` conserva nivel y nombre, con un tablero vacío.
+
+Los cambios se comprueban con `test/catalogo/niveles_test.dart`, `test/bloc/menu_bloc_test.dart` y `test/presentation/niveles_flujo_test.dart`. Este último usa recorridos fijos y dados programados para jugar por controles reales hasta ganar en cada mapa, comprobar los puntos y el personaje de la celebración y reiniciar. Las capturas de los cuatro niveles y del selector están en `test/golden/niveles_capturas_test.dart`; las imágenes se precargan antes de capturar para evitar referencias incompletas.
+
+Se agregó `flutter_lints` y se corrigieron los avisos detectados. Las referencias visuales se revisaron con los nuevos fondos, naves y controles antes de actualizarlas. La revisión de fluidez en teléfonos físicos y en iOS sigue pendiente. La compilación Android de depuración se genera con `flutter build apk --debug --no-pub`.
+
+Los recursos aportados `Nivel 4.png` y `Mini 4.png` contienen «VI» en la ilustración; el selector los identifica como Nivel 4 y se conservaron las imágenes originales.
+
+Verificación de esta entrega (22 de octubre de 2026): **264 pruebas aprobadas**, análisis sin problemas y APK de depuración compilado. No se comprobó el rendimiento en teléfono físico ni se compiló iOS.

@@ -16,6 +16,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fuentes_prueba.dart';
+import '../support/flujo_niveles.dart';
 
 class _TiradaDosCinco implements Random {
   int _indice = 0;
@@ -55,7 +56,7 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await precargarRecursos(tester);
       if (estado != 'resultados') {
         await tester.tap(find.byKey(const ValueKey('dado_1')));
         await tester.pumpAndSettle();

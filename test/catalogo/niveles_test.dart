@@ -137,8 +137,9 @@ void main() {
             ? 6
             : 7,
       );
-      if (n < 4)
+      if (n < 4) {
         expect(tablero.obtenerZona('blanco').celdas.length, n == 2 ? 2 : 5);
+      }
     });
     test(
       'Nivel $n: preparación parcial y copias conservan puntos e independencia',
@@ -183,8 +184,9 @@ void main() {
       expect(() => naranja.colocarValor('f1_c1', 3), throwsArgumentError);
       expect(() => naranja.colocarValor('f7_c1', 4), throwsArgumentError);
       final marcador = Marcador(jugadores: 2);
-      for (final id in ['naranja_1', 'naranja_2'])
+      for (final id in ['naranja_1', 'naranja_2']) {
         marcador.reclamar(zona: naranja.obtenerZona(id), jugadorId: 'ana');
+      }
       expect(marcador.puntosDe('ana'), 12);
     },
   );
@@ -193,11 +195,12 @@ void main() {
     () {
       for (final grupo in GrupoNaranja.values) {
         final tipo = TipoNaranja(grupo);
-        for (var n = 0; n <= 7; n++)
+        for (var n = 0; n <= 7; n++) {
           expect(
             tipo.esPosibleAgregar([], n),
             grupo == GrupoNaranja.alto ? n >= 4 && n <= 6 : n >= 1 && n <= 3,
           );
+        }
       }
       final prep = PreparacionInicial(catalogo.crearTablero('tablero_04'));
       prep.colocarValor('f1_c5', 4);
@@ -205,8 +208,9 @@ void main() {
       expect(() => prep.intercambiar('f1_c5', 'f7_c2'), throwsArgumentError);
       expect(prep.celdas['f1_c5']!.valor, 4);
       prep.reiniciar();
-      for (final (id, v) in [('f3_c3', 1), ('f3_c6', 2), ('f4_c1', 3)])
+      for (final (id, v) in [('f3_c3', 1), ('f3_c6', 2), ('f4_c1', 3)]) {
         prep.colocarValor(id, v);
+      }
       expect(() => prep.distribucionAleatoria(Random(2)), throwsStateError);
       expect(prep.celdas.values.where((c) => c.estaOcupada).length, 3);
     },
