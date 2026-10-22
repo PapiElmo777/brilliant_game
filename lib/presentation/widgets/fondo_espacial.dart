@@ -1,28 +1,47 @@
 import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 class FondoEspacial extends StatelessWidget {
   final Widget child;
   final String? ruta;
+  final bool numeroEnContenido;
+  const FondoEspacial({
+    super.key,
+    required this.child,
+    this.ruta,
+    this.numeroEnContenido = false,
+  });
 
-  const FondoEspacial({super.key, required this.child, this.ruta});
+  static double altoNumero(double ancho) => ancho * 145 / 841;
 
   @override
   Widget build(BuildContext context) {
     if (ruta != null) {
-      return DecoratedBox(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(ruta!),
-            fit: BoxFit.cover,
-            colorFilter: const ColorFilter.mode(
-              Color(0x38000000),
-              BlendMode.darken,
+      return ColoredBox(
+        color: const Color(0xFF071226),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: MediaQuery.paddingOf(context).top,
+                ),
+                child: numeroEnContenido
+                    ? _RecorteFondo(ruta: ruta!, numero: false)
+                    : Image.asset(
+                        ruta!,
+                        fit: BoxFit.cover,
+                        alignment: Alignment.topCenter,
+                        color: const Color(0x38000000),
+                        colorBlendMode: BlendMode.darken,
+                        excludeFromSemantics: true,
+                      ),
+              ),
             ),
-          ),
+            child,
+          ],
         ),
-        child: child,
       );
     }
     return DecoratedBox(
@@ -34,6 +53,84 @@ class FondoEspacial extends StatelessWidget {
         ),
       ),
       child: CustomPaint(painter: _EscenarioPainter(), child: child),
+    );
+  }
+}
+
+// Se encuadran dos partes del mismo recurso: el número acompaña a la nave
+// y el paisaje permanece fijo, sin repetir el número detrás del contenido.
+class _RecorteFondo extends StatelessWidget {
+  final String ruta;
+  final bool numero;
+  const _RecorteFondo({required this.ruta, required this.numero});
+  @override
+  Widget build(BuildContext context) => FittedBox(
+    fit: BoxFit.cover,
+    alignment: Alignment.topCenter,
+    clipBehavior: Clip.hardEdge,
+    child: SizedBox(
+      width: 841,
+      height: numero ? 145 : 1725,
+      child: ClipRect(
+        child: OverflowBox(
+          alignment: numero ? Alignment.topCenter : Alignment.bottomCenter,
+          minWidth: 841,
+          maxWidth: 841,
+          minHeight: 1870,
+          maxHeight: 1870,
+          child: Image.asset(
+            ruta,
+            width: 841,
+            height: 1870,
+            fit: BoxFit.fill,
+            color: const Color(0x38000000),
+            colorBlendMode: BlendMode.darken,
+            excludeFromSemantics: true,
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class NumeroFondoNivel extends StatelessWidget {
+  final String? ruta;
+  const NumeroFondoNivel({super.key, required this.ruta});
+  @override
+  Widget build(BuildContext context) {
+    if (ruta == null) return const SizedBox.shrink();
+    return ExcludeSemantics(
+      child: AspectRatio(
+        key: const ValueKey('numero_fondo_nivel'),
+        aspectRatio: 841 / 145,
+        child: ShaderMask(
+          blendMode: BlendMode.dstIn,
+          shaderCallback: (rect) => const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.transparent,
+              Colors.white,
+              Colors.white,
+              Colors.transparent,
+            ],
+            stops: [0, .15, .85, 1],
+          ).createShader(rect),
+          child: ShaderMask(
+            blendMode: BlendMode.dstIn,
+            shaderCallback: (rect) => const LinearGradient(
+              colors: [
+                Colors.transparent,
+                Colors.white,
+                Colors.white,
+                Colors.transparent,
+              ],
+              stops: [0, .15, .85, 1],
+            ).createShader(rect),
+            child: _RecorteFondo(ruta: ruta!, numero: true),
+          ),
+        ),
+      ),
     );
   }
 }

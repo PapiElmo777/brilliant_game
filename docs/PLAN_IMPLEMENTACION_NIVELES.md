@@ -140,7 +140,7 @@ Implementar la selección como una ruta propia vinculada al mismo `MenuBloc` del
 
 Extender `FondoEspacial` para recibir la ruta del fondo. En preparación, partida, celebración y resultados se utiliza el fondo del nivel activo. El fondo pertenece a la pantalla y permanece fijo cuando el contenido se desplaza.
 
-Dibujar con `BoxFit.cover`, sin deformar, con alineación centrada como punto inicial. Revisar los recortes en vertical y horizontal, ya que las imágenes incluyen números romanos y naves. Añadir una atenuación si hace falta para legibilidad de mensajes, dados y botones. Cuando se usa imagen, sustituir la escena dibujada de estrellas, planeta y suelo; evitar superponer dos escenarios completos.
+El paisaje se encuadra con `BoxFit.cover` y alineación superior. En preparación y partida, `NumeroFondoNivel` muestra la franja original que contiene el número, justo encima de la nave, y la desplaza junto con el contenido; el paisaje fijo omite esa franja para evitar duplicados. Se respetan las barras del sistema y se conserva la imagen original sin editarla. Revisar el encuadre en vertical, horizontal y con texto ampliado. Añadir una atenuación si hace falta para legibilidad de mensajes, dados y botones. Cuando se usa imagen, sustituir la escena dibujada de estrellas, planeta y suelo; evitar superponer dos escenarios completos.
 
 El menú principal y el selector conservarán inicialmente el fondo espacial neutro actual, pues todavía no hay nivel activo. En la celebración se mantiene el fondo del nivel, sin duplicarlo en la capa de efectos. Los ejemplos y tableros de prueba sin metadatos podrán usar el fondo actual.
 
@@ -235,3 +235,7 @@ La fuente ya incluye matrices, posiciones iniciales, tablas de puntos y agrupaci
 - Los originales `Nivel 4.png` y `Mini 4.png` muestran «VI» en su ilustración, aunque corresponden al Nivel 4 por nombre de archivo y por asignación del catálogo. Se conservan como fueron aportados.
 
 Verificación final: `flutter test --no-pub` aprobó las 264 pruebas; `flutter analyze --no-pub` terminó sin problemas y `flutter build apk --debug --no-pub` generó el APK correctamente. Los siete fallos visuales y la advertencia de análisis registrados al inicio quedaron resueltos. No se probó rendimiento en teléfonos físicos ni se compiló iOS.
+
+Ajuste de encuadre posterior: el número romano de cada recurso acompaña a la nave en los cuatro niveles, también al desplazar la pantalla. Se añadieron seis comprobaciones de posición con barras del sistema y una captura adicional del Nivel 3 que reproduce el caso reportado.
+
+Verificación del ajuste del fondo: **271 pruebas aprobadas** y análisis sin problemas.

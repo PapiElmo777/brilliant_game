@@ -22,6 +22,21 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+  testWidgets('Nivel 3 con barras del sistema', skip: !Platform.isMacOS, (
+    tester,
+  ) async {
+    pantallaNivel(tester, size: const Size(393, 873));
+    tester.view.padding = const FakeViewPadding(top: 32, bottom: 24);
+    await selectorNivel(tester, dados: DadosNivel([1, 1]));
+    await escogerNivel(tester, 3);
+    await prepararNivel(tester, 3);
+    await pulsarNivel(tester, find.byKey(const ValueKey('boton_inicio')));
+    await expectLater(
+      find.byType(BrilliantGameApp),
+      matchesGoldenFile('capturas/nivel_3_partida_barras.png'),
+    );
+    expect(tester.takeException(), isNull);
+  });
   for (final nivel in [1, 2, 3, 4]) {
     testWidgets(
       'Recursos y tablero del Nivel $nivel',

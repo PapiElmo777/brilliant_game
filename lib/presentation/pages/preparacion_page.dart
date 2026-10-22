@@ -69,6 +69,7 @@ class _PreparacionPageState extends State<PreparacionPage> {
             children: [
               FondoEspacial(
                 ruta: widget.definicion.recursos?.fondo,
+                numeroEnContenido: true,
                 child: SafeArea(
                   child: LayoutBuilder(
                     builder: (context, constraints) => SingleChildScrollView(
@@ -109,6 +110,9 @@ class _PreparacionPageState extends State<PreparacionPage> {
                                       ),
                                     ),
                                   ],
+                                ),
+                                NumeroFondoNivel(
+                                  ruta: widget.definicion.recursos?.fondo,
                                 ),
                                 SizedBox(
                                   key: _origenNave,

@@ -493,3 +493,7 @@ Se agregó `flutter_lints` y se corrigieron los avisos detectados. Las referenci
 Los recursos aportados `Nivel 4.png` y `Mini 4.png` contienen «VI» en la ilustración; el selector los identifica como Nivel 4 y se conservaron las imágenes originales.
 
 Verificación de esta entrega (22 de octubre de 2026): **264 pruebas aprobadas**, análisis sin problemas y APK de depuración compilado. No se comprobó el rendimiento en teléfono físico ni se compiló iOS.
+
+El número romano original de cada fondo se encuadra en `NumeroFondoNivel`, justo encima de la nave en preparación y partida. Se desplaza con el contenido y queda fuera de las barras del sistema. El paisaje permanece fijo, sin duplicar el número detrás del tablero; las imágenes originales no se modifican. Las capturas incluyen un caso del Nivel 3 con barras del sistema y las pruebas de encuadre cubren los cuatro niveles, texto ampliado y orientación horizontal.
+
+Verificación del ajuste del fondo: **271 pruebas aprobadas** y análisis sin problemas.

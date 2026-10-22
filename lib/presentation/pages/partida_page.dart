@@ -211,6 +211,7 @@ class _PartidaPageState extends State<PartidaPage> {
                   ),
                 ],
               ),
+              NumeroFondoNivel(ruta: widget.definicion.recursos?.fondo),
               // La nave crece con la altura disponible sin quitarle demasiado
               // espacio al tablero.
               // La puntuación acompaña a la nave por la derecha.
@@ -346,6 +347,7 @@ class _PartidaPageState extends State<PartidaPage> {
             children: [
               FondoEspacial(
                 ruta: widget.definicion.recursos?.fondo,
+                numeroEnContenido: true,
                 child: SafeArea(
                   // Si no cabe el tablero a su ancho completo, se permite
                   // desplazar en lugar de encoger sus casillas.
@@ -359,7 +361,12 @@ class _PartidaPageState extends State<PartidaPage> {
                           8;
                       final fijo =
                           espacio.maxHeight >=
-                          _alturaControles + anchoTablero + textoExtra;
+                          _alturaControles +
+                              anchoTablero +
+                              textoExtra +
+                              (widget.definicion.recursos == null
+                                  ? 0
+                                  : FondoEspacial.altoNumero(anchoTablero));
                       final contenido = Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 520),
