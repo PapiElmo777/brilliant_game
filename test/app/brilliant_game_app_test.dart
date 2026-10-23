@@ -7,9 +7,12 @@ void main() {
     await tester.pumpWidget(const BrilliantGameApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('BRILLIANT'), findsOneWidget);
+    expect(find.bySemanticsLabel('Brilliant'), findsOneWidget);
+    expect(find.text('Que la Fuerza guíe tus números.'), findsOneWidget);
     expect(tester.takeException(), isNull);
-    final context = tester.element(find.text('BRILLIANT'));
+    final context = tester.element(
+      find.byKey(const ValueKey('nueva_partida_menu')),
+    );
     expect(Theme.of(context).brightness, Brightness.dark);
     expect(ModalRoute.of(context)?.settings.name, '/');
   });

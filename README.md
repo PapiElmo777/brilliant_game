@@ -198,7 +198,7 @@ flutter pub get
 flutter run
 ```
 
-Android e iOS utilizan por ahora los identificadores de desarrollo generados por Flutter. Para ejecutar iOS en un dispositivo físico, configurar el equipo de firma en Xcode. Los recursos e iconos nativos son todavía los predeterminados.
+Android e iOS utilizan por ahora los identificadores de desarrollo generados por Flutter. Para ejecutar iOS en un dispositivo físico, configurar el equipo de firma en Xcode. Android e iOS usan el icono de Brilliant aportado en `assets/images/branding/IconB.png`, generado en todos los tamaños de sus catálogos nativos.
 
 La integración de `flutter_bloc` ya está declarada. El punto de entrada y la presentación están separados de las exportaciones del motor en `lib/brilliant_game.dart`.
 
@@ -240,7 +240,7 @@ Las posiciones en píxeles y los controladores de animación pertenecen a los wi
 
 ## Interfaz estática: fase 4
 
-El menú muestra un escenario lunar, una nave con marciano, el logotipo y únicamente `NUEVA PARTIDA`. El fondo y la nave se dibujan por separado con Flutter, sin usar una imagen plana como interfaz.
+El menú actual muestra `assets/images/backgrounds/PantallaMenu1.png` como fondo, con su logotipo integrado. Sobre el espacio oscuro entre la batalla y la firma presenta «Que la Fuerza guíe tus números.» y el único botón `NUEVA PARTIDA`. El botón es un control real de Flutter y mantiene la navegación al selector de niveles. La portada permanece fija; en horizontal, la ilustración y los controles se distribuyen a los lados.
 
 La navegación escucha `MenuBloc` y crea un `InicioBloc` nuevo por pantalla. La preparación representa las 49 celdas del modelo y resalta las seis iniciales con contorno cian y un signo +. La bandeja muestra los números faltantes, identifica la selección visual y semánticamente y permite cancelarla. Tocar una celda inicial ocupada retira su número.
 
@@ -264,7 +264,7 @@ Las pruebas de animación cubren tiempos, confirmación única, reconstrucciones
 
 ## Verificación y recursos: fase 6
 
-Los recursos visuales se dibujan con Flutter en lugar de usar imágenes. El fondo lunar (`FondoEspacial`), la nave con el marciano (`NaveMarciano`), el logotipo (`LogotipoBrilliant`), los botones de panel (`BotonPanel`), las celdas y los efectos de haz, estela y partículas son widgets o `CustomPainter` independientes. Al ser vectoriales se adaptan a cualquier densidad de pantalla y pueden animarse por separado. Las carpetas de `assets/images/` quedan reservadas por si en el futuro se sustituye alguno de estos elementos por ilustraciones.
+La fase 6 original utilizaba recursos dibujados con Flutter; las ilustraciones incorporadas después sustituyen el fondo del menú y los fondos y naves de cada nivel. El fondo lunar (`FondoEspacial`), la nave con el marciano (`NaveMarciano`), el logotipo (`LogotipoBrilliant`), los botones de panel (`BotonPanel`), las celdas y los efectos de haz, estela y partículas son widgets o `CustomPainter` independientes. Al ser vectoriales se adaptan a cualquier densidad de pantalla y pueden animarse por separado. Las ilustraciones actuales están registradas en las carpetas de `assets/images/`; los botones, las celdas y los efectos siguen siendo widgets independientes.
 
 La aplicación se limita a orientación vertical en teléfonos. Los errores de preparación se muestran sólo en el panel junto al tablero. El disparo añade chispas deterministas a la estela y un destello al llegar a la celda.
 
@@ -486,7 +486,7 @@ en macOS y deben revisarse visualmente antes de actualizar referencias.
 
 Los cuatro mapas reproducen 49 celdas y sus seis posiciones iniciales. Blanco y amarillo forman una sola zona por mapa aunque sus celdas estén separadas; blanco exige números iguales y amarillo números distintos. En Nivel 4, la fila 1 es una zona naranja que acepta 4–6 y la fila 7 es otra que acepta 1–3; ambas permiten repeticiones y puntúan independientemente 6/4/3. Las demás agrupaciones y las tablas de puntos están definidas en `docs/reglas_mapas.md`.
 
-`RecursosNivel` relaciona cada mapa con `Nivel N.png`, `Mini N.png` y su nave con personaje. Preparación, partida y resultados conservan el fondo seleccionado. La nave se muestra en preparación, partida y celebración con su proporción original, y el origen de los disparos se ajusta al recurso. Nave y personaje son una ilustración única: se anima el conjunto. El menú y el selector conservan el escenario neutro. `EMPEZAR DE NUEVO` conserva nivel y nombre, con un tablero vacío.
+`RecursosNivel` relaciona cada mapa con `Nivel N.png`, `Mini N.png` y su nave con personaje. Preparación, partida y resultados conservan el fondo seleccionado. La nave se muestra en preparación, partida y celebración con su proporción original, y el origen de los disparos se ajusta al recurso. Nave y personaje son una ilustración única: se anima el conjunto. El selector conserva el escenario neutro y el menú usa su ilustración propia `PantallaMenu1.png`. `EMPEZAR DE NUEVO` conserva nivel y nombre, con un tablero vacío.
 
 Los cambios se comprueban con `test/catalogo/niveles_test.dart`, `test/bloc/menu_bloc_test.dart` y `test/presentation/niveles_flujo_test.dart`. Este último usa recorridos fijos y dados programados para jugar por controles reales hasta ganar en cada mapa, comprobar los puntos y el personaje de la celebración y reiniciar. Las capturas de los cuatro niveles y del selector están en `test/golden/niveles_capturas_test.dart`; las imágenes se precargan antes de capturar para evitar referencias incompletas.
 
@@ -501,3 +501,5 @@ El número romano original de cada fondo se encuadra en `NumeroFondoNivel`, just
 Verificación del ajuste del fondo: **271 pruebas aprobadas** y análisis sin problemas.
 
 La preparación y la partida mantienen visibles el tablero completo, los dados y los botones sin desplazamiento. Las pruebas arrastran el tablero en ambos sentidos y comprueban que ni este ni la nave cambian de posición. El selector, el historial y los resultados conservan su desplazamiento propio.
+
+Rediseño del menú: las capturas de 390×844 y 320×568 reflejan la nueva portada. `menu_portada_test.dart` comprueba el botón de al menos 48 puntos, texto ampliado, barras del sistema, ausencia de desplazamiento y acceso al selector en cuatro tamaños, incluida orientación horizontal. El catálogo de iconos iOS y las cinco densidades Android se generaron desde el original sin transparencia. Verificación: **275 pruebas aprobadas** y análisis sin problemas.

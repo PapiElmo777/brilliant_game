@@ -48,6 +48,10 @@ Future<void> precargarRecursos(WidgetTester tester) async {
   final context = tester.element(find.byType(Navigator).first);
   await tester.runAsync(
     () => Future.wait([
+      precacheImage(
+        const AssetImage('assets/images/backgrounds/PantallaMenu1.png'),
+        context,
+      ),
       for (final nivel in CatalogoTableros.predeterminado().definiciones.values)
         for (final ruta in [
           nivel.recursos!.miniatura,
