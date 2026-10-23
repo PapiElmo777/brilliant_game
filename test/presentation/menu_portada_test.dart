@@ -26,6 +26,16 @@ void main() {
       expect(rect.right, lessThanOrEqualTo(size.width));
       expect(rect.height, greaterThanOrEqualTo(48));
       expect(find.byType(Scrollable), findsNothing);
+      final logo = find.byKey(const ValueKey('logo_menu'));
+      expect(
+        tester.widget<Image>(logo).image,
+        const AssetImage('assets/images/branding/LogoMenu.png'),
+      );
+      expect(tester.getRect(logo).bottom, lessThanOrEqualTo(rect.top));
+      expect(
+        tester.getRect(find.text('Que la Fuerza guíe tus números.')).top,
+        greaterThan(rect.bottom),
+      );
       final fondo = find.byKey(const ValueKey('fondo_menu'));
       expect(
         tester.widget<Image>(fondo).image,

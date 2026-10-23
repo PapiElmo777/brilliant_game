@@ -240,7 +240,7 @@ Las posiciones en píxeles y los controladores de animación pertenecen a los wi
 
 ## Interfaz estática: fase 4
 
-El menú actual muestra `assets/images/backgrounds/PantallaMenu1.png` como fondo, con su logotipo integrado. Sobre el espacio oscuro entre la batalla y la firma presenta «Que la Fuerza guíe tus números.» y el único botón `NUEVA PARTIDA`. El botón es un control real de Flutter y mantiene la navegación al selector de niveles. La portada permanece fija; en horizontal, la ilustración y los controles se distribuyen a los lados.
+El menú actual usa `assets/images/backgrounds/PantallaMenu1.png` para la batalla y `assets/images/branding/LogoMenu.png` para el logo aportado por el usuario. El logo se sitúa debajo de la última nave, seguido del único botón `NUEVA PARTIDA` y, debajo de este, «Que la Fuerza guíe tus números.». La firma incluida en el fondo queda fuera del recorte visible para evitar duplicados; los archivos originales no se editan. El botón es un control real de Flutter y mantiene la navegación al selector de niveles. La portada permanece fija; en horizontal, la ilustración y los controles se distribuyen a los lados.
 
 La navegación escucha `MenuBloc` y crea un `InicioBloc` nuevo por pantalla. La preparación representa las 49 celdas del modelo y resalta las seis iniciales con contorno cian y un signo +. La bandeja muestra los números faltantes, identifica la selección visual y semánticamente y permite cancelarla. Tocar una celda inicial ocupada retira su número.
 
@@ -502,4 +502,4 @@ Verificación del ajuste del fondo: **271 pruebas aprobadas** y análisis sin pr
 
 La preparación y la partida mantienen visibles el tablero completo, los dados y los botones sin desplazamiento. Las pruebas arrastran el tablero en ambos sentidos y comprueban que ni este ni la nave cambian de posición. El selector, el historial y los resultados conservan su desplazamiento propio.
 
-Rediseño del menú: las capturas de 390×844 y 320×568 reflejan la nueva portada. `menu_portada_test.dart` comprueba el botón de al menos 48 puntos, texto ampliado, barras del sistema, ausencia de desplazamiento y acceso al selector en cuatro tamaños, incluida orientación horizontal. El catálogo de iconos iOS y las cinco densidades Android se generaron desde el original sin transparencia. Verificación: **275 pruebas aprobadas** y análisis sin problemas.
+Rediseño del menú: las capturas de 390×844 y 320×568 reflejan la nueva portada. `menu_portada_test.dart` comprueba el botón de al menos 48 puntos, texto ampliado, barras del sistema, orden del logo y la frase, ausencia de desplazamiento y acceso al selector en cuatro tamaños, incluida orientación horizontal. El catálogo de iconos iOS y las cinco densidades Android se generaron desde el original sin transparencia. Verificación: **275 pruebas aprobadas** y análisis sin problemas.
