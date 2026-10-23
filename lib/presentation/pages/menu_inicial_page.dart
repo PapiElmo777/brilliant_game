@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -67,177 +66,108 @@ class _MenuInicialPageState extends State<MenuInicialPage> {
   }
 }
 
-/// Se separan la batalla y el logo para ordenar los controles sin repetir
-/// la firma que ya contiene la imagen de fondo. Los originales se conservan.
+/// Conserva el paisaje a pantalla completa. La sombra inferior y el logo
+/// con alfa se mezclan con el cielo, sin paneles ni recortes de la batalla.
 class _PortadaMenu extends StatelessWidget {
   final VoidCallback? onNuevaPartida;
   const _PortadaMenu({required this.onNuevaPartida});
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-    child: LayoutBuilder(
-      builder: (context, espacio) {
-        final horizontal = espacio.maxWidth > espacio.maxHeight;
-        final ancho = math.min(300.0, espacio.maxWidth - 48);
-        final logo = _LogoMenu(ancho: horizontal ? 240 : ancho);
-        final controles = _ControlesMenu(onNuevaPartida: onNuevaPartida);
-        if (horizontal) {
-          return Row(
-            children: [
-              const Expanded(child: _BatallaMenu()),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 340),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [logo, const SizedBox(height: 8), controles],
-                      ),
-                    ),
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, espacio) {
+      final horizontal = espacio.maxWidth > espacio.maxHeight;
+      final barras = MediaQuery.paddingOf(context);
+      final ancho = math.min(340.0, espacio.maxWidth - 48);
+      final altoLogo = (espacio.maxHeight * .16).clamp(86.0, 140.0);
+      final arribaControles = espacio.maxHeight - barras.bottom - 16 - 104;
+      final controles = _ControlesMenu(onNuevaPartida: onNuevaPartida);
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            'assets/images/backgrounds/PantallaMenu1.png',
+            key: const ValueKey('fondo_menu'),
+            fit: horizontal ? BoxFit.contain : BoxFit.cover,
+            alignment: horizontal
+                ? Alignment.centerLeft
+                : Alignment.bottomCenter,
+            excludeFromSemantics: true,
+          ),
+          // El propio cielo continúa detrás del logo y de los controles.
+          // La firma original se desvanece bajo esta sombra sin cortar la imagen.
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: [0, .62, .79, 1],
+                colors: [
+                  Colors.transparent,
+                  Colors.transparent,
+                  Color(0xFF00102F),
+                  Color(0xFF00102F),
+                ],
+              ),
+            ),
+          ),
+          if (horizontal)
+            Positioned(
+              left: espacio.maxHeight * 841 / 1870 + 24,
+              right: barras.right + 24,
+              top: barras.top + 16,
+              bottom: barras.bottom + 16,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 340),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const _LogoMenu(ancho: 260, alto: 140),
+                      const SizedBox(height: 12),
+                      controles,
+                    ],
                   ),
                 ),
               ),
-            ],
-          );
-        }
-        return Column(
-          children: [
-            const Expanded(child: _BatallaMenu()),
-            logo,
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 340),
-                child: controles,
-              ),
+            )
+          else ...[
+            Positioned(
+              left: (espacio.maxWidth - ancho) / 2,
+              width: ancho,
+              top: arribaControles - 12 - altoLogo,
+              height: altoLogo,
+              child: _LogoMenu(ancho: ancho, alto: altoLogo),
             ),
-            const SizedBox(height: 16),
+            Positioned(
+              left: (espacio.maxWidth - ancho) / 2,
+              width: ancho,
+              top: arribaControles,
+              height: 104,
+              child: controles,
+            ),
           ],
-        );
-      },
-    ),
-  );
-}
-
-class _BatallaMenu extends StatelessWidget {
-  const _BatallaMenu();
-  static const _altoArte = 1250.0;
-  Widget _imagen({required BoxFit fit, bool principal = false}) => FittedBox(
-    fit: fit,
-    alignment: Alignment.bottomCenter,
-    child: SizedBox(
-      width: 841,
-      height: _altoArte,
-      child: ClipRect(
-        child: OverflowBox(
-          alignment: Alignment.topCenter,
-          minWidth: 841,
-          maxWidth: 841,
-          minHeight: 1870,
-          maxHeight: 1870,
-          child: Image.asset(
-            'assets/images/backgrounds/PantallaMenu1.png',
-            key: principal ? const ValueKey('fondo_menu') : null,
-            width: 841,
-            height: 1870,
-            fit: BoxFit.fill,
-            excludeFromSemantics: true,
-          ),
-        ),
-      ),
-    ),
-  );
-  @override
-  Widget build(BuildContext context) => ShaderMask(
-    blendMode: BlendMode.dstIn,
-    shaderCallback: (rect) => const LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [Colors.white, Colors.white, Colors.transparent],
-      stops: [0, .92, 1],
-    ).createShader(rect),
-    child: ClipRect(
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Extiende el cielo hasta los bordes sin recortar las naves.
-          Opacity(
-            opacity: .5,
-            child: ImageFiltered(
-              imageFilter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-              child: _imagen(fit: BoxFit.cover),
-            ),
-          ),
-          ShaderMask(
-            blendMode: BlendMode.dstIn,
-            shaderCallback: (rect) {
-              final escala = math.min(
-                rect.width / 841,
-                rect.height / _altoArte,
-              );
-              final margen = (rect.width - 841 * escala) / (2 * rect.width);
-              final borde = (1 - 2 * margen) * .08;
-              return LinearGradient(
-                colors: const [
-                  Colors.transparent,
-                  Colors.white,
-                  Colors.white,
-                  Colors.transparent,
-                ],
-                stops: [margen, margen + borde, 1 - margen - borde, 1 - margen],
-              ).createShader(rect);
-            },
-            child: _imagen(fit: BoxFit.contain, principal: true),
-          ),
         ],
-      ),
-    ),
+      );
+    },
   );
 }
 
 class _LogoMenu extends StatelessWidget {
   final double ancho;
-  const _LogoMenu({required this.ancho});
+  final double alto;
+  const _LogoMenu({required this.ancho, required this.alto});
   @override
   Widget build(BuildContext context) => Semantics(
     label: 'Brilliant',
     image: true,
-    child: ShaderMask(
-      blendMode: BlendMode.dstIn,
-      shaderCallback: (rect) => const LinearGradient(
-        colors: [
-          Colors.transparent,
-          Colors.white,
-          Colors.white,
-          Colors.transparent,
-        ],
-        stops: [0, .12, .88, 1],
-      ).createShader(rect),
-      child: ShaderMask(
-        blendMode: BlendMode.dstIn,
-        shaderCallback: (rect) => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.transparent,
-            Colors.white,
-            Colors.white,
-            Colors.transparent,
-          ],
-          stops: [0, .1, .86, 1],
-        ).createShader(rect),
-        child: Image.asset(
-          'assets/images/branding/LogoMenu.png',
-          key: const ValueKey('logo_menu'),
-          width: ancho,
-          height: ancho * 272 / 448,
-          fit: BoxFit.contain,
-          excludeFromSemantics: true,
-        ),
-      ),
+    child: Image.asset(
+      'assets/images/branding/LogoBrilliant.png',
+      key: const ValueKey('logo_menu'),
+      width: ancho,
+      height: alto,
+      fit: BoxFit.contain,
+      filterQuality: FilterQuality.high,
+      excludeFromSemantics: true,
     ),
   );
 }

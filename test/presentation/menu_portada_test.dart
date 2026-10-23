@@ -29,7 +29,7 @@ void main() {
       final logo = find.byKey(const ValueKey('logo_menu'));
       expect(
         tester.widget<Image>(logo).image,
-        const AssetImage('assets/images/branding/LogoMenu.png'),
+        const AssetImage('assets/images/branding/LogoBrilliant.png'),
       );
       expect(tester.getRect(logo).bottom, lessThanOrEqualTo(rect.top));
       expect(

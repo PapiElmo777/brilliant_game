@@ -49,7 +49,7 @@ Future<void> precargarRecursos(WidgetTester tester) async {
   await tester.runAsync(
     () => Future.wait([
       precacheImage(
-        const AssetImage('assets/images/branding/LogoMenu.png'),
+        const AssetImage('assets/images/branding/LogoBrilliant.png'),
         context,
       ),
       precacheImage(
