@@ -10,6 +10,7 @@ import '../../catalogo/definicion_tablero.dart';
 import '../widgets/boton_panel.dart';
 import '../widgets/celebracion_victoria.dart';
 import '../widgets/dados_partida.dart';
+import '../widgets/diseno_juego_fijo.dart';
 import '../widgets/dialogo_salir_partida.dart';
 import '../widgets/fondo_espacial.dart';
 import '../widgets/historial_tiradas.dart';
@@ -39,10 +40,6 @@ class PartidaPage extends StatefulWidget {
 }
 
 class _PartidaPageState extends State<PartidaPage> {
-  /// Reserva para encabezado, nave, mensajes, dados y controles. El tablero
-  /// necesita además su ancho completo para conservar casillas utilizables.
-  static const _alturaControles = 480.0;
-
   final _lienzo = GlobalKey();
   final _arriba = GlobalKey();
   final _impactos = GlobalKey();
@@ -125,14 +122,18 @@ class _PartidaPageState extends State<PartidaPage> {
         : 'Elige el número que quieres colocar.';
   }
 
-  Widget _globo(PartidaEstado e) => Semantics(
+  Widget _globo(PartidaEstado e, {bool compacto = false}) => Semantics(
     liveRegion: true,
     // Las jugadas no válidas se avisan en el globo con una sacudida.
     child: e.error == null
-        ? GloboAlien(mensaje: _mensaje(e))
+        ? GloboAlien(mensaje: _mensaje(e), compacto: compacto)
         : RespuestaError(
             key: ObjectKey(e),
-            child: GloboAlien(mensaje: e.error!, error: true),
+            child: GloboAlien(
+              mensaje: e.error!,
+              error: true,
+              compacto: compacto,
+            ),
           ),
   );
 
@@ -143,6 +144,7 @@ class _PartidaPageState extends State<PartidaPage> {
       return BotonPanel(
         key: const ValueKey('boton_lanzar'),
         texto: 'LANZAR METEOROS',
+        compacto: true,
         icono: Icons.bolt,
         onPressed: () => bloc.add(MeteorosSolicitados(e.tirada.id)),
       );
@@ -151,6 +153,7 @@ class _PartidaPageState extends State<PartidaPage> {
       return BotonPanel(
         key: const ValueKey('boton_omitir'),
         texto: 'OMITIR TIRO',
+        compacto: true,
         icono: Icons.skip_next_rounded,
         onPressed: () => bloc.add(TiroOmitido(e.tirada.id)),
       );
@@ -174,140 +177,230 @@ class _PartidaPageState extends State<PartidaPage> {
     ),
   );
 
-  Widget _contenido(
-    PartidaEstado e,
-    PartidaBloc bloc, {
-    required bool fijo,
-    required double alto,
-  }) {
-    final boton = _boton(e, bloc);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-      child: Stack(
-        key: _lienzo,
-        children: [
-          Column(
+  Widget _contenido(PartidaEstado e, PartidaBloc bloc, BoxConstraints espacio) {
+    final m = MedidasJuegoFijo(espacio);
+    final ancho = m.anchoPanel;
+    final naveAncho = m.compacto
+        ? 56.0
+        : (espacio.maxHeight * .17).clamp(110.0, 160.0);
+    final naveAlto =
+        naveAncho / (widget.definicion.recursos?.proporcionNave ?? 1.65);
+    final numeroAlto = widget.definicion.recursos == null
+        ? 0.0
+        : FondoEspacial.altoNumero(ancho);
+    final etiquetaAlto = MediaQuery.textScalerOf(context).scale(12) * 1.3;
+    final globoAlto = MediaQuery.textScalerOf(context).scale(16) * 1.3 * 2 + 29;
+    Widget nave() => _ocultable(
+      oculto: () => _celebracion.ocultarNave,
+      SizedBox(
+        key: _nave,
+        width: naveAncho,
+        child: NaveMarciano(recursos: widget.definicion.recursos),
+      ),
+    );
+    Widget globo(bool compacto) => FittedBox(
+      fit: BoxFit.scaleDown,
+      child: SizedBox(
+        width: compacto ? ancho - 88 : ancho,
+        child: _globo(e, compacto: compacto),
+      ),
+    );
+    final superior = m.compacto
+        ? SizedBox(
+            height: 68,
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 80,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 64,
+                        child: NumeroFondoNivel(
+                          ruta: widget.definicion.recursos?.fondo,
+                          compacto: true,
+                        ),
+                      ),
+                      nave(),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 22,
+                        child: PanelPuntos(
+                          puntos: e.puntos,
+                          meta: e.meta,
+                          compacto: true,
+                        ),
+                      ),
+                      Expanded(child: globo(true)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          )
+        : Column(
             children: [
-              Row(
-                children: [
-                  IconButton(
-                    tooltip: 'Volver al menú',
-                    onPressed: () => _regresar(e, bloc),
-                    icon: const Icon(Icons.arrow_back_rounded),
-                  ),
-                  const Expanded(
-                    child: Text(
-                      'BRILLIANT',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                  ),
-                  Flexible(
-                    child: HistorialTiradas(
-                      registros: e.historial,
-                      celdas: e.celdas,
-                    ),
-                  ),
-                ],
+              SizedBox(
+                height: numeroAlto,
+                child: NumeroFondoNivel(
+                  ruta: widget.definicion.recursos?.fondo,
+                ),
               ),
-              NumeroFondoNivel(ruta: widget.definicion.recursos?.fondo),
-              // La nave crece con la altura disponible sin quitarle demasiado
-              // espacio al tablero.
-              // La puntuación acompaña a la nave por la derecha.
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  const Spacer(),
-                  _ocultable(
-                    oculto: () => _celebracion.ocultarNave,
-                    SizedBox(
-                      key: _nave,
-                      width: (alto * .18).clamp(110.0, 180.0),
-                      child: NaveMarciano(recursos: widget.definicion.recursos),
-                    ),
-                  ),
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.bottomLeft,
+              SizedBox(
+                height: naveAlto,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Spacer(),
+                    nave(),
+                    Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(left: 8, bottom: 4),
-                        child: PanelPuntos(puntos: e.puntos, meta: e.meta),
+                        child: Align(
+                          alignment: Alignment.bottomLeft,
+                          child: PanelPuntos(puntos: e.puntos, meta: e.meta),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              Text(
-                widget.jugador == null
-                    ? 'MISIÓN INICIADA'
-                    : 'MISIÓN DE ${widget.jugador!.toUpperCase()}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 12, letterSpacing: 1.5),
+              SizedBox(
+                height: etiquetaAlto,
+                child: Text(
+                  widget.jugador == null
+                      ? 'MISIÓN INICIADA'
+                      : 'MISIÓN DE ${widget.jugador!.toUpperCase()}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 12, letterSpacing: 1.5),
+                ),
               ),
-              _globo(e),
-              // Lugar de los dados bajo la nave, separado del globo. A la
-              // derecha, sin estorbar a los dados, la opción de volver a tirar.
+              SizedBox(height: globoAlto, child: globo(false)),
+            ],
+          );
+    final altoSuperior = m.compacto
+        ? 68.0
+        : numeroAlto + naveAlto + etiquetaAlto + globoAlto;
+    final boton = _boton(e, bloc);
+    return Stack(
+      key: _lienzo,
+      children: [
+        DisenoJuegoFijo(
+          medidas: m,
+          altoControles: altoSuperior + 80,
+          cabecera: Row(
+            children: [
+              IconButton(
+                tooltip: 'Volver al menú',
+                constraints: BoxConstraints.tightFor(
+                  width: 40,
+                  height: m.altoCabecera,
+                ),
+                padding: EdgeInsets.zero,
+                onPressed: () => _regresar(e, bloc),
+                icon: const Icon(Icons.arrow_back_rounded),
+              ),
+              Expanded(
+                child: m.compacto
+                    ? FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'BRILLIANT',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 12,
+                              ),
+                            ),
+                            FittedBox(
+                              child: Text(
+                                widget.jugador == null
+                                    ? 'MISIÓN INICIADA'
+                                    : 'MISIÓN DE ${widget.jugador!.toUpperCase()}',
+                                style: const TextStyle(fontSize: 9),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : const Text(
+                        'BRILLIANT',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontWeight: FontWeight.w800),
+                      ),
+              ),
+              Flexible(
+                child: HistorialTiradas(
+                  registros: e.historial,
+                  celdas: e.celdas,
+                ),
+              ),
+            ],
+          ),
+          controles: Column(
+            children: [
+              superior,
               SizedBox(
                 key: _arriba,
-                height: 92,
+                height: 80,
                 width: double.infinity,
                 child: e.puedeRelanzar
                     ? Align(
                         alignment: Alignment.centerRight,
                         child: BotonRelanzar(
+                          tamano: m.compacto ? 56 : 64,
                           onPressed: () =>
                               bloc.add(DadosRelanzados(e.tirada.id)),
                         ),
                       )
                     : null,
               ),
-              if (fijo)
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, espacio) => Center(
-                      child: SizedBox.square(
-                        dimension: espacio.biggest.shortestSide,
-                        child: _tablero(e, bloc),
-                      ),
-                    ),
-                  ),
-                )
-              else
-                _tablero(e, bloc),
-              SizedBox(
-                key: _impactos,
-                height: 96,
-                width: double.infinity,
-                child: boton == null
-                    ? null
-                    : Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 420),
-                          child: boton,
-                        ),
-                      ),
-              ),
             ],
           ),
-          if (!e.partidaTerminada)
-            Positioned.fill(
-              child: DadosPartida(
-                key: ValueKey('dados_${e.tirada.id}'),
-                estado: e,
-                lienzo: _lienzo,
-                arriba: _arriba,
-                abajo: _impactos,
-                onSeleccionar: (id) =>
-                    bloc.add(DadoSeleccionado(e.tirada.id, id)),
-                onMovimientoCompletado: () =>
-                    bloc.add(MovimientoDadosCompletado(e.tirada.id)),
-              ),
+          tablero: _tablero(e, bloc),
+          pie: SizedBox(
+            key: _impactos,
+            width: double.infinity,
+            child: boton == null
+                ? null
+                : Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 420),
+                      child: boton,
+                    ),
+                  ),
+          ),
+        ),
+        if (!e.partidaTerminada)
+          Positioned.fill(
+            child: DadosPartida(
+              key: ValueKey('dados_${e.tirada.id}'),
+              estado: e,
+              lienzo: _lienzo,
+              arriba: _arriba,
+              abajo: _impactos,
+              onSeleccionar: (id) =>
+                  bloc.add(DadoSeleccionado(e.tirada.id, id)),
+              onMovimientoCompletado: () =>
+                  bloc.add(MovimientoDadosCompletado(e.tirada.id)),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 
@@ -349,38 +442,9 @@ class _PartidaPageState extends State<PartidaPage> {
                 ruta: widget.definicion.recursos?.fondo,
                 numeroEnContenido: true,
                 child: SafeArea(
-                  // Si no cabe el tablero a su ancho completo, se permite
-                  // desplazar en lugar de encoger sus casillas.
                   child: LayoutBuilder(
                     builder: (context, espacio) {
-                      final anchoTablero =
-                          espacio.maxWidth.clamp(0.0, 520.0) - 24;
-                      final textoExtra =
-                          (MediaQuery.textScalerOf(context).scale(16) - 16)
-                              .clamp(0.0, double.infinity) *
-                          8;
-                      final fijo =
-                          espacio.maxHeight >=
-                          _alturaControles +
-                              anchoTablero +
-                              textoExtra +
-                              (widget.definicion.recursos == null
-                                  ? 0
-                                  : FondoEspacial.altoNumero(anchoTablero));
-                      final contenido = Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 520),
-                          child: _contenido(
-                            e,
-                            bloc,
-                            fijo: fijo,
-                            alto: espacio.maxHeight,
-                          ),
-                        ),
-                      );
-                      final pantalla = fijo
-                          ? contenido
-                          : SingleChildScrollView(child: contenido);
+                      final pantalla = _contenido(e, bloc, espacio);
                       // La celebración hace temblar la partida y atenúa lo
                       // que no participa en ella.
                       return ListenableBuilder(
@@ -435,7 +499,13 @@ class _PartidaPageState extends State<PartidaPage> {
 class GloboAlien extends StatelessWidget {
   final String mensaje;
   final bool error;
-  const GloboAlien({super.key, required this.mensaje, this.error = false});
+  final bool compacto;
+  const GloboAlien({
+    super.key,
+    required this.mensaje,
+    this.error = false,
+    this.compacto = false,
+  });
 
   Color get _borde => error ? const Color(0xFFFF6B6B) : const Color(0xFF72E9FF);
 
@@ -443,15 +513,25 @@ class GloboAlien extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     mainAxisSize: MainAxisSize.min,
     children: [
-      CustomPaint(size: const Size(18, 9), painter: _PicoGlobo(_borde)),
+      CustomPaint(
+        size: compacto ? const Size(12, 6) : const Size(18, 9),
+        painter: _PicoGlobo(_borde),
+      ),
       Container(
         // Reserva dos renglones para que el cambio de mensaje no mueva el
         // tablero ni los dados.
         constraints: BoxConstraints(
-          minHeight: MediaQuery.textScalerOf(context).scale(16) * 1.3 * 2 + 20,
+          minHeight:
+              MediaQuery.textScalerOf(context).scale(compacto ? 12 : 16) *
+                  (compacto ? 1.2 : 1.3) *
+                  2 +
+              (compacto ? 12 : 20),
         ),
         alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: EdgeInsets.symmetric(
+          horizontal: compacto ? 8 : 16,
+          vertical: compacto ? 6 : 10,
+        ),
         decoration: BoxDecoration(
           color: const Color(0xE6102B4A),
           borderRadius: BorderRadius.circular(16),
@@ -463,8 +543,8 @@ class GloboAlien extends StatelessWidget {
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            fontSize: 16,
-            height: 1.3,
+            fontSize: compacto ? 12 : 16,
+            height: compacto ? 1.2 : 1.3,
             color: error ? const Color(0xFFFFB4B4) : const Color(0xFFB6F6FF),
           ),
         ),
@@ -495,64 +575,97 @@ class _PicoGlobo extends CustomPainter {
 class PanelPuntos extends StatelessWidget {
   final int puntos;
   final int meta;
-  const PanelPuntos({super.key, required this.puntos, required this.meta});
+  final bool compacto;
+  const PanelPuntos({
+    super.key,
+    required this.puntos,
+    required this.meta,
+    this.compacto = false,
+  });
 
   @override
   Widget build(BuildContext context) => Semantics(
     label: 'Puntuación: $puntos de $meta para ganar',
     excludeSemantics: true,
-    child: FittedBox(
-      fit: BoxFit.scaleDown,
-      child: Container(
-        key: const ValueKey('puntuacion'),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xCC0C2640),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF72E9FF), width: 1.5),
-          boxShadow: const [
-            BoxShadow(color: Color(0x4472E9FF), blurRadius: 10),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'PUNTOS',
-              style: TextStyle(
-                fontSize: 10,
-                letterSpacing: 2,
-                color: Color(0xFF9FBACB),
+    child: compacto
+        ? Container(
+            key: const ValueKey('puntuacion'),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+            decoration: BoxDecoration(
+              color: const Color(0xCC0C2640),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFF72E9FF)),
+            ),
+            child: FittedBox(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('PUNTOS', style: TextStyle(fontSize: 10)),
+                  Text(
+                    '$puntos',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  Text(' / $meta', style: const TextStyle(fontSize: 10)),
+                ],
               ),
             ),
-            Text(
-              '$puntos',
-              style: const TextStyle(
-                fontSize: 26,
-                height: 1.1,
-                fontWeight: FontWeight.w900,
-                color: Color(0xFFB6F6FF),
+          )
+        : FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Container(
+              key: const ValueKey('puntuacion'),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xCC0C2640),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF72E9FF), width: 1.5),
+                boxShadow: const [
+                  BoxShadow(color: Color(0x4472E9FF), blurRadius: 10),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'PUNTOS',
+                    style: TextStyle(
+                      fontSize: 10,
+                      letterSpacing: 2,
+                      color: Color(0xFF9FBACB),
+                    ),
+                  ),
+                  Text(
+                    '$puntos',
+                    style: const TextStyle(
+                      fontSize: 26,
+                      height: 1.1,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFFB6F6FF),
+                    ),
+                  ),
+                  Text(
+                    'META $meta',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      letterSpacing: 1.5,
+                      color: Color(0xFF9FBACB),
+                    ),
+                  ),
+                ],
               ),
             ),
-            Text(
-              'META $meta',
-              style: const TextStyle(
-                fontSize: 10,
-                letterSpacing: 1.5,
-                color: Color(0xFF9FBACB),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
+          ),
   );
 }
 
 /// Botón compacto para omitir la tirada y pasar directamente a la siguiente.
 class BotonRelanzar extends StatelessWidget {
   final VoidCallback onPressed;
-  const BotonRelanzar({super.key, required this.onPressed});
+  final double tamano;
+  const BotonRelanzar({super.key, required this.onPressed, this.tamano = 78});
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -561,8 +674,8 @@ class BotonRelanzar extends StatelessWidget {
     excludeSemantics: true,
     child: SizedBox(
       key: const ValueKey('boton_relanzar'),
-      width: 78,
-      height: 78,
+      width: tamano,
+      height: tamano,
       child: Material(
         color: const Color(0xCC0C2640),
         shape: const BeveledRectangleBorder(

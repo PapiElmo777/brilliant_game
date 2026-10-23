@@ -8,12 +8,14 @@ class BotonPanel extends StatelessWidget {
   final String texto;
   final IconData icono;
   final VoidCallback? onPressed;
+  final bool compacto;
 
   const BotonPanel({
     super.key,
     required this.texto,
     required this.icono,
     required this.onPressed,
+    this.compacto = false,
   });
 
   static const _forma = BeveledRectangleBorder(
@@ -58,14 +60,14 @@ class BotonPanel extends StatelessWidget {
                 disabledForegroundColor: const Color(0xFFE2F9FF),
                 overlayColor: ColoresBrilliant.cian,
                 shadowColor: Colors.transparent,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 28,
-                  vertical: 18,
+                padding: EdgeInsets.symmetric(
+                  horizontal: compacto ? 12 : 28,
+                  vertical: compacto ? 10 : 18,
                 ),
                 textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  fontSize: 17,
+                  fontSize: compacto ? 14 : 17,
                   fontWeight: FontWeight.w800,
-                  letterSpacing: 2.4,
+                  letterSpacing: compacto ? 1 : 2.4,
                 ),
               ),
               icon: Icon(icono, color: ColoresBrilliant.cian),

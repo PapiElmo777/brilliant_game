@@ -9,8 +9,13 @@ import 'boton_panel.dart';
 /// pulsos de resplandor para llamar la atención sin repetirse indefinidamente.
 class BotonInicio extends StatefulWidget {
   final VoidCallback onPressed;
+  final bool compacto;
 
-  const BotonInicio({super.key, required this.onPressed});
+  const BotonInicio({
+    super.key,
+    required this.onPressed,
+    this.compacto = false,
+  });
 
   @override
   State<BotonInicio> createState() => _BotonInicioState();
@@ -48,6 +53,7 @@ class _BotonInicioState extends State<BotonInicio>
     child: BotonPanel(
       key: const ValueKey('boton_inicio'),
       texto: 'INICIO',
+      compacto: widget.compacto,
       icono: Icons.rocket_launch_rounded,
       onPressed: widget.onPressed,
     ),

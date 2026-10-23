@@ -4,6 +4,7 @@ library;
 import 'dart:io';
 
 import 'package:brilliant_game/app/brilliant_game_app.dart';
+import 'package:brilliant_game/presentation/pages/preparacion_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -51,8 +52,8 @@ Future<void> _completar(WidgetTester tester) async {
     await _pulsar(tester, 'numero_${i + 1}');
     await _pulsar(tester, 'celda_${_iniciales[i]}');
   }
-  // Vuelve al inicio del contenido: INICIO debe verse sin desplazar.
-  await tester.drag(find.byType(SingleChildScrollView), const Offset(0, 2000));
+  // El arrastre no debe desplazar el contenido ni ocultar INICIO.
+  await tester.drag(find.byType(PreparacionPage), const Offset(0, 2000));
   await tester.pumpAndSettle();
 }
 

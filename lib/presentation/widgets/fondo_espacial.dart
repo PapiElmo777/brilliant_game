@@ -62,15 +62,20 @@ class FondoEspacial extends StatelessWidget {
 class _RecorteFondo extends StatelessWidget {
   final String ruta;
   final bool numero;
-  const _RecorteFondo({required this.ruta, required this.numero});
+  final bool compacto;
+  const _RecorteFondo({
+    required this.ruta,
+    required this.numero,
+    this.compacto = false,
+  });
   @override
   Widget build(BuildContext context) => FittedBox(
     fit: BoxFit.cover,
     alignment: Alignment.topCenter,
     clipBehavior: Clip.hardEdge,
     child: SizedBox(
-      width: 841,
-      height: numero ? 145 : 1725,
+      width: numero && compacto ? 300 : 841,
+      height: numero ? (compacto ? 100 : 145) : 1725,
       child: ClipRect(
         child: OverflowBox(
           alignment: numero ? Alignment.topCenter : Alignment.bottomCenter,
@@ -78,14 +83,17 @@ class _RecorteFondo extends StatelessWidget {
           maxWidth: 841,
           minHeight: 1870,
           maxHeight: 1870,
-          child: Image.asset(
-            ruta,
-            width: 841,
-            height: 1870,
-            fit: BoxFit.fill,
-            color: const Color(0x38000000),
-            colorBlendMode: BlendMode.darken,
-            excludeFromSemantics: true,
+          child: Transform.translate(
+            offset: Offset(0, numero && compacto ? -24 : 0),
+            child: Image.asset(
+              ruta,
+              width: 841,
+              height: 1870,
+              fit: BoxFit.fill,
+              color: const Color(0x38000000),
+              colorBlendMode: BlendMode.darken,
+              excludeFromSemantics: true,
+            ),
           ),
         ),
       ),
@@ -95,14 +103,19 @@ class _RecorteFondo extends StatelessWidget {
 
 class NumeroFondoNivel extends StatelessWidget {
   final String? ruta;
-  const NumeroFondoNivel({super.key, required this.ruta});
+  final bool compacto;
+  const NumeroFondoNivel({
+    super.key,
+    required this.ruta,
+    this.compacto = false,
+  });
   @override
   Widget build(BuildContext context) {
     if (ruta == null) return const SizedBox.shrink();
     return ExcludeSemantics(
       child: AspectRatio(
         key: const ValueKey('numero_fondo_nivel'),
-        aspectRatio: 841 / 145,
+        aspectRatio: compacto ? 3 : 841 / 145,
         child: ShaderMask(
           blendMode: BlendMode.dstIn,
           shaderCallback: (rect) => const LinearGradient(
@@ -114,7 +127,7 @@ class NumeroFondoNivel extends StatelessWidget {
               Colors.white,
               Colors.transparent,
             ],
-            stops: [0, .15, .85, 1],
+            stops: [0, .08, .95, 1],
           ).createShader(rect),
           child: ShaderMask(
             blendMode: BlendMode.dstIn,
@@ -125,9 +138,9 @@ class NumeroFondoNivel extends StatelessWidget {
                 Colors.white,
                 Colors.transparent,
               ],
-              stops: [0, .15, .85, 1],
+              stops: [0, .08, .95, 1],
             ).createShader(rect),
-            child: _RecorteFondo(ruta: ruta!, numero: true),
+            child: _RecorteFondo(ruta: ruta!, numero: true, compacto: compacto),
           ),
         ),
       ),

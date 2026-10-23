@@ -139,15 +139,21 @@ void main() {
       expect(b.state.historial.single.celdaId, colocadaId);
       expect(find.text('LANZAR METEOROS'), findsOneWidget);
       final tablero = tester.getRect(find.byType(TableroView));
-      expect(
-        tester.getRect(find.byKey(const ValueKey('boton_lanzar'))).top,
-        greaterThanOrEqualTo(tablero.bottom),
-      );
+      final lanzar = tester.getRect(find.byKey(const ValueKey('boton_lanzar')));
+      if (size.width > size.height) {
+        expect(lanzar.right, lessThanOrEqualTo(tablero.left));
+      } else {
+        expect(lanzar.top, greaterThanOrEqualTo(tablero.bottom));
+      }
       final globo = tester.getRect(find.byType(GloboAlien));
       for (final id in [0, 1]) {
         final dado = tester.getRect(find.byKey(ValueKey('dado_$id')));
         expect(dado.top, greaterThan(globo.bottom + 8));
-        expect(dado.bottom, lessThanOrEqualTo(tablero.top));
+        if (size.width > size.height) {
+          expect(dado.right, lessThanOrEqualTo(tablero.left));
+        } else {
+          expect(dado.bottom, lessThanOrEqualTo(tablero.top));
+        }
       }
       expect(
         tester.getSize(find.byKey(const ValueKey('celda_0-1'))).shortestSide,

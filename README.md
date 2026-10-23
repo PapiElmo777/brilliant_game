@@ -246,7 +246,7 @@ La navegación escucha `MenuBloc` y crea un `InicioBloc` nuevo por pantalla. La 
 
 Los errores y el progreso reflejan el estado del BLoC. `INICIO` sólo aparece al completar la preparación; al confirmar, se muestra el estado iniciado y las celdas quedan bloqueadas. Volver al menú y solicitar otra partida crea un tablero vacío. No se implementa todavía el desarrollo posterior de la partida.
 
-La fase 4 estableció colocaciones instantáneas; la fase 5 las sustituyó por la confirmación al terminar el vuelo y activó la entrada animada. La interfaz utiliza desplazamiento vertical cuando el espacio o el tamaño del texto lo requieren.
+La fase 4 estableció colocaciones instantáneas; la fase 5 las sustituyó por la confirmación al terminar el vuelo y activó la entrada animada. Preparación y partida permanecen fijas: el tablero se ajusta al espacio disponible y los controles pasan a un lateral en horizontal.
 
 `test/presentation/flujo_interfaz_test.dart` cubre navegación, colores, selección accesible, errores, colocación, retiro, inicio, partidas nuevas y ausencia de desbordamientos en tamaños 320×568, 430×932 y 844×390 con texto ampliado.
 
@@ -256,7 +256,7 @@ Al abrir la preparación, la nave entra durante un segundo con desaceleración y
 
 Cada colocación válida monta un `DisparoNumeroOverlay` identificado por el ID del disparo. El número viaja durante 650 ms con brillo y estela cian. El origen y destino se calculan desde las posiciones globales de los widgets, sin guardar píxeles en el BLoC. Sólo al terminar se envía `DisparoNumeroCompletado`; reconstruir el widget no repite esa confirmación. Salir de la pantalla descarta la animación sin confirmar una colocación pendiente.
 
-La bandeja conserva el espacio de las fichas utilizadas, sin mostrarlas ni incluirlas en la semántica. El indicador y el control de cancelación también mantienen su espacio para que el destino del disparo no salte al confirmar la colocación. El desplazamiento del tablero se bloquea durante el vuelo.
+La bandeja conserva el espacio de las fichas utilizadas, sin mostrarlas ni incluirlas en la semántica. El indicador y el control de cancelación también mantienen su espacio para que el destino del disparo no salte al confirmar la colocación. El tablero permanece fijo durante toda la preparación y la partida, incluido el vuelo.
 
 Los errores reciben una breve sacudida y un resplandor en su panel, además del mensaje visible. `INICIO` aparece con escala y opacidad cuando el BLoC lo permite. Todos estos efectos respetan `MediaQuery.disableAnimations`: se presentan los estados finales y se mantienen las confirmaciones necesarias sin bloquear el flujo.
 
@@ -280,7 +280,7 @@ Al pulsar `NUEVA PARTIDA` se pide el nombre del jugador. `MenuBloc` pasa a la fa
 
 `Acomodo aleatorio` envía `ColocacionAleatoriaSolicitada`. `PreparacionInicial.distribucionAleatoria` busca, sobre una copia, una colocación de los números faltantes que cumpla las reglas de zona; los números ya colocados se conservan. `InicioBloc` dispara las colocaciones una por una, del número menor al mayor, con la misma animación y confirmación que la colocación manual. Si no existe una distribución válida se publica un error sin disparar.
 
-Al completar la preparación, `PanelInicio` presenta `INICIO` fijo en la parte inferior de la pantalla, sin necesidad de desplazar. El botón entra desde abajo con rebote y emite dos pulsos de resplandor; con movimiento reducido aparece directamente. Tras iniciar, el panel confirma las posiciones.
+Al completar la preparación, `BotonInicio` presenta `INICIO` en el espacio reservado al pie de la pantalla fija. El botón entra desde abajo con rebote y emite dos pulsos de resplandor; con movimiento reducido aparece directamente. Tras iniciar, el panel confirma las posiciones.
 
 ## Prueba provisional de meteoritos
 
@@ -343,9 +343,11 @@ el ID de la tirada; las confirmaciones antiguas o duplicadas se ignoran.
   conserva un solo registro de la ronda; al lanzar, la jugada queda fija.
 - Salir con la flecha o con el regreso del sistema pide confirmación, porque se
   pierde el progreso; al aceptar se vuelve al menú principal.
-- La pantalla permite desplazarse cuando no cabe el tablero a su ancho
-  completo junto con los controles y el texto ampliado. Así las casillas no
-  se reducen hasta resultar difíciles de tocar.
+- Preparación y partida no permiten desplazarse. `DisenoJuegoFijo` reserva
+  espacio para la cabecera, los controles y el pie, y ajusta el tablero al área
+  restante. En pantallas pequeñas compacta la nave y los mensajes; en horizontal
+  coloca los controles a la izquierda. Las pruebas conservan casillas de al
+  menos 32 puntos con texto ampliado y barras del sistema.
 - `Tiradas · N`, en el encabezado, abre el historial. Una colocación ilumina el
   dado escrito e indica fila y columna; una omisión no ilumina ninguno.
 
@@ -494,6 +496,8 @@ Los recursos aportados `Nivel 4.png` y `Mini 4.png` contienen «VI» en la ilust
 
 Verificación de esta entrega (22 de octubre de 2026): **264 pruebas aprobadas**, análisis sin problemas y APK de depuración compilado. No se comprobó el rendimiento en teléfono físico ni se compiló iOS.
 
-El número romano original de cada fondo se encuadra en `NumeroFondoNivel`, justo encima de la nave en preparación y partida. Se desplaza con el contenido y queda fuera de las barras del sistema. El paisaje permanece fijo, sin duplicar el número detrás del tablero; las imágenes originales no se modifican. Las capturas incluyen un caso del Nivel 3 con barras del sistema y las pruebas de encuadre cubren los cuatro niveles, texto ampliado y orientación horizontal.
+El número romano original de cada fondo se encuadra en `NumeroFondoNivel`, justo encima de la nave en preparación y partida. Permanece fijo junto a la nave y queda fuera de las barras del sistema. El paisaje permanece fijo, sin duplicar el número detrás del tablero; las imágenes originales no se modifican. Las capturas incluyen un caso del Nivel 3 con barras del sistema y las pruebas de encuadre cubren los cuatro niveles, texto ampliado y orientación horizontal.
 
 Verificación del ajuste del fondo: **271 pruebas aprobadas** y análisis sin problemas.
+
+La preparación y la partida mantienen visibles el tablero completo, los dados y los botones sin desplazamiento. Las pruebas arrastran el tablero en ambos sentidos y comprueban que ni este ni la nave cambian de posición. El selector, el historial y los resultados conservan su desplazamiento propio.

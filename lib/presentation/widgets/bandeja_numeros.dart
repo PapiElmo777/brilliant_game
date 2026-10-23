@@ -5,12 +5,14 @@ import '../../bloc/inicio_estado.dart';
 class BandejaNumeros extends StatefulWidget {
   final InicioEstado estado;
   final ValueChanged<int> onSeleccionado;
+  final double? altura;
   final VoidCallback? onPresentacionCompletada;
 
   const BandejaNumeros({
     super.key,
     required this.estado,
     required this.onSeleccionado,
+    this.altura,
     this.onPresentacionCompletada,
   });
 
@@ -78,80 +80,89 @@ class _BandejaNumerosState extends State<BandejaNumeros>
     final onSeleccionado = widget.onSeleccionado;
     final numeros = estado.numerosFaltantes.toList()..sort();
     final alturaFicha =
+        widget.altura ??
         56 *
-        (MediaQuery.textScalerOf(context).scale(22) / 22).clamp(
-          1.0,
-          double.infinity,
-        );
+            (MediaQuery.textScalerOf(context).scale(22) / 22).clamp(
+              1.0,
+              double.infinity,
+            );
     return AnimatedBuilder(
       animation: _controller,
-      builder: (context, _) => Wrap(
-        alignment: WrapAlignment.center,
-        spacing: 8,
-        runSpacing: 8,
+      builder: (context, _) => Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           for (var numero = 1; numero <= 6; numero++)
             if (!numeros.contains(numero))
-              SizedBox(width: 48, height: alturaFicha)
+              Expanded(child: SizedBox(height: alturaFicha))
             else
-              _AparicionNumero(
-                progreso: Interval(
-                  .26 + (numero - 1) * .09,
-                  .5 + (numero - 1) * .09,
-                  curve: Curves.easeOutCubic,
-                ).transform(_controller.value),
-                child: Semantics(
-                  selected: numero == estado.numeroSeleccionado,
-                  button: true,
-                  enabled: !estado.interaccionBloqueada,
-                  label: 'Número $numero',
-                  onTap: estado.interaccionBloqueada
-                      ? null
-                      : () => onSeleccionado(numero),
-                  excludeSemantics: true,
-                  child: SizedBox(
-                    width: 48,
-                    height: alturaFicha,
-                    child: OutlinedButton(
-                      key: ValueKey('numero_$numero'),
-                      style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        disabledForegroundColor:
-                            numero == estado.numeroSeleccionado
-                            ? const Color(0xFF234254)
-                            : const Color(0xFF8DA5B5),
-                        backgroundColor: numero == estado.numeroSeleccionado
-                            ? const Color(0xFF72E9FF)
-                            : const Color(0xFF132D46),
-                        foregroundColor: numero == estado.numeroSeleccionado
-                            ? const Color(0xFF071226)
-                            : const Color(0xFFF4FAFF),
-                        side: BorderSide(
-                          color: numero == estado.numeroSeleccionado
-                              ? Colors.white
-                              : const Color(0xFF44647A),
-                          width: numero == estado.numeroSeleccionado ? 2 : 1,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: estado.interaccionBloqueada
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  child: _AparicionNumero(
+                    progreso: Interval(
+                      .26 + (numero - 1) * .09,
+                      .5 + (numero - 1) * .09,
+                      curve: Curves.easeOutCubic,
+                    ).transform(_controller.value),
+                    child: Semantics(
+                      selected: numero == estado.numeroSeleccionado,
+                      button: true,
+                      enabled: !estado.interaccionBloqueada,
+                      label: 'Número $numero',
+                      onTap: estado.interaccionBloqueada
                           ? null
                           : () => onSeleccionado(numero),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            '$numero',
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
+                      excludeSemantics: true,
+                      child: SizedBox(
+                        width: 48,
+                        height: alturaFicha,
+                        child: OutlinedButton(
+                          key: ValueKey('numero_$numero'),
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            disabledForegroundColor:
+                                numero == estado.numeroSeleccionado
+                                ? const Color(0xFF234254)
+                                : const Color(0xFF8DA5B5),
+                            backgroundColor: numero == estado.numeroSeleccionado
+                                ? const Color(0xFF72E9FF)
+                                : const Color(0xFF132D46),
+                            foregroundColor: numero == estado.numeroSeleccionado
+                                ? const Color(0xFF071226)
+                                : const Color(0xFFF4FAFF),
+                            side: BorderSide(
+                              color: numero == estado.numeroSeleccionado
+                                  ? Colors.white
+                                  : const Color(0xFF44647A),
+                              width: numero == estado.numeroSeleccionado
+                                  ? 2
+                                  : 1,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          if (numero == estado.numeroSeleccionado)
-                            const Icon(Icons.check_rounded, size: 14),
-                        ],
+                          onPressed: estado.interaccionBloqueada
+                              ? null
+                              : () => onSeleccionado(numero),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  '$numero',
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                if (numero == estado.numeroSeleccionado)
+                                  const Icon(Icons.check_rounded, size: 14),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),

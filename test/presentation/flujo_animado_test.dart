@@ -207,7 +207,7 @@ void main() {
     // Permanece fijo aunque se desplace el contenido.
     for (final desplazamiento in [2000.0, -2000.0]) {
       await tester.drag(
-        find.byType(SingleChildScrollView),
+        find.byType(PreparacionPage),
         Offset(0, desplazamiento),
       );
       await tester.pumpAndSettle();

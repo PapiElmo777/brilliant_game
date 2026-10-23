@@ -138,9 +138,9 @@ Implementar la selección como una ruta propia vinculada al mismo `MenuBloc` del
 
 ## 8. Fondos por nivel
 
-Extender `FondoEspacial` para recibir la ruta del fondo. En preparación, partida, celebración y resultados se utiliza el fondo del nivel activo. El fondo pertenece a la pantalla y permanece fijo cuando el contenido se desplaza.
+Extender `FondoEspacial` para recibir la ruta del fondo. En preparación, partida, celebración y resultados se utiliza el fondo del nivel activo. El fondo pertenece a la pantalla y permanece fijo. Preparación y partida también mantienen fijo su contenido.
 
-El paisaje se encuadra con `BoxFit.cover` y alineación superior. En preparación y partida, `NumeroFondoNivel` muestra la franja original que contiene el número, justo encima de la nave, y la desplaza junto con el contenido; el paisaje fijo omite esa franja para evitar duplicados. Se respetan las barras del sistema y se conserva la imagen original sin editarla. Revisar el encuadre en vertical, horizontal y con texto ampliado. Añadir una atenuación si hace falta para legibilidad de mensajes, dados y botones. Cuando se usa imagen, sustituir la escena dibujada de estrellas, planeta y suelo; evitar superponer dos escenarios completos.
+El paisaje se encuadra con `BoxFit.cover` y alineación superior. En preparación y partida, `NumeroFondoNivel` muestra la franja original que contiene el número, justo encima de la nave, y la mantiene fija junto a ella; el paisaje fijo omite esa franja para evitar duplicados. Se respetan las barras del sistema y se conserva la imagen original sin editarla. Revisar el encuadre en vertical, horizontal y con texto ampliado. Añadir una atenuación si hace falta para legibilidad de mensajes, dados y botones. Cuando se usa imagen, sustituir la escena dibujada de estrellas, planeta y suelo; evitar superponer dos escenarios completos.
 
 El menú principal y el selector conservarán inicialmente el fondo espacial neutro actual, pues todavía no hay nivel activo. En la celebración se mantiene el fondo del nivel, sin duplicarlo en la capa de efectos. Los ejemplos y tableros de prueba sin metadatos podrán usar el fondo actual.
 
@@ -199,7 +199,7 @@ La carpeta `characters/` ya está registrada en `pubspec.yaml`. Mantener las rut
 - Recorrer por controles reales selector → nombre → seis colocaciones → INICIO → tirada → colocación válida en cada nivel. Dados controlados y destinos esperados concretos; no seleccionar destinos copiando la respuesta del BLoC.
 - Un recorrido completo hasta resultados por nivel verifica puntuación, nombre, fondo y reinicio vacío del mismo nivel. Los casos blanca/naranja deberán aparecer además en recorridos específicos aunque el camino ganador no los necesite.
 - Movimiento reducido, fallo del recurso de meteoritos, omisión de celebración y regreso del sistema conservan el nivel seleccionado.
-- Comprobar en 320×568, 390×844, 430×932 y horizontal 844×390, con texto normal y ampliado a 1,5×. Conservar el mínimo actual de casilla de 32 puntos y controles accesibles mediante desplazamiento.
+- Comprobar en 320×568, 390×844, 430×932 y horizontal 844×390, con texto normal y ampliado a 1,5×. Conservar casillas de al menos 32 puntos en los tamaños comprobados y controles visibles sin desplazamiento en preparación y partida. En horizontal, distribuir controles y tablero en dos columnas.
 - Verificar que cada nivel carga la ruta de nave correcta en preparación y partida, que su copia durante la victoria usa el mismo recurso y que reiniciar conserva la asociación. Comprobar entrada, origen de disparo, encuadre y movimiento reducido.
 - Capturas del selector y preparación de los cuatro niveles, naves y personajes, zonas blanca/naranja, puntos y resultados con el fondo elegido. Revisar visualmente contraste, recortes y correspondencia de recursos antes de actualizar referencias.
 - Medir fluidez y memoria en teléfono con fondos reales, miniaturas, meteoritos y celebración; una prueba con imágenes simuladas no sustituye esta comprobación.
@@ -236,6 +236,10 @@ La fuente ya incluye matrices, posiciones iniciales, tablas de puntos y agrupaci
 
 Verificación final: `flutter test --no-pub` aprobó las 264 pruebas; `flutter analyze --no-pub` terminó sin problemas y `flutter build apk --debug --no-pub` generó el APK correctamente. Los siete fallos visuales y la advertencia de análisis registrados al inicio quedaron resueltos. No se probó rendimiento en teléfonos físicos ni se compiló iOS.
 
-Ajuste de encuadre posterior: el número romano de cada recurso acompaña a la nave en los cuatro niveles, también al desplazar la pantalla. Se añadieron seis comprobaciones de posición con barras del sistema y una captura adicional del Nivel 3 que reproduce el caso reportado.
+Ajuste de encuadre posterior: el número romano de cada recurso acompaña a la nave en los cuatro niveles, manteniendo la pantalla fija. Se añadieron seis comprobaciones de posición con barras del sistema y una captura adicional del Nivel 3 que reproduce el caso reportado.
 
 Verificación del ajuste del fondo: **271 pruebas aprobadas** y análisis sin problemas.
+
+Ajuste posterior de pantalla fija: preparación y partida usan `DisenoJuegoFijo`, sin contenedores de desplazamiento. En vertical reservan el espacio del pie y adaptan el tablero al alto restante; en pantallas pequeñas compactan los controles y en horizontal los sitúan a un lado del tablero. Se mantienen el fondo, el número encima de la nave y los efectos de colocación y victoria. Las pruebas verifican que arrastrar no mueve la nave ni el tablero, además de la visibilidad de controles, barras del sistema y texto ampliado.
+
+Verificación de pantalla fija: **271 pruebas aprobadas**, referencias visuales actualizadas y análisis sin problemas.

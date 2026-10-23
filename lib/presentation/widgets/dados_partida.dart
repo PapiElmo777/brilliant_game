@@ -185,6 +185,10 @@ class _DadosPartidaState extends State<DadosPartida>
       final arriba = _centro(widget.arriba, box);
       if (abajo == null || arriba == null) return const SizedBox();
       final t = Curves.easeInOutCubic.transform(_movimiento.value);
+      final cajaInferior = widget.abajo.currentContext?.findRenderObject();
+      final margen = cajaInferior is RenderBox
+          ? ((cajaInferior.size.height - 56) / 2).clamp(0.0, 4.0)
+          : 4.0;
       return Stack(
         children: [
           for (final dado in widget.estado.tirada.dados)
@@ -192,14 +196,17 @@ class _DadosPartidaState extends State<DadosPartida>
               left:
                   Offset.lerp(
                     abajo +
-                        Offset(dado.id == 0 ? -52 : 52, dado.id == 0 ? -4 : 4),
+                        Offset(
+                          dado.id == 0 ? -52 : 52,
+                          dado.id == 0 ? -margen : margen,
+                        ),
                     arriba + Offset(dado.id == 0 ? -36 : 36, 0),
                     t,
                   )!.dx -
                   28,
               top:
                   Offset.lerp(
-                    abajo + Offset(0, dado.id == 0 ? -4 : 4),
+                    abajo + Offset(0, dado.id == 0 ? -margen : margen),
                     arriba,
                     t,
                   )!.dy -
