@@ -16,7 +16,10 @@ void main() {
     'Flutter → JAR: registro, reinicios, partida y borrado real',
     (tester) async {
       final jar = File(
-        '../brilliant_server/target/brilliant-server.jar',
+        const String.fromEnvironment(
+          'AUTH_SERVER_JAR',
+          defaultValue: '../brilliant_server/target/brilliant-server.jar',
+        ),
       ).absolute.path;
       final setup = await tester.runAsync(() async {
         final directory = await Directory.systemTemp.createTemp(
@@ -131,7 +134,7 @@ void main() {
         await settleNetwork();
       }
 
-      const password = 'Nebulosas azules y planetas 8492';
+      const password = 'a!2';
       const username = 'PilotoE2E';
       Future<void> credentials(String name) async {
         await tester.enterText(

@@ -8,6 +8,8 @@ Implementados en Flutter **registro, inicio de sesión y borrado de cuentas**, c
 
 La app arranca en login; crear cuenta abre directamente el menú. El menú tiene acceso a «Mi cuenta» y a eliminarla con contraseña actual y confirmación explícita. La cuenta aporta UUID y nombre a las partidas locales y resultados: ya no se pide un nombre por partida. Se conservan los cuatro niveles, reglas, puntuaciones y animaciones.
 
+Desde el 3 de noviembre de 2026, el registro requiere **3–128 caracteres y al menos un carácter especial** (puntuación o símbolo, por ejemplo `a!2`). Los espacios no satisfacen el requisito de carácter especial. Las cuentas anteriores conservan acceso aunque su contraseña no tenga símbolo.
+
 La sesión vive solo en memoria; un proceso nuevo requiere login. La caducidad y el borrado desmontan las rutas protegidas. Un fallo de red al borrar muestra resultado incierto, sin anunciar éxito ni reintentar automáticamente. Se bloquean envíos dobles y se respeta `Retry-After`. No se guardan contraseñas ni tokens, ni se usan refresh tokens. No se añaden invitados, renombrado, logout, recuperación, salas ni partidas en línea.
 
 ### Conectar con la API
@@ -549,3 +551,21 @@ Verificación del ajuste del fondo: **271 pruebas aprobadas** y análisis sin pr
 La preparación y la partida mantienen visibles el tablero completo, los dados y los botones sin desplazamiento. Las pruebas arrastran el tablero en ambos sentidos y comprueban que ni este ni la nave cambian de posición. El selector, el historial y los resultados conservan su desplazamiento propio.
 
 Rediseño del menú: las capturas de 390×844 y 320×568 reflejan la nueva portada. `menu_portada_test.dart` comprueba el botón de al menos 48 puntos, texto ampliado, barras del sistema, orden del logo y la frase, ausencia de desplazamiento y acceso al selector en cuatro tamaños, incluida orientación horizontal. El catálogo de iconos iOS y las cinco densidades Android se generaron desde el original sin transparencia. Verificación: **275 pruebas aprobadas** y análisis sin problemas.
+
+## Actualización de contraseña: 3 de noviembre de 2026
+
+Se redujo el mínimo a 3 caracteres y se exige puntuación o símbolo al registrar. El máximo sigue siendo 128 puntos de código Unicode; no se recortan las contraseñas. La validación se aplica en Flutter y Java y preserva el acceso y borrado de cuentas anteriores sin símbolo.
+
+El JAR actualizado se generó por separado en `../brilliant_server/target/brilliant-server-passwords.jar`, sin sobrescribir el servidor abierto. Detener el proceso anterior antes de arrancar ese JAR desde la carpeta `brilliant_server`, conservando el mismo directorio de datos:
+
+```sh
+java -jar target/brilliant-server-passwords.jar --server.address=0.0.0.0 --server.port=8080
+```
+
+La prueba de integración admite elegir ese artefacto sin modificar el servidor en uso:
+
+```sh
+flutter test test/auth/auth_api_e2e_test.dart --dart-define=RUN_AUTH_API_E2E=true --dart-define=AUTH_SERVER_JAR=../brilliant_server/target/brilliant-server-passwords.jar
+```
+
+Verificación de esta actualización: **300 pruebas Flutter aprobadas**, análisis sin avisos, APK Debug generado y recorrido adicional Flutter → JAR correcto con `a!2`. El servidor pasó **19 pruebas**. La captura de registro se revisó visualmente y se actualizó con el nuevo requisito.

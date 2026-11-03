@@ -93,7 +93,7 @@ class _AccesoPageState extends State<AccesoPage> {
                           decoration: InputDecoration(
                             labelText: 'Contraseña',
                             helperText: _register
-                                ? '15–128 caracteres; evita contraseñas comunes'
+                                ? '3–128 caracteres y al menos un carácter especial'
                                 : null,
                             suffixIcon: IconButton(
                               tooltip: _visible
@@ -111,10 +111,19 @@ class _AccesoPageState extends State<AccesoPage> {
                           textInputAction: TextInputAction.done,
                           onFieldSubmitted: enabled ? (_) => _submit() : null,
                           validator: (value) {
-                            final length = (value ?? '').runes.length;
-                            return length >= 15 && length <= 128
-                                ? null
-                                : 'Usa entre 15 y 128 caracteres.';
+                            final password = value ?? '';
+                            final length = password.runes.length;
+                            if (length < 3 || length > 128) {
+                              return 'Usa entre 3 y 128 caracteres.';
+                            }
+                            if (_register &&
+                                !RegExp(
+                                  r'[\p{P}\p{S}]',
+                                  unicode: true,
+                                ).hasMatch(password)) {
+                              return 'Incluye al menos un carácter especial, como !, @ o #.';
+                            }
+                            return null;
                           },
                         ),
                         if (state.error != null)

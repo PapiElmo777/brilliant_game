@@ -45,7 +45,7 @@ class AuthFailure implements Exception {
     'CURRENT_PASSWORD_INVALID' => 'La contraseña actual es incorrecta.',
     'USERNAME_UNAVAILABLE' => 'Ese nombre de usuario ya está ocupado.',
     'VALIDATION_ERROR' =>
-      'Revisa los datos. La contraseña debe tener entre 15 y 128 caracteres y no ser una contraseña común.',
+      'Revisa los datos. Para crear cuenta, usa de 3 a 128 caracteres, al menos uno especial, y evita contraseñas comunes.',
     'RATE_LIMITED' =>
       'Demasiados intentos. Espera antes de volver a intentarlo.',
     'NETWORK_ERROR' =>

@@ -33,7 +33,7 @@ void main() {
       );
       await tester.enterText(
         find.byKey(const ValueKey('auth_password')),
-        'una contraseña de pruebas',
+        'a!2',
       );
       await tap(tester, 'auth_submit');
       expect(find.byType(MenuInicialPage), findsOneWidget);
@@ -45,6 +45,37 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     },
   );
+
+  for (final password in ['a!', 'abc', 'a 2', 'áéí']) {
+    testWidgets(
+      'Registro rechaza contraseña sin longitud o símbolo: $password',
+      (tester) async {
+        await tester.pumpWidget(
+          BrilliantGameApp(authRepository: FakeAuthRepository()),
+        );
+        await tap(tester, 'auth_switch');
+        await tester.enterText(
+          find.byKey(const ValueKey('auth_username')),
+          'Ana',
+        );
+        await tester.enterText(
+          find.byKey(const ValueKey('auth_password')),
+          password,
+        );
+        await tap(tester, 'auth_submit');
+        expect(find.byType(MenuInicialPage), findsNothing);
+        expect(
+          find.text(
+            password == 'a!'
+                ? 'Usa entre 3 y 128 caracteres.'
+                : 'Incluye al menos un carácter especial, como !, @ o #.',
+          ),
+          findsOneWidget,
+        );
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+  }
 
   testWidgets(
     'Cancelar no borra; contraseña errónea conserva; 204 limpia todas las rutas',
