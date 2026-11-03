@@ -7,11 +7,13 @@ class AuthState {
   final bool busy;
   final String? error;
   final int cooldown;
+  final bool logoutUnconfirmed;
   const AuthState({
     this.session,
     this.busy = false,
     this.error,
     this.cooldown = 0,
+    this.logoutUnconfirmed = false,
   });
 }
 
@@ -61,6 +63,46 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  Future<void> logout() async {
+    final session = state.session;
+    if (session == null || state.busy || state.cooldown > 0) return;
+    final generation = ++_generation;
+    emit(
+      AuthState(
+        session: session,
+        busy: true,
+        error: state.error,
+        logoutUnconfirmed: state.logoutUnconfirmed,
+      ),
+    );
+    try {
+      await repository.logout(session.accessToken);
+      if (isClosed || generation != _generation) return;
+      _clearSession('Sesión cerrada.');
+    } on AuthFailure catch (error) {
+      if (isClosed || generation != _generation) return;
+      if (error.status == 401) {
+        invalidate();
+      } else {
+        _fail(error, logout: true);
+      }
+    }
+  }
+
+  void logoutLocally() {
+    if (state.session == null || !state.logoutUnconfirmed) return;
+    _clearSession(
+      'Saliste de este dispositivo. No se pudo confirmar el cierre de sesión en el servidor.',
+    );
+  }
+
+  void _clearSession(String message) {
+    ++_generation;
+    _expiry?.cancel();
+    _cooldown?.cancel();
+    if (!isClosed) emit(AuthState(error: message));
+  }
+
   Future<void> deleteAccount(String password) async {
     final session = state.session;
     if (session == null || state.busy || state.cooldown > 0) return;
@@ -69,9 +111,7 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       await repository.deleteAccount(session.accessToken, password);
       if (isClosed || generation != _generation) return;
-      _expiry?.cancel();
-      ++_generation;
-      emit(const AuthState(error: 'Cuenta eliminada.'));
+      _clearSession('Cuenta eliminada.');
     } on AuthFailure catch (error) {
       if (isClosed || generation != _generation) return;
       if (error.invalidSession || error.status == 401) {
@@ -82,10 +122,11 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  void _fail(AuthFailure error, {bool deletion = false}) {
-    final message =
-        deletion &&
-            (error.code == 'NETWORK_ERROR' || error.code == 'SERVER_ERROR')
+  void _fail(AuthFailure error, {bool deletion = false, bool logout = false}) {
+    final message = logout
+        ? 'No se pudo confirmar el cierre de sesión en el servidor. Puedes reintentar o salir solo de este dispositivo.'
+        : deletion &&
+              (error.code == 'NETWORK_ERROR' || error.code == 'SERVER_ERROR')
         ? 'No se pudo confirmar el borrado. La cuenta podría haberse eliminado. No se reintentará automáticamente.'
         : error.message;
     emit(
@@ -93,6 +134,7 @@ class AuthCubit extends Cubit<AuthState> {
         session: state.session,
         error: message,
         cooldown: error.retryAfter,
+        logoutUnconfirmed: logout,
       ),
     );
     _cooldown?.cancel();
@@ -105,6 +147,7 @@ class AuthCubit extends Cubit<AuthState> {
             session: state.session,
             error: state.error,
             cooldown: remaining,
+            logoutUnconfirmed: state.logoutUnconfirmed,
           ),
         );
         if (remaining <= 0) timer.cancel();
@@ -114,16 +157,8 @@ class AuthCubit extends Cubit<AuthState> {
 
   /// Invalida también operaciones pendientes: una respuesta tardía no restaura
   /// una identidad después de la caducidad o de desmontar la aplicación.
-  void invalidate() {
-    ++_generation;
-    _expiry?.cancel();
-    _cooldown?.cancel();
-    if (!isClosed) {
-      emit(
-        const AuthState(error: 'La sesión terminó. Inicia sesión de nuevo.'),
-      );
-    }
-  }
+  void invalidate() =>
+      _clearSession('La sesión terminó. Inicia sesión de nuevo.');
 
   @override
   Future<void> close() {

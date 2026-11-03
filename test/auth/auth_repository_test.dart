@@ -102,6 +102,27 @@ void main() {
     );
   }
 
+  test('Logout envía POST sin cuerpo, con Bearer y espera 204', () async {
+    server.listen((request) async {
+      expect(request.method, 'POST');
+      expect(request.uri.path, '/api/v1/auth/logout');
+      expect(request.headers.value('authorization'), 'Bearer token');
+      expect(await utf8.decoder.bind(request).join(), isEmpty);
+      request.response.statusCode = 204;
+      await request.response.close();
+    });
+    await repository.logout('token');
+  });
+
+  test('Logout no confirma éxito con respuesta distinta de 204', () async {
+    server.listen((request) async {
+      await request.drain<void>();
+      request.response.statusCode = 200;
+      await request.response.close();
+    });
+    await expectLater(repository.logout('token'), throwsA(isA<AuthFailure>()));
+  });
+
   test('Errores estructurados y Retry-After', () async {
     server.listen((request) async {
       await request.drain<void>();

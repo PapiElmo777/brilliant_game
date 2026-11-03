@@ -64,6 +64,7 @@ class AuthFailure implements Exception {
 abstract interface class AuthRepository {
   Future<AuthSession> register(String username, String password);
   Future<AuthSession> login(String username, String password);
+  Future<void> logout(String accessToken);
   Future<void> deleteAccount(String accessToken, String currentPassword);
   void close();
 }
@@ -216,6 +217,11 @@ class HttpAuthRepository implements AuthRepository {
   @override
   Future<AuthSession> login(String username, String password) =>
       _authenticate('auth/login', 200, username, password);
+  @override
+  Future<void> logout(String accessToken) async {
+    await _send('POST', 'auth/logout', 204, token: accessToken);
+  }
+
   @override
   Future<void> deleteAccount(String accessToken, String currentPassword) async {
     await _send(

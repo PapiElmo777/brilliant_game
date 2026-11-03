@@ -8,6 +8,7 @@ class FakeAuthRepository implements AuthRepository {
   final String name;
   AuthFailure? failure;
   int deletes = 0;
+  int logouts = 0;
   FakeAuthRepository({this.name = 'Ana'});
   @override
   Future<AuthSession> login(String username, String password) async {
@@ -22,6 +23,12 @@ class FakeAuthRepository implements AuthRepository {
   @override
   Future<AuthSession> register(String username, String password) =>
       login(username, password);
+  @override
+  Future<void> logout(String accessToken) async {
+    logouts++;
+    if (failure != null) throw failure!;
+  }
+
   @override
   Future<void> deleteAccount(String accessToken, String currentPassword) async {
     deletes++;
