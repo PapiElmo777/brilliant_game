@@ -7,41 +7,77 @@ class CuentaPage extends StatelessWidget {
   const CuentaPage({super.key});
   @override
   Widget build(BuildContext context) => BlocBuilder<AuthCubit, AuthState>(
-    builder: (context, state) => Scaffold(
-      appBar: AppBar(title: const Text('Mi cuenta')),
-      body: FondoEspacial(
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      state.session?.user.username ?? '',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 24),
-                    OutlinedButton.icon(
-                      key: const ValueKey('delete_account'),
-                      onPressed: state.busy
-                          ? null
-                          : () {
-                              context.read<AuthCubit>().clearError();
-                              Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => const _EliminarCuentaPage(),
-                                ),
-                              );
-                            },
-                      icon: const Icon(Icons.delete_forever),
-                      label: const Text('Eliminar cuenta'),
-                    ),
-                  ],
+    builder: (context, state) => PopScope(
+      canPop: !state.busy,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Mi cuenta')),
+        body: FondoEspacial(
+          child: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        state.session?.user.username ?? '',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 24),
+                      FilledButton.icon(
+                        key: const ValueKey('logout_account'),
+                        onPressed: state.busy || state.cooldown > 0
+                            ? null
+                            : () => context.read<AuthCubit>().logout(),
+                        icon: const Icon(Icons.logout),
+                        label: Text(
+                          state.busy
+                              ? 'Cerrando sesión…'
+                              : state.logoutUnconfirmed
+                              ? 'Reintentar cierre de sesión'
+                              : 'Cerrar sesión',
+                        ),
+                      ),
+                      if (state.logoutUnconfirmed) ...[
+                        const SizedBox(height: 12),
+                        Semantics(
+                          liveRegion: true,
+                          child: Text(
+                            state.error!,
+                            key: const ValueKey('logout_error'),
+                          ),
+                        ),
+                        if (state.cooldown > 0)
+                          Text('Vuelve a intentarlo en ${state.cooldown} s.'),
+                        TextButton(
+                          key: const ValueKey('logout_local'),
+                          onPressed: () =>
+                              context.read<AuthCubit>().logoutLocally(),
+                          child: const Text('Salir solo de este dispositivo'),
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        key: const ValueKey('delete_account'),
+                        onPressed: state.busy
+                            ? null
+                            : () {
+                                context.read<AuthCubit>().clearError();
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => const _EliminarCuentaPage(),
+                                  ),
+                                );
+                              },
+                        icon: const Icon(Icons.delete_forever),
+                        label: const Text('Eliminar cuenta'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

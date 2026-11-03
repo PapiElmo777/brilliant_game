@@ -20,6 +20,57 @@ Future<void> openDelete(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('Cerrar sesión limpia rutas y permite volver a entrar', (
+    tester,
+  ) async {
+    final repository = FakeAuthRepository();
+    await iniciarApp(tester, repository: repository);
+    await tap(tester, 'account_menu');
+    await tap(tester, 'logout_account');
+    expect(find.text('Sesión cerrada.'), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(MenuInicialPage), findsNothing);
+    expect(repository.logouts, 1);
+    expect(repository.deletes, 0);
+    await tester.enterText(find.byKey(const ValueKey('auth_username')), 'Ana');
+    await tester.enterText(find.byKey(const ValueKey('auth_password')), 'a!2');
+    await tap(tester, 'auth_submit');
+    expect(find.byType(MenuInicialPage), findsOneWidget);
+  });
+
+  for (final local in [false, true]) {
+    testWidgets(
+      'Logout con red caída permite ${local ? 'salida local' : 'reintentar'}',
+      (tester) async {
+        final repository = FakeAuthRepository();
+        await iniciarApp(tester, repository: repository);
+        await tap(tester, 'account_menu');
+        repository.failure = const AuthFailure('NETWORK_ERROR');
+        await tap(tester, 'logout_account');
+        expect(find.byKey(const ValueKey('logout_error')), findsOneWidget);
+        expect(find.text('Iniciar sesión'), findsNothing);
+        if (local) {
+          await tap(tester, 'logout_local');
+          expect(
+            find.textContaining('No se pudo confirmar el cierre'),
+            findsOneWidget,
+          );
+          expect(repository.logouts, 1);
+        } else {
+          repository.failure = null;
+          await tap(tester, 'logout_account');
+          expect(find.text('Sesión cerrada.'), findsOneWidget);
+          expect(repository.logouts, 2);
+        }
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+        expect(find.text('Iniciar sesión'), findsOneWidget);
+        expect(find.byType(MenuInicialPage), findsNothing);
+      },
+    );
+  }
+
   testWidgets(
     'Registro por formulario abre el menú; proceso nuevo exige login',
     (tester) async {

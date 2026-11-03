@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:brilliant_game/app/brilliant_game_app.dart';
 import 'package:brilliant_game/auth/auth_repository.dart';
+import 'package:brilliant_game/auth/auth_cubit.dart';
+import 'package:brilliant_game/presentation/pages/menu_inicial_page.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:brilliant_game/presentation/pages/partida_page.dart';
 import 'package:brilliant_game/presentation/pages/preparacion_page.dart';
 import 'package:flutter/material.dart';
@@ -180,6 +183,48 @@ void main() {
           ),
         );
       });
+      final previousSession = tester
+          .element(find.byType(MenuInicialPage))
+          .read<AuthCubit>()
+          .state
+          .session!;
+      await tap('account_menu');
+      await tap('logout_account');
+      expect(find.text('Sesión cerrada.'), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byType(MenuInicialPage), findsNothing);
+      await tester.runAsync(() async {
+        final client = realClient();
+        try {
+          for (final (token, expected) in [
+            (previousSession.accessToken, 401),
+            (account!.accessToken, 200),
+          ]) {
+            final request = await client.getUrl(
+              url.resolve('/api/v1/users/me'),
+            );
+            request.headers.set('authorization', 'Bearer $token');
+            final response = await request.close();
+            await response.drain<void>();
+            expect(response.statusCode, expected);
+          }
+        } finally {
+          client.close(force: true);
+        }
+      });
+      await credentials(username);
+      expect(find.byType(MenuInicialPage), findsOneWidget);
+      expect(
+        tester
+            .element(find.byType(MenuInicialPage))
+            .read<AuthCubit>()
+            .state
+            .session!
+            .user
+            .id,
+        account!.user.id,
+      );
       await tap('nueva_partida_menu');
       await tap('elegir_tablero_01');
       expect(find.byType(PreparacionPage), findsOneWidget);
@@ -192,7 +237,7 @@ void main() {
       await tap('boton_inicio');
       expect(
         tester.widget<PreparacionPage>(find.byType(PreparacionPage)).jugadorId,
-        account!.user.id,
+        account.user.id,
       );
       expect(
         tester.widget<PartidaPage>(find.byType(PartidaPage)).jugador,

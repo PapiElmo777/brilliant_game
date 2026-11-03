@@ -4,13 +4,13 @@ Juego Flutter organizado como **Tablero → Zona → Celda**, con cuatro niveles
 
 ## Fase 1 del multijugador: cuentas y autenticación
 
-Implementados en Flutter **registro, inicio de sesión y borrado de cuentas**, conforme al alcance indicado por el usuario. Se reutiliza el servidor Java/Spring/SQLite independiente de `../brilliant_server`. Renombrado y cierre de sesión siguen disponibles en la API, pero no se integran en esta entrega.
+Implementados en Flutter **registro, inicio de sesión, cierre de sesión y borrado de cuentas**, conforme al alcance indicado por el usuario. Se reutiliza el servidor Java/Spring/SQLite independiente de `../brilliant_server`. Renombrado permanece fuera de esta entrega. El cierre de sesión se añadió el 3 de noviembre de 2026.
 
-La app arranca en login; crear cuenta abre directamente el menú. El menú tiene acceso a «Mi cuenta» y a eliminarla con contraseña actual y confirmación explícita. La cuenta aporta UUID y nombre a las partidas locales y resultados: ya no se pide un nombre por partida. Se conservan los cuatro niveles, reglas, puntuaciones y animaciones.
+La app arranca en login; crear cuenta abre directamente el menú. El menú tiene acceso a «Mi cuenta», donde se puede cerrar sesión o eliminarla con contraseña actual y confirmación explícita. La cuenta aporta UUID y nombre a las partidas locales y resultados: ya no se pide un nombre por partida. Se conservan los cuatro niveles, reglas, puntuaciones y animaciones.
 
 Desde el 3 de noviembre de 2026, el registro requiere **3–128 caracteres y al menos un carácter especial** (puntuación o símbolo, por ejemplo `a!2`). Los espacios no satisfacen el requisito de carácter especial. Las cuentas anteriores conservan acceso aunque su contraseña no tenga símbolo.
 
-La sesión vive solo en memoria; un proceso nuevo requiere login. La caducidad y el borrado desmontan las rutas protegidas. Un fallo de red al borrar muestra resultado incierto, sin anunciar éxito ni reintentar automáticamente. Se bloquean envíos dobles y se respeta `Retry-After`. No se guardan contraseñas ni tokens, ni se usan refresh tokens. No se añaden invitados, renombrado, logout, recuperación, salas ni partidas en línea.
+La sesión vive solo en memoria; un proceso nuevo requiere login. La caducidad, el cierre de sesión y el borrado desmontan las rutas protegidas. Un fallo de red al borrar muestra resultado incierto, sin anunciar éxito ni reintentar automáticamente. Se bloquean envíos dobles y se respeta `Retry-After`. No se guardan contraseñas ni tokens, ni se usan refresh tokens. No se añaden invitados, renombrado, recuperación, salas ni partidas en línea.
 
 ### Conectar con la API
 
@@ -575,3 +575,13 @@ Verificación de esta actualización: **300 pruebas Flutter aprobadas**, anális
 El cliente valida que la ruta de `API_BASE_URL` termine en `/api/v1` (permite barra final). Un sufijo accidental como `/api/v1+` se rechaza como configuración inválida antes de enviar credenciales. Un `401` inesperado en login o registro muestra un rechazo de acceso y permite reintentar; no anuncia caducidad de una sesión que aún no existe. Los `401` de operaciones protegidas siguen limpiando la sesión.
 
 Verificación: 28 pruebas de autenticación correctas y análisis sin avisos. La configuración de prueba del Samsung usa exactamente `--dart-define=API_BASE_URL=http://127.0.0.1:8080/api/v1` mediante el túnel ADB.
+
+## Cerrar sesión: 3 de noviembre de 2026
+
+Desde el menú, pulsar el nombre de la cuenta → **Cerrar sesión**. Flutter envía `POST /api/v1/auth/logout` sin cuerpo y con el Bearer de la sesión actual. Tras 204 elimina la identidad y el token de memoria y desmonta todas las rutas; atrás no permite volver al menú. La cuenta y sus demás sesiones se conservan y se puede iniciar sesión otra vez.
+
+Si falla la conexión, el panel ofrece reintentar o elegir **Salir solo de este dispositivo**, indicando que no se confirmó el cierre remoto. No se reintenta automáticamente. Una respuesta tardía se descarta y no puede cerrar una sesión nueva. Los rechazos 401 y la caducidad limpian la sesión local.
+
+La API ya implementaba logout; no se modificó ni recompiló el servidor abierto. El recorrido contra el JAR comprueba por botones reales el cierre, la revocación inmediata de ese token, la conservación de otra sesión y el acceso de nuevo con la misma cuenta.
+
+Verificación del cierre de sesión: **317 pruebas Flutter aprobadas**, análisis sin avisos, APK Android Debug compilado y recorrido adicional Flutter → JAR correcto. Revisadas visualmente las capturas del panel de cuenta y del aviso de cierre no confirmado.
