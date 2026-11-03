@@ -21,11 +21,13 @@ import 'partida_page.dart';
 class PreparacionPage extends StatefulWidget {
   final DefinicionTablero definicion;
   final String? jugador;
+  final String? jugadorId;
   final Random? azarPartida;
   const PreparacionPage({
     super.key,
     required this.definicion,
     this.jugador,
+    this.jugadorId,
     this.azarPartida,
   });
   @override
@@ -237,6 +239,7 @@ class _PreparacionPageState extends State<PreparacionPage> {
             context.read<InicioBloc>().crearTableroParaJuego(),
             azar: widget.azarPartida,
             nombreJugador: widget.jugador,
+            jugadorId: widget.jugadorId ?? 'jugador_1',
           ),
           child: PartidaPage(
             definicion: widget.definicion,

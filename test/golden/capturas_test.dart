@@ -1,6 +1,7 @@
 @Tags(['golden'])
 library;
 
+import '../support/auth_support.dart';
 import 'dart:io';
 
 import 'package:brilliant_game/app/brilliant_game_app.dart';
@@ -26,7 +27,7 @@ Future<void> _abrir(WidgetTester tester, Size tamano) async {
       const FakeAccessibilityFeatures(disableAnimations: true);
   addTearDown(tester.view.reset);
   addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
-  await tester.pumpWidget(const BrilliantGameApp());
+  await iniciarApp(tester);
   await precargarRecursos(tester);
 }
 
@@ -42,9 +43,7 @@ Future<void> _nuevaPartida(WidgetTester tester) async {
   await tester.pumpAndSettle();
   await _pulsar(tester, 'elegir_tablero_01');
   await tester.pumpAndSettle();
-  await tester.enterText(find.byKey(const ValueKey('campo_nombre')), 'Ana');
-  await tester.pump();
-  await _pulsar(tester, 'confirmar_nombre');
+  expect(find.byKey(const ValueKey('campo_nombre')), findsNothing);
 }
 
 Future<void> _completar(WidgetTester tester) async {
@@ -69,17 +68,6 @@ void main() {
     testWidgets('Menú', skip: _omitir, (tester) async {
       await _abrir(tester, _telefono);
       await _comparar('menu');
-    });
-
-    testWidgets('Diálogo del nombre', skip: _omitir, (tester) async {
-      await _abrir(tester, _telefono);
-      await tester.tap(find.text('NUEVA PARTIDA'));
-      await tester.pumpAndSettle();
-      await _pulsar(tester, 'elegir_tablero_01');
-      await tester.pumpAndSettle();
-      await tester.enterText(find.byKey(const ValueKey('campo_nombre')), 'Ana');
-      await tester.pump();
-      await _comparar('dialogo_nombre');
     });
 
     testWidgets('Preparación vacía', skip: _omitir, (tester) async {

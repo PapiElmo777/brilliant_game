@@ -3,13 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../bloc/menu_bloc.dart';
+import '../../auth/auth_repository.dart';
+import 'cuenta_page.dart';
 import '../../catalogo/definicion_tablero.dart';
 import 'seleccion_nivel_page.dart';
 
 class MenuInicialPage extends StatefulWidget {
   final void Function(DefinicionTablero tablero, String jugador) onNuevaPartida;
 
-  const MenuInicialPage({super.key, required this.onNuevaPartida});
+  final Account? cuenta;
+  const MenuInicialPage({super.key, required this.onNuevaPartida, this.cuenta});
 
   @override
   State<MenuInicialPage> createState() => _MenuInicialPageState();
@@ -31,7 +34,9 @@ class _MenuInicialPageState extends State<MenuInicialPage> {
                   MaterialPageRoute(
                     builder: (_) => BlocProvider.value(
                       value: bloc,
-                      child: const SeleccionNivelPage(),
+                      child: SeleccionNivelPage(
+                        nombreCuenta: widget.cuenta?.username,
+                      ),
                     ),
                   ),
                 );
@@ -50,15 +55,40 @@ class _MenuInicialPageState extends State<MenuInicialPage> {
           }
         },
         builder: (context, estado) => Scaffold(
+          resizeToAvoidBottomInset: false,
           backgroundColor: const Color(0xFF00102F),
-          body: _PortadaMenu(
-            onNuevaPartida:
-                estado.fase == FaseMenu.menuVisible ||
-                    estado.fase == FaseMenu.partidaPreparada
-                ? () => context.read<MenuBloc>().add(
-                    const NuevaPartidaSolicitada(),
-                  )
-                : null,
+          body: Stack(
+            fit: StackFit.expand,
+            children: [
+              _PortadaMenu(
+                onNuevaPartida:
+                    estado.fase == FaseMenu.menuVisible ||
+                        estado.fase == FaseMenu.partidaPreparada
+                    ? () => context.read<MenuBloc>().add(
+                        const NuevaPartidaSolicitada(),
+                      )
+                    : null,
+              ),
+              if (widget.cuenta != null)
+                SafeArea(
+                  child: Align(
+                    alignment: Alignment.topRight,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: FilledButton.icon(
+                        key: const ValueKey('account_menu'),
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const CuentaPage(),
+                          ),
+                        ),
+                        icon: const Icon(Icons.account_circle),
+                        label: Text(widget.cuenta!.username),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),

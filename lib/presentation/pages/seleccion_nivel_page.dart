@@ -7,7 +7,8 @@ import '../widgets/dialogo_nombre_jugador.dart';
 import '../widgets/fondo_espacial.dart';
 
 class SeleccionNivelPage extends StatelessWidget {
-  const SeleccionNivelPage({super.key});
+  final String? nombreCuenta;
+  const SeleccionNivelPage({super.key, this.nombreCuenta});
   @override
   Widget build(BuildContext context) => BlocConsumer<MenuBloc, MenuEstado>(
     listenWhen: (anterior, actual) =>
@@ -16,6 +17,10 @@ class SeleccionNivelPage extends StatelessWidget {
     listener: (context, estado) async {
       final bloc = context.read<MenuBloc>();
       if (estado.fase == FaseMenu.pidiendoNombre) {
+        if (nombreCuenta != null) {
+          bloc.add(NombreJugadorConfirmado(nombreCuenta!));
+          return;
+        }
         final nombre = await DialogoNombreJugador.mostrar(
           context,
           inicial: estado.jugador,

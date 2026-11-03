@@ -1,4 +1,4 @@
-import 'package:brilliant_game/app/brilliant_game_app.dart';
+import '../support/auth_support.dart';
 import 'package:brilliant_game/presentation/pages/seleccion_nivel_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,7 +16,7 @@ void main() {
     ) async {
       pantallaNivel(tester, size: size, escala: 1.5);
       tester.view.padding = const FakeViewPadding(top: 32, bottom: 24);
-      await tester.pumpWidget(const BrilliantGameApp());
+      await iniciarApp(tester);
       await precargarRecursos(tester);
       final boton = find.byKey(const ValueKey('nueva_partida_menu'));
       final rect = tester.getRect(boton);

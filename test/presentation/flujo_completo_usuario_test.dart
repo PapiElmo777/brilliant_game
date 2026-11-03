@@ -1,7 +1,7 @@
+import '../support/auth_support.dart';
 import 'dart:math';
 import 'dart:ui' as ui;
 
-import 'package:brilliant_game/app/brilliant_game_app.dart';
 import 'package:brilliant_game/bloc/partida_bloc.dart';
 import 'package:brilliant_game/brilliant_game.dart';
 import 'package:brilliant_game/catalogo/tablero_01.dart';
@@ -157,16 +157,11 @@ void main() {
           if (terminarPartida)
             for (final (_, valor, _) in _caminoVictoria) ...[valor, valor],
         ]);
-        await tester.pumpWidget(BrilliantGameApp(azarPartida: azar));
+        await iniciarApp(tester, azarPartida: azar);
         await tester.pumpAndSettle();
         await _pulsar(tester, find.text('NUEVA PARTIDA'));
         await _pulsar(tester, find.byKey(const ValueKey('elegir_tablero_01')));
-        await tester.enterText(
-          find.byKey(const ValueKey('campo_nombre')),
-          'Ana',
-        );
-        await tester.pump();
-        await _pulsar(tester, find.byKey(const ValueKey('confirmar_nombre')));
+        expect(find.byKey(const ValueKey('campo_nombre')), findsNothing);
         expect(find.text('PREPARA TU MISIÓN, ANA'), findsOneWidget);
         for (var i = 0; i < _iniciales.length; i++) {
           expect(find.byKey(const ValueKey('boton_inicio')), findsNothing);
@@ -297,7 +292,7 @@ void main() {
           expect(find.text('Meta: 26 puntos'), findsOneWidget);
           expect(
             find.descendant(
-              of: find.byKey(const ValueKey('ranking_jugador_1')),
+              of: find.byKey(const ValueKey('ranking_uuid-de-prueba')),
               matching: find.text('Ana'),
             ),
             findsOneWidget,
@@ -331,11 +326,7 @@ void main() {
         }
         await _pulsar(tester, find.text('NUEVA PARTIDA'));
         await _pulsar(tester, find.byKey(const ValueKey('elegir_tablero_01')));
-        expect(
-          tester.widget<TextField>(find.byType(TextField)).controller!.text,
-          'Ana',
-        );
-        await _pulsar(tester, find.byKey(const ValueKey('confirmar_nombre')));
+        expect(find.byKey(const ValueKey('campo_nombre')), findsNothing);
         expect(
           tester
               .widgetList<CeldaView>(find.byType(CeldaView))

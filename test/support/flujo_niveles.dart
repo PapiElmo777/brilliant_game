@@ -1,6 +1,6 @@
+import 'auth_support.dart';
 import 'package:brilliant_game/catalogo/catalogo_tableros.dart';
 import 'dart:math';
-import 'package:brilliant_game/app/brilliant_game_app.dart';
 import 'package:brilliant_game/presentation/widgets/nave_marciano.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -69,7 +69,7 @@ Future<void> precargarRecursos(WidgetTester tester) async {
 }
 
 Future<void> selectorNivel(WidgetTester tester, {Random? dados}) async {
-  await tester.pumpWidget(BrilliantGameApp(azarPartida: dados));
+  await iniciarApp(tester, azarPartida: dados);
   await precargarRecursos(tester);
   await pulsarNivel(tester, find.text('NUEVA PARTIDA'));
   expect(find.byType(TextField), findsNothing);
@@ -88,10 +88,7 @@ Future<void> escogerNivel(WidgetTester tester, int nivel) async {
     );
   }
   await pulsarNivel(tester, tarjeta);
-  expect(find.text('Nivel $nivel · ¿Cómo te llamas?'), findsOneWidget);
-  await tester.enterText(find.byKey(const ValueKey('campo_nombre')), 'Ana');
-  await tester.pump();
-  await pulsarNivel(tester, find.byKey(const ValueKey('confirmar_nombre')));
+  expect(find.byKey(const ValueKey('campo_nombre')), findsNothing);
 }
 
 Future<void> prepararNivel(WidgetTester tester, int nivel) async {

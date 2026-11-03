@@ -101,39 +101,23 @@ void main() {
       },
     );
   }
-  testWidgets(
-    'El selector admite accesibilidad y recupera un nombre inválido',
-    (tester) async {
-      pantallaNivel(tester);
-      await selectorNivel(tester);
-      final semantica = tester.getSemantics(
-        find.bySemanticsLabel('Elegir Nivel 1'),
-      );
-      expect(
-        semantica.getSemanticsData().hasAction(ui.SemanticsAction.tap),
-        isTrue,
-      );
-      await pulsarNivel(
-        tester,
-        find.byKey(const ValueKey('elegir_tablero_01')),
-      );
-      await tester.enterText(
-        find.byKey(const ValueKey('campo_nombre')),
-        '😀' * 9,
-      );
-      await tester.pump();
-      await pulsarNivel(tester, find.byKey(const ValueKey('confirmar_nombre')));
-      expect(find.byType(AlertDialog), findsOneWidget);
-      expect(
-        find.text('El nombre admite hasta 16 caracteres.'),
-        findsOneWidget,
-      );
-      await tester.enterText(find.byKey(const ValueKey('campo_nombre')), 'Ana');
-      await tester.pump();
-      await pulsarNivel(tester, find.byKey(const ValueKey('confirmar_nombre')));
-      expect(find.byType(PreparacionPage), findsOneWidget);
-    },
-  );
+  testWidgets('El selector admite accesibilidad y usa el nombre autenticado', (
+    tester,
+  ) async {
+    pantallaNivel(tester);
+    await selectorNivel(tester);
+    final semantica = tester.getSemantics(
+      find.bySemanticsLabel('Elegir Nivel 1'),
+    );
+    expect(
+      semantica.getSemanticsData().hasAction(ui.SemanticsAction.tap),
+      isTrue,
+    );
+    await pulsarNivel(tester, find.byKey(const ValueKey('elegir_tablero_01')));
+    expect(find.byKey(const ValueKey('campo_nombre')), findsNothing);
+    expect(find.text('PREPARA TU MISIÓN, ANA'), findsOneWidget);
+    expect(find.byType(PreparacionPage), findsOneWidget);
+  });
   for (final size in [
     const Size(320, 568),
     const Size(430, 932),
@@ -151,7 +135,7 @@ void main() {
     });
   }
   testWidgets(
-    'Cancelar el nombre permite elegir otro nivel sin duplicar diálogos',
+    'Doble toque elige un solo nivel y regresar permite elegir otro',
     (tester) async {
       pantallaNivel(tester);
       await selectorNivel(tester);
@@ -160,8 +144,10 @@ void main() {
       await tester.tap(nivel);
       await tester.tap(nivel, warnIfMissed: false);
       await tester.pumpAndSettle();
-      expect(find.byType(AlertDialog), findsOneWidget);
-      await pulsarNivel(tester, find.text('Cancelar'));
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byType(PreparacionPage), findsOneWidget);
+      await pulsarNivel(tester, find.byTooltip('Volver al menú'));
+      await pulsarNivel(tester, find.text('NUEVA PARTIDA'));
       expect(find.byType(SeleccionNivelPage), findsOneWidget);
       await escogerNivel(tester, 3);
       naveDelNivel(tester, 3);

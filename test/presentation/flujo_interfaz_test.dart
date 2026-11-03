@@ -1,4 +1,4 @@
-import 'package:brilliant_game/app/brilliant_game_app.dart';
+import '../support/auth_support.dart';
 import 'package:brilliant_game/brilliant_game.dart';
 import 'package:brilliant_game/presentation/pages/preparacion_page.dart';
 import 'package:brilliant_game/presentation/pages/seleccion_nivel_page.dart';
@@ -18,13 +18,11 @@ Future<void> pulsar(WidgetTester tester, Finder finder) async {
 Future<void> nuevaPartida(WidgetTester tester, {String nombre = 'Ana'}) async {
   await pulsar(tester, find.text('NUEVA PARTIDA'));
   await pulsar(tester, find.byKey(const ValueKey('elegir_tablero_01')));
-  await tester.enterText(find.byKey(const ValueKey('campo_nombre')), nombre);
-  await tester.pump();
-  await pulsar(tester, find.byKey(const ValueKey('confirmar_nombre')));
+  expect(find.byKey(const ValueKey('campo_nombre')), findsNothing);
 }
 
 Future<void> abrir(WidgetTester tester) async {
-  await tester.pumpWidget(const BrilliantGameApp());
+  await iniciarApp(tester);
   await tester.pumpAndSettle();
   await nuevaPartida(tester);
 }
@@ -33,13 +31,11 @@ InicioBloc blocDe(WidgetTester tester) =>
     tester.element(find.byType(PreparacionPage)).read<InicioBloc>();
 
 void main() {
-  testWidgets('El menú tiene una sola acción y abre las 49 celdas correctas', (
-    tester,
-  ) async {
-    await tester.pumpWidget(const BrilliantGameApp());
+  testWidgets('El menú abre las 49 celdas correctas', (tester) async {
+    await iniciarApp(tester);
     expect(
       find.byWidgetPredicate((widget) => widget is FilledButton),
-      findsOneWidget,
+      findsNWidgets(2),
     );
     expect(find.text('NUEVA PARTIDA'), findsOneWidget);
     expect(find.text('SALIR'), findsNothing);
@@ -62,25 +58,17 @@ void main() {
     expect(find.byType(OutlinedButton), findsNWidgets(6));
   });
 
-  testWidgets('Pide el nombre antes de preparar y permite cancelar', (
+  testWidgets('Usa la cuenta al preparar y permite cancelar el selector', (
     tester,
   ) async {
-    await tester.pumpWidget(const BrilliantGameApp());
-    await tester.pumpAndSettle();
+    await iniciarApp(tester);
     await pulsar(tester, find.text('NUEVA PARTIDA'));
-    await pulsar(tester, find.byKey(const ValueKey('elegir_tablero_01')));
-    expect(find.text('Nivel 1 · ¿Cómo te llamas?'), findsOneWidget);
-    final confirmar = find.byKey(const ValueKey('confirmar_nombre'));
-    expect(tester.widget<FilledButton>(confirmar).onPressed, isNull);
-    await pulsar(tester, find.text('Cancelar'));
-    expect(find.byType(SeleccionNivelPage), findsOneWidget);
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(find.byType(PreparacionPage), findsNothing);
-    expect(find.text('NUEVA PARTIDA'), findsOneWidget);
-    await nuevaPartida(tester, nombre: 'Alfredo');
-    expect(find.byType(PreparacionPage), findsOneWidget);
-    expect(find.text('PREPARA TU MISIÓN, ALFREDO'), findsOneWidget);
+    expect(find.byType(SeleccionNivelPage), findsNothing);
+    await nuevaPartida(tester);
+    expect(find.text('PREPARA TU MISIÓN, ANA'), findsOneWidget);
+    expect(find.byKey(const ValueKey('campo_nombre')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -160,8 +148,7 @@ void main() {
     expect(anterior.isClosed, isTrue);
     await pulsar(tester, find.text('NUEVA PARTIDA'));
     await pulsar(tester, find.byKey(const ValueKey('elegir_tablero_01')));
-    expect(find.text('Ana'), findsOneWidget);
-    await pulsar(tester, find.byKey(const ValueKey('confirmar_nombre')));
+    expect(find.byKey(const ValueKey('campo_nombre')), findsNothing);
     expect(blocDe(tester).state.numerosFaltantes.length, 6);
     expect(identical(anterior, blocDe(tester)), isFalse);
     expect(tester.takeException(), isNull);
