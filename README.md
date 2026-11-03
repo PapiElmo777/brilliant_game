@@ -2,6 +2,52 @@
 
 Juego Flutter organizado como **Tablero → Zona → Celda**, con cuatro niveles seleccionables, preparación, dados y anclas, puntuación, victoria y resultados. Cada zona recibe un `Tipo` para su color y restricción, y una tabla de puntuación propia del nivel. Incluye configuración para Android e iOS.
 
+## Fase 1 del multijugador: cuentas y autenticación
+
+Implementados en Flutter **registro, inicio de sesión y borrado de cuentas**, conforme al alcance indicado por el usuario. Se reutiliza el servidor Java/Spring/SQLite independiente de `../brilliant_server`. Renombrado y cierre de sesión siguen disponibles en la API, pero no se integran en esta entrega.
+
+La app arranca en login; crear cuenta abre directamente el menú. El menú tiene acceso a «Mi cuenta» y a eliminarla con contraseña actual y confirmación explícita. La cuenta aporta UUID y nombre a las partidas locales y resultados: ya no se pide un nombre por partida. Se conservan los cuatro niveles, reglas, puntuaciones y animaciones.
+
+La sesión vive solo en memoria; un proceso nuevo requiere login. La caducidad y el borrado desmontan las rutas protegidas. Un fallo de red al borrar muestra resultado incierto, sin anunciar éxito ni reintentar automáticamente. Se bloquean envíos dobles y se respeta `Retry-After`. No se guardan contraseñas ni tokens, ni se usan refresh tokens. No se añaden invitados, renombrado, logout, recuperación, salas ni partidas en línea.
+
+### Conectar con la API
+
+Desde el servidor:
+
+```sh
+./mvnw verify
+java -jar target/brilliant-server.jar
+```
+
+Desde Flutter, para el emulador Android estándar:
+
+```sh
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080/api/v1
+```
+
+En simulador iOS puede usarse `http://localhost:8080/api/v1`. El valor predeterminado es `http://127.0.0.1:8080/api/v1`; en un teléfono se debe configurar la dirección accesible del servidor. `API_BASE_URL` incluye `/api/v1` y se fija al compilar; cambiarla requiere ejecutar/compilar otra vez. El cliente no sigue redirecciones y solo envía Bearer al origen configurado. HTTP se admite únicamente en Debug; release/profile exige HTTPS. Android permite tráfico HTTP solo en el manifiesto Debug. iOS usa un plist Debug separado con permiso para red local y localhost; el plist de release no recibe excepciones de transporte.
+
+### Verificación de cuentas
+
+```sh
+flutter analyze
+flutter test
+flutter build apk --debug --no-pub
+flutter build ios --simulator --debug --no-pub
+```
+
+El recorrido real optativo requiere el JAR hermano generado y Java en `/usr/bin/java`:
+
+```sh
+flutter test test/auth/auth_api_e2e_test.dart --dart-define=RUN_AUTH_API_E2E=true
+```
+
+La prueba arranca Java desde una carpeta temporal, con puerto libre, datos y claves temporales. Recorre los formularios de registro/login/borrado, reinicia app y servidor para comprobar persistencia, abre una partida local con la identidad de la cuenta, comprueba duplicado sin distinguir mayúsculas, cancelación, contraseña incorrecta, borrado, login posterior rechazado y revocación del token. No toca cuentas ni datos existentes. Por defecto se omite para que `flutter test` no requiera Java.
+
+Verificación de esta entrega (2 de noviembre de 2026): **296 pruebas Flutter aprobadas**, incluidas 21 comparaciones visuales; el recorrido Java optativo se omite en la suite normal y se ejecutó por separado correctamente. Análisis sin avisos, **17 pruebas del servidor aprobadas**, JAR generado, APK Android Debug y aplicación iOS Debug para simulador compilados. Revisadas visualmente las pantallas de login, registro, borrado y las dos capturas modificadas del menú. El recorrido real comprobó persistencia al reiniciar el servidor, acceso tras reiniciar el cliente y rechazo de login/token después del borrado. No se ejecutó la interfaz en teléfono físico ni sobre LAN, ni se realizó despliegue productivo.
+
+Los documentos de trabajo sincronizados están en `docs/`, excluidos de GitHub. Las secciones de fases del juego que siguen describen entregas anteriores; el flujo de cuentas vigente es el de este apartado.
+
 ## Contrato de los tipos
 
 ```dart
@@ -240,7 +286,7 @@ Las posiciones en píxeles y los controladores de animación pertenecen a los wi
 
 ## Interfaz estática: fase 4
 
-El menú actual usa `assets/images/backgrounds/PantallaMenu1.png` para la batalla y `assets/images/branding/LogoBrilliant.png` para el logo aportado por el usuario. El logo se sitúa debajo de la última nave, seguido del único botón `NUEVA PARTIDA` y, debajo de este, «Que la Fuerza guíe tus números.». La ilustración ocupa toda la pantalla, sin franjas laterales ni copias desenfocadas. Una sombra gradual del propio cielo cubre la firma inferior original; el logo nuevo utiliza directamente su transparencia, sin filtros de color ni máscaras. El PNG original de 1774×887 se conserva sin redimensionar ni comprimir de nuevo. El botón es un control real de Flutter y mantiene la navegación al selector de niveles. La portada permanece fija; en horizontal, la ilustración y los controles se distribuyen a los lados.
+El menú actual usa `assets/images/backgrounds/PantallaMenu1.png` para la batalla y `assets/images/branding/LogoBrilliant.png` para el logo aportado por el usuario. El logo se sitúa debajo de la última nave, seguido del botón `NUEVA PARTIDA` y, debajo de este, «Que la Fuerza guíe tus números.». La ilustración ocupa toda la pantalla, sin franjas laterales ni copias desenfocadas. Una sombra gradual del propio cielo cubre la firma inferior original; el logo nuevo utiliza directamente su transparencia, sin filtros de color ni máscaras. El PNG original de 1774×887 se conserva sin redimensionar ni comprimir de nuevo. El botón es un control real de Flutter y mantiene la navegación al selector de niveles. El acceso a la cuenta aparece en la esquina superior. La portada permanece fija; en horizontal, la ilustración y los controles se distribuyen a los lados.
 
 La navegación escucha `MenuBloc` y crea un `InicioBloc` nuevo por pantalla. La preparación representa las 49 celdas del modelo y resalta las seis iniciales con contorno cian y un signo +. La bandeja muestra los números faltantes, identifica la selección visual y semánticamente y permite cancelarla. Tocar una celda inicial ocupada retira su número.
 
@@ -276,7 +322,7 @@ flutter test --update-goldens test/golden
 
 ## Nombre del jugador, acomodo aleatorio e INICIO fijo
 
-Al pulsar `NUEVA PARTIDA` se pide el nombre del jugador. `MenuBloc` pasa a la fase `pidiendoNombre`; `NombreJugadorConfirmado(nombre)` valida entre 1 y 16 caracteres, sin espacios sobrantes, y prepara `tablero_01`. `CapturaNombreCancelada` vuelve al menú. El último nombre aceptado se propone en la siguiente partida y la preparación lo muestra en su encabezado.
+En el flujo autenticado, `NUEVA PARTIDA` abre el selector de niveles y la preparación usa el nombre de la cuenta sin abrir otro formulario. `MenuBloc` conserva sus eventos de nombre para componentes y pruebas del flujo original; la aplicación le entrega automáticamente el nombre autenticado. El UUID del servidor se pasa a `PartidaBloc` para marcador y resultados.
 
 `Acomodo aleatorio` envía `ColocacionAleatoriaSolicitada`. `PreparacionInicial.distribucionAleatoria` busca, sobre una copia, una colocación de los números faltantes que cumpla las reglas de zona; los números ya colocados se conservan. `InicioBloc` dispara las colocaciones una por una, del número menor al mayor, con la misma animación y confirmación que la colocación manual. Si no existe una distribución válida se publica un error sin disparar.
 
@@ -391,7 +437,7 @@ suma los puntos de un jugador. Cada jugador reclama una zona una sola vez.
 
 La meta para ganar depende del número de jugadores (`metaDePuntos`): 2 → 26,
 3 → 24, 4 → 22 y 5 → 20. Mientras no exista el multijugador, `PartidaBloc`
-juega con un solo jugador local (`jugador_1`) y la meta de 2 jugadores.
+juega con un solo jugador local identificado por el UUID de la cuenta y la meta de 2 jugadores. `jugador_1` sigue siendo el valor predeterminado del motor cuando se usa de forma independiente.
 
 En la partida, escribir el número que completa una zona reclama el puesto y
 el alien anuncia los puntos; si la jugada se cambia antes de lanzar, el
@@ -452,7 +498,7 @@ Pruebas: `test/core/marcador_test.dart`, `test/bloc/partida_bloc_test.dart`,
 ## Pruebas del recorrido completo del usuario
 
 `test/presentation/flujo_completo_usuario_test.dart` recorre la aplicación
-desde el menú: captura del nombre, seis colocaciones manuales en `tablero_01`,
+desde el acceso con una cuenta de prueba: selección del nivel, seis colocaciones manuales en `tablero_01`,
 INICIO, elección e intercambio de dados, destinos concretos e historial.
 En 390×844 continúa hasta ganar a 26 puntos en 20 rondas; en 320×568, con texto
 ampliado, completa dos rondas. Ambos recorridos vuelven a una preparación
@@ -475,7 +521,7 @@ en macOS y deben revisarse visualmente antes de actualizar referencias.
 
 ## Cuatro niveles, fondos y personajes
 
-`NUEVA PARTIDA` abre primero el selector de niveles, con cuatro tarjetas y sus miniaturas. Tocar una tarjeta o `NIVEL ALEATORIO` solicita el nombre y crea la preparación del mapa elegido. El sorteo es uniforme entre los cuatro y se ejecuta una sola vez por selección. Cancelar el nombre vuelve al selector; volver desde el selector regresa al menú.
+`NUEVA PARTIDA` abre primero el selector de niveles, con cuatro tarjetas y sus miniaturas. Tocar una tarjeta o `NIVEL ALEATORIO` crea la preparación del mapa elegido con el nombre de la cuenta. El sorteo es uniforme entre los cuatro y se ejecuta una sola vez por selección. Volver desde el selector regresa al menú.
 
 | Nivel | Definición | Zonas | Nave y personaje |
 |---|---|---:|---|
