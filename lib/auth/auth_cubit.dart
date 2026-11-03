@@ -49,7 +49,15 @@ class AuthCubit extends Cubit<AuthState> {
       _expiry = Timer(remaining, invalidate);
       emit(AuthState(session: session));
     } on AuthFailure catch (error) {
-      if (!isClosed && generation == _generation) _fail(error);
+      if (!isClosed && generation == _generation) {
+        // Login/register are public: a 401 here cannot expire a local session
+        // that has not been established. Keep the form available to retry.
+        _fail(
+          error.status == 401 && error.code != 'INVALID_CREDENTIALS'
+              ? const AuthFailure('AUTH_ENDPOINT_REJECTED', status: 401)
+              : error,
+        );
+      }
     }
   }
 

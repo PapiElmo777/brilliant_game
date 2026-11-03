@@ -70,6 +70,38 @@ void main() {
     },
   );
 
+  for (final path in ['/api/v1+', '/api/v1/health/ready', '']) {
+    test(
+      'URL inválida se rechaza antes de enviar credenciales: $path',
+      () async {
+        repository.close();
+        repository = HttpAuthRepository(
+          baseUrl: Uri.parse('http://127.0.0.1:${server.port}$path'),
+        );
+        await expectLater(
+          repository.login('Piloto', 'a!2'),
+          throwsA(
+            isA<AuthFailure>().having(
+              (e) => e.code,
+              'code',
+              'CONFIGURATION_ERROR',
+            ),
+          ),
+        );
+        await expectLater(
+          repository.register('Piloto', 'a!2'),
+          throwsA(
+            isA<AuthFailure>().having(
+              (e) => e.code,
+              'code',
+              'CONFIGURATION_ERROR',
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   test('Errores estructurados y Retry-After', () async {
     server.listen((request) async {
       await request.drain<void>();

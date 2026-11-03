@@ -42,6 +42,8 @@ class AuthFailure implements Exception {
   bool get invalidSession => status == 401 && code != 'INVALID_CREDENTIALS';
   String get message => switch (code) {
     'INVALID_CREDENTIALS' => 'Usuario o contraseña incorrectos.',
+    'AUTH_ENDPOINT_REJECTED' =>
+      'El servidor rechazó la solicitud de acceso. Inténtalo de nuevo.',
     'CURRENT_PASSWORD_INVALID' => 'La contraseña actual es incorrecta.',
     'USERNAME_UNAVAILABLE' => 'Ese nombre de usuario ya está ocupado.',
     'VALIDATION_ERROR' =>
@@ -94,6 +96,7 @@ class HttpAuthRepository implements AuthRepository {
       baseUrl.userInfo.isEmpty &&
       !baseUrl.hasQuery &&
       !baseUrl.hasFragment &&
+      baseUrl.path.replaceFirst(RegExp(r'/+$'), '').endsWith('/api/v1') &&
       (baseUrl.scheme == 'https' || (kDebugMode && baseUrl.scheme == 'http'));
 
   Future<Map<String, dynamic>?> _send(

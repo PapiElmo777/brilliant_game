@@ -26,6 +26,28 @@ AuthSession session() => AuthSession(
 );
 
 void main() {
+  for (final register in [false, true]) {
+    test(
+      '401 público no anuncia caducidad y permite reintentar ($register)',
+      () async {
+        final repository = FakeAuthRepository()
+          ..failure = const AuthFailure('UNAUTHORIZED', status: 401);
+        final auth = AuthCubit(repository);
+        addTearDown(auth.close);
+        await auth.authenticate('Ana', 'a!2', register: register);
+        expect(auth.state.session, isNull);
+        expect(auth.state.busy, isFalse);
+        expect(
+          auth.state.error,
+          'El servidor rechazó la solicitud de acceso. Inténtalo de nuevo.',
+        );
+        repository.failure = null;
+        await auth.authenticate('Ana', 'a!2', register: register);
+        expect(auth.state.session, isNotNull);
+      },
+    );
+  }
+
   test('Registro y borrado confirmado publican y limpian identidad', () async {
     final repository = FakeAuthRepository();
     final auth = AuthCubit(repository);

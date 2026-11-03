@@ -569,3 +569,9 @@ flutter test test/auth/auth_api_e2e_test.dart --dart-define=RUN_AUTH_API_E2E=tru
 ```
 
 Verificación de esta actualización: **300 pruebas Flutter aprobadas**, análisis sin avisos, APK Debug generado y recorrido adicional Flutter → JAR correcto con `a!2`. El servidor pasó **19 pruebas**. La captura de registro se revisó visualmente y se actualizó con el nuevo requisito.
+
+## Corrección de configuración de acceso: 3 de noviembre de 2026
+
+El cliente valida que la ruta de `API_BASE_URL` termine en `/api/v1` (permite barra final). Un sufijo accidental como `/api/v1+` se rechaza como configuración inválida antes de enviar credenciales. Un `401` inesperado en login o registro muestra un rechazo de acceso y permite reintentar; no anuncia caducidad de una sesión que aún no existe. Los `401` de operaciones protegidas siguen limpiando la sesión.
+
+Verificación: 28 pruebas de autenticación correctas y análisis sin avisos. La configuración de prueba del Samsung usa exactamente `--dart-define=API_BASE_URL=http://127.0.0.1:8080/api/v1` mediante el túnel ADB.
