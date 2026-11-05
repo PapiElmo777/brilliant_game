@@ -9,6 +9,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
+  shared_preferences: ^2.5.5
   video_player: ^2.10.1
 
 flutter:

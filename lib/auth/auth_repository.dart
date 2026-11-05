@@ -76,19 +76,20 @@ class HttpAuthRepository implements AuthRepository {
   final HttpClient _client;
   final Duration timeout;
 
+  static Uri get configuredBaseUrl =>
+      Uri.tryParse(
+        const String.fromEnvironment(
+          'API_BASE_URL',
+          defaultValue: 'http://127.0.0.1:8080/api/v1',
+        ),
+      ) ??
+      Uri();
+
   HttpAuthRepository({
     Uri? baseUrl,
     HttpClient? client,
     this.timeout = const Duration(seconds: 15),
-  }) : baseUrl =
-           baseUrl ??
-           Uri.tryParse(
-             const String.fromEnvironment(
-               'API_BASE_URL',
-               defaultValue: 'http://127.0.0.1:8080/api/v1',
-             ),
-           ) ??
-           Uri(),
+  }) : baseUrl = baseUrl ?? configuredBaseUrl,
        _client = client ?? HttpClient();
 
   bool get _validUrl =>
