@@ -4,7 +4,17 @@ import '../../auth/auth_cubit.dart';
 import '../widgets/fondo_espacial.dart';
 
 class AccesoPage extends StatefulWidget {
-  const AccesoPage({super.key});
+  final VoidCallback? onServerSettings;
+  final String? serverLabel;
+  final String? serverWarning;
+  final bool canAuthenticate;
+  const AccesoPage({
+    super.key,
+    this.onServerSettings,
+    this.serverLabel,
+    this.serverWarning,
+    this.canAuthenticate = true,
+  });
   @override
   State<AccesoPage> createState() => _AccesoPageState();
 }
@@ -37,7 +47,8 @@ class _AccesoPageState extends State<AccesoPage> {
   @override
   Widget build(BuildContext context) => BlocBuilder<AuthCubit, AuthState>(
     builder: (context, state) {
-      final enabled = !state.busy && state.cooldown == 0;
+      final enabled =
+          widget.canAuthenticate && !state.busy && state.cooldown == 0;
       return Scaffold(
         body: FondoEspacial(
           child: SafeArea(
@@ -126,6 +137,14 @@ class _AccesoPageState extends State<AccesoPage> {
                             return null;
                           },
                         ),
+                        if (widget.serverWarning != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 16),
+                            child: Semantics(
+                              liveRegion: true,
+                              child: Text(widget.serverWarning!),
+                            ),
+                          ),
                         if (state.error != null)
                           Padding(
                             padding: const EdgeInsets.only(top: 16),
@@ -170,6 +189,22 @@ class _AccesoPageState extends State<AccesoPage> {
                                 : 'Crear una cuenta',
                           ),
                         ),
+                        if (widget.onServerSettings != null) ...[
+                          const SizedBox(height: 12),
+                          TextButton.icon(
+                            key: const ValueKey('server_settings'),
+                            onPressed: state.busy
+                                ? null
+                                : widget.onServerSettings,
+                            icon: const Icon(Icons.dns_outlined),
+                            label: const Text('Servidor'),
+                          ),
+                          Text(
+                            widget.serverLabel ?? '',
+                            key: const ValueKey('server_current'),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ],
                     ),
                   ),

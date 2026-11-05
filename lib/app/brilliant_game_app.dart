@@ -3,50 +3,156 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../auth/auth_cubit.dart';
 import '../auth/auth_repository.dart';
+import '../server/server_configuration.dart';
 import '../presentation/pages/acceso_page.dart';
+import '../presentation/pages/servidor_page.dart';
 import 'rutas_brilliant.dart';
 import 'tema_brilliant.dart';
 
 class BrilliantGameApp extends StatefulWidget {
   final Random? azarPartida;
   final AuthRepository? authRepository;
-  const BrilliantGameApp({super.key, this.azarPartida, this.authRepository});
+  final ServerSettingsStore? serverStore;
+  final ServerProbe? serverProbe;
+  final AuthRepository Function(Uri)? authRepositoryFactory;
+  const BrilliantGameApp({
+    super.key,
+    this.azarPartida,
+    this.authRepository,
+    this.serverStore,
+    this.serverProbe,
+    this.authRepositoryFactory,
+  });
   @override
   State<BrilliantGameApp> createState() => _BrilliantGameAppState();
 }
 
 class _BrilliantGameAppState extends State<BrilliantGameApp> {
-  late final _repository = widget.authRepository ?? HttpAuthRepository();
-  late final _auth = AuthCubit(_repository);
+  AuthRepository? _repository;
+  AuthCubit? _auth;
+  late final _store = widget.serverStore ?? PreferencesServerSettingsStore();
+  late final _probe = widget.serverProbe ?? HttpServerProbe();
+  late final bool _configurationEnabled =
+      widget.authRepository == null || widget.serverStore != null;
+  Uri _server = HttpAuthRepository.configuredBaseUrl;
+  bool _configured = false;
+  String? _warning;
+  int _revision = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_configurationEnabled) {
+      _load();
+    } else {
+      _createAuth();
+    }
+  }
+
+  void _createAuth() {
+    _repository =
+        widget.authRepository ??
+        widget.authRepositoryFactory?.call(_server) ??
+        HttpAuthRepository(baseUrl: _server);
+    _auth = AuthCubit(_repository!);
+  }
+
+  Future<void> _load() async {
+    try {
+      final stored = await _store.read();
+      if (!mounted) return;
+      if (stored != null) {
+        _server = ServerAddress.parse(stored);
+      } else if (const bool.hasEnvironment('API_BASE_URL')) {
+        _server = ServerAddress.parse(_server.toString());
+      }
+      _configured = stored != null || const bool.hasEnvironment('API_BASE_URL');
+      if (!_configured) _warning = 'Configura el servidor para comenzar.';
+    } catch (_) {
+      if (!mounted) return;
+      _warning =
+          'No se pudo cargar la dirección guardada. Configura el servidor para comenzar.';
+    }
+    if (!mounted) return;
+    setState(_createAuth);
+  }
+
+  void _changeServer(Uri address) {
+    if (_auth?.state.session != null || _auth?.state.busy == true) return;
+    final previousAuth = _auth;
+    final previousRepository = _repository;
+    setState(() {
+      _server = address;
+      _configured = true;
+      _warning = null;
+      _revision++;
+      _createAuth();
+    });
+    previousAuth?.close();
+    if (widget.authRepository == null) previousRepository?.close();
+  }
+
   @override
   void dispose() {
-    _auth.close();
-    if (widget.authRepository == null) _repository.close();
+    _auth?.close();
+    if (widget.authRepository == null) _repository?.close();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => BlocProvider.value(
-    value: _auth,
-    child: BlocBuilder<AuthCubit, AuthState>(
-      // Cada identidad tiene su Navigator. Borrar/caducar desmonta TODAS las
-      // rutas y diálogos del juego, incluso los abiertos durante una petición.
-      buildWhen: (previous, current) =>
-          previous.session?.user.id != current.session?.user.id,
-      builder: (context, state) => MaterialApp(
-        key: ValueKey(state.session?.user.id),
-        title: 'Brilliant Game',
-        debugShowCheckedModeBanner: false,
+  Widget build(BuildContext context) {
+    final auth = _auth;
+    if (auth == null) {
+      return MaterialApp(
         theme: TemaBrilliant.oscuro,
-        home: state.session == null ? const AccesoPage() : null,
-        onGenerateRoute: state.session == null
-            ? null
-            : (settings) => RutasBrilliant.generar(
-                settings,
-                azarPartida: widget.azarPartida,
-                cuenta: state.session!.user,
-              ),
+        debugShowCheckedModeBanner: false,
+        home: const Scaffold(body: Center(child: CircularProgressIndicator())),
+      );
+    }
+    return BlocProvider.value(
+      value: auth,
+      child: BlocBuilder<AuthCubit, AuthState>(
+        // Cada identidad y servidor tienen su Navigator. Al salir o cambiar
+        // de servidor se desmontan todas las rutas y los formularios anteriores.
+        buildWhen: (previous, current) =>
+            previous.session?.user.id != current.session?.user.id,
+        builder: (context, state) => MaterialApp(
+          key: ValueKey((_revision, state.session?.user.id)),
+          title: 'Brilliant Game',
+          debugShowCheckedModeBanner: false,
+          theme: TemaBrilliant.oscuro,
+          home: state.session == null
+              ? Builder(
+                  builder: (context) => AccesoPage(
+                    canAuthenticate: !_configurationEnabled || _configured,
+                    serverWarning: _warning,
+                    serverLabel: _configured
+                        ? _server.authority
+                        : 'Sin configurar',
+                    onServerSettings: !_configurationEnabled
+                        ? null
+                        : () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => ServidorPage(
+                                currentAddress: _configured ? _server : null,
+                                store: _store,
+                                probe: _probe,
+                                onSaved: _changeServer,
+                              ),
+                            ),
+                          ),
+                  ),
+                )
+              : null,
+          onGenerateRoute: state.session == null
+              ? null
+              : (settings) => RutasBrilliant.generar(
+                  settings,
+                  azarPartida: widget.azarPartida,
+                  cuenta: state.session!.user,
+                ),
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
