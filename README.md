@@ -591,3 +591,18 @@ Verificación del cierre de sesión: **317 pruebas Flutter aprobadas**, análisi
 ## Conexión persistente: 4 de noviembre de 2026
 
 Análisis sin avisos, **347 pruebas Flutter aprobadas**, recorrido real Flutter → JAR correcto, APK Android Debug y app iOS para simulador compilados. Revisadas tres capturas nuevas de Servidor. El servidor pasó **20 pruebas**, incluida concurrencia de cuatro clientes. Samsung SM-N985F obtuvo HTTP 200 por Wi-Fi directo contra Java 21 en el puerto 8080. La comprobación con cuatro dispositivos físicos y las partidas en línea siguen pendientes.
+
+## Una sesión por cuenta y registro local de pruebas: 5 de noviembre de 2026
+
+Un segundo dispositivo recibe «La cuenta ya tiene una sesión abierta en otro dispositivo» sin cerrar la sesión del primero. Para probar varios dispositivos a la vez, crear una cuenta para cada uno. Logout permite el siguiente acceso inmediatamente. La app comprueba actividad cada 10 segundos y al volver al primer plano; 45 segundos sin actividad liberan la cuenta. Al volver después de ese tiempo es necesario iniciar sesión de nuevo. Los 401 limpian identidad y navegación; los fallos de red no afirman un cierre remoto. La sesión sigue únicamente en memoria y mantiene su caducidad de token.
+
+Esta política reemplaza el comportamiento anterior que permitía varias sesiones de una cuenta. El servidor migra la base existente a V002, conserva las cuentas y exige actualizar también la app para mantener su actividad. Arrancar el JAR nuevo desde la carpeta del servidor, después de detener el anterior:
+
+```sh
+cd /Users/alfredojimenez/developer/brilliant_game/brilliant_server
+"/Applications/Android Studio.app/Contents/jbr/Contents/Home/bin/java" -jar target/brilliant-server-accounts.jar --spring.profiles.active=lan
+```
+
+El perfil LAN crea `brilliant_server/data/cuentas-prueba.json`: archivo local solicitado con usuarios y contraseñas legibles para pruebas. Se completa después de registrar o iniciar sesión correctamente, actualiza renombrados y quita cuentas eliminadas; no recupera contraseñas antiguas de sus hashes. Está fuera de Git y solo su propietario puede leerlo. Se puede desactivar con `RECORD_TEST_ACCOUNTS=false`; producción prohíbe activarlo. Flutter sigue sin guardar contraseñas ni tokens.
+
+Verificación: **352 pruebas Flutter aprobadas**, análisis sin avisos, APK Android Debug generado, **29 pruebas Java** y recorrido real Flutter → JAR correcto, incluyendo rechazo del segundo acceso sin afectar al primero, logout y acceso posterior. Se comprueban además actividad periódica, regreso al primer plano y rechazo de respuestas antiguas.
