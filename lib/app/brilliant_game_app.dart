@@ -27,7 +27,8 @@ class BrilliantGameApp extends StatefulWidget {
   State<BrilliantGameApp> createState() => _BrilliantGameAppState();
 }
 
-class _BrilliantGameAppState extends State<BrilliantGameApp> {
+class _BrilliantGameAppState extends State<BrilliantGameApp>
+    with WidgetsBindingObserver {
   AuthRepository? _repository;
   AuthCubit? _auth;
   late final _store = widget.serverStore ?? PreferencesServerSettingsStore();
@@ -42,11 +43,17 @@ class _BrilliantGameAppState extends State<BrilliantGameApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     if (_configurationEnabled) {
       _load();
     } else {
       _createAuth();
     }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _auth?.checkSession();
   }
 
   void _createAuth() {
@@ -94,6 +101,7 @@ class _BrilliantGameAppState extends State<BrilliantGameApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _auth?.close();
     if (widget.authRepository == null) _repository?.close();
     super.dispose();

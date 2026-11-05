@@ -179,6 +179,14 @@ void main() {
       expect(find.text('NUEVA PARTIDA'), findsOneWidget);
       // La misma cuenta sobrevive a reiniciar JAR y cliente. El cliente no
       // conserva tokens ni pide nuevamente registro después del reinicio.
+      final registeredSession = tester
+          .element(find.byType(MenuInicialPage))
+          .read<AuthCubit>()
+          .state
+          .session!;
+      await tester.runAsync(
+        () => repository.logout(registeredSession.accessToken),
+      );
       await tester.pumpWidget(const SizedBox());
       await tester.runAsync(() async {
         await stop();
@@ -189,10 +197,22 @@ void main() {
       expect(find.text('Iniciar sesión'), findsOneWidget);
       await credentials(username.toLowerCase());
       expect(find.text('NUEVA PARTIDA'), findsOneWidget);
-      final account = await tester.runAsync(
-        () => repository.login(username, password),
-      );
-      expect(account, isNotNull);
+      final account = tester
+          .element(find.byType(MenuInicialPage))
+          .read<AuthCubit>()
+          .state
+          .session!;
+      await tester.runAsync(() async {
+        await expectLater(
+          repository.login(username, password),
+          throwsA(
+            isA<AuthFailure>()
+                .having((e) => e.code, 'code', 'SESSION_ALREADY_ACTIVE')
+                .having((e) => e.status, 'status', 409),
+          ),
+        );
+        await repository.checkSession(account.accessToken);
+      });
       await tester.runAsync(() async {
         await expectLater(
           repository.register(username.toLowerCase(), password),
@@ -221,7 +241,6 @@ void main() {
         try {
           for (final (token, expected) in [
             (previousSession.accessToken, 401),
-            (account!.accessToken, 200),
           ]) {
             final request = await client.getUrl(
               url.resolve('/api/v1/users/me'),
@@ -245,7 +264,7 @@ void main() {
             .session!
             .user
             .id,
-        account!.user.id,
+        account.user.id,
       );
       await tap('nueva_partida_menu');
       await tap('elegir_tablero_01');

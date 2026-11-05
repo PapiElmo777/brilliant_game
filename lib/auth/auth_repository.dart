@@ -46,6 +46,8 @@ class AuthFailure implements Exception {
       'El servidor rechazó la solicitud de acceso. Inténtalo de nuevo.',
     'CURRENT_PASSWORD_INVALID' => 'La contraseña actual es incorrecta.',
     'USERNAME_UNAVAILABLE' => 'Ese nombre de usuario ya está ocupado.',
+    'SESSION_ALREADY_ACTIVE' =>
+      'La cuenta ya tiene una sesión abierta en otro dispositivo. Cierra esa sesión o espera 45 segundos si la app se cerró.',
     'VALIDATION_ERROR' =>
       'Revisa los datos. Para crear cuenta, usa de 3 a 128 caracteres, al menos uno especial, y evita contraseñas comunes.',
     'RATE_LIMITED' =>
@@ -65,6 +67,7 @@ abstract interface class AuthRepository {
   Future<AuthSession> register(String username, String password);
   Future<AuthSession> login(String username, String password);
   Future<void> logout(String accessToken);
+  Future<void> checkSession(String accessToken);
   Future<void> deleteAccount(String accessToken, String currentPassword);
   void close();
 }
@@ -221,6 +224,11 @@ class HttpAuthRepository implements AuthRepository {
   @override
   Future<void> logout(String accessToken) async {
     await _send('POST', 'auth/logout', 204, token: accessToken);
+  }
+
+  @override
+  Future<void> checkSession(String accessToken) async {
+    await _send('GET', 'users/me', 200, token: accessToken);
   }
 
   @override

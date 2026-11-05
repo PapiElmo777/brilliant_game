@@ -21,6 +21,8 @@ class AuthCubit extends Cubit<AuthState> {
   final AuthRepository repository;
   Timer? _expiry;
   Timer? _cooldown;
+  Timer? _presence;
+  bool _checkingSession = false;
   int _generation = 0;
   AuthCubit(this.repository) : super(const AuthState());
 
@@ -49,6 +51,11 @@ class AuthCubit extends Cubit<AuthState> {
         return;
       }
       _expiry = Timer(remaining, invalidate);
+      _presence?.cancel();
+      _presence = Timer.periodic(
+        const Duration(seconds: 10),
+        (_) => checkSession(),
+      );
       emit(AuthState(session: session));
     } on AuthFailure catch (error) {
       if (!isClosed && generation == _generation) {
@@ -60,6 +67,24 @@ class AuthCubit extends Cubit<AuthState> {
               : error,
         );
       }
+    }
+  }
+
+  /// A 401 from the authenticated probe clears every protected route. Network
+  /// errors do not claim the server closed a session; the next probe retries.
+  Future<void> checkSession() async {
+    final session = state.session;
+    if (session == null || state.busy || _checkingSession || isClosed) return;
+    final generation = _generation;
+    _checkingSession = true;
+    try {
+      await repository.checkSession(session.accessToken);
+    } on AuthFailure catch (error) {
+      if (!isClosed && generation == _generation && error.status == 401) {
+        invalidate();
+      }
+    } finally {
+      _checkingSession = false;
     }
   }
 
@@ -100,6 +125,7 @@ class AuthCubit extends Cubit<AuthState> {
     ++_generation;
     _expiry?.cancel();
     _cooldown?.cancel();
+    _presence?.cancel();
     if (!isClosed) emit(AuthState(error: message));
   }
 
@@ -165,6 +191,7 @@ class AuthCubit extends Cubit<AuthState> {
     ++_generation;
     _expiry?.cancel();
     _cooldown?.cancel();
+    _presence?.cancel();
     return super.close();
   }
 }
