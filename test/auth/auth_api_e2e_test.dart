@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:brilliant_game/app/brilliant_game_app.dart';
 import 'package:brilliant_game/auth/auth_repository.dart';
 import 'package:brilliant_game/auth/auth_cubit.dart';
+import 'package:brilliant_game/server/server_configuration.dart';
+import '../support/server_support.dart';
 import 'package:brilliant_game/presentation/pages/menu_inicial_page.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:brilliant_game/presentation/pages/partida_page.dart';
@@ -41,9 +43,19 @@ void main() {
         _RealHttpOverrides(),
       );
       final repository = HttpAuthRepository(baseUrl: url, client: realClient());
+      final serverStore = MemoryServerSettingsStore();
+      final serverProbe = HttpServerProbe(clientFactory: realClient);
+      Widget app() => BrilliantGameApp(
+        authRepository: repository,
+        serverStore: serverStore,
+        serverProbe: serverProbe,
+      );
       Future<void> start() async {
         process = await Process.start(
-          '/usr/bin/java',
+          const String.fromEnvironment(
+            'AUTH_SERVER_JAVA',
+            defaultValue: '/usr/bin/java',
+          ),
           [
             '-jar',
             jar,
@@ -123,7 +135,9 @@ void main() {
           );
           await tester.pump();
           if (find.text('Conectando…').evaluate().isEmpty &&
-              find.text('Eliminando…').evaluate().isEmpty) {
+              find.text('Eliminando…').evaluate().isEmpty &&
+              find.text('Cerrando sesión…').evaluate().isEmpty &&
+              find.text('Comprobando conexión…').evaluate().isEmpty) {
             break;
           }
         }
@@ -151,7 +165,15 @@ void main() {
         await tap('auth_submit');
       }
 
-      await tester.pumpWidget(BrilliantGameApp(authRepository: repository));
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      await tap('server_settings');
+      await tester.enterText(
+        find.byKey(const ValueKey('server_address')),
+        url.toString(),
+      );
+      await tap('server_save');
+      expect(serverStore.value, url.toString());
       await tap('auth_switch');
       await credentials(username);
       expect(find.text('NUEVA PARTIDA'), findsOneWidget);
@@ -162,7 +184,7 @@ void main() {
         await stop();
         await start();
       });
-      await tester.pumpWidget(BrilliantGameApp(authRepository: repository));
+      await tester.pumpWidget(app());
       await tester.pumpAndSettle();
       expect(find.text('Iniciar sesión'), findsOneWidget);
       await credentials(username.toLowerCase());

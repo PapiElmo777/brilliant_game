@@ -12,22 +12,24 @@ Desde el 3 de noviembre de 2026, el registro requiere **3–128 caracteres y al 
 
 La sesión vive solo en memoria; un proceso nuevo requiere login. La caducidad, el cierre de sesión y el borrado desmontan las rutas protegidas. Un fallo de red al borrar muestra resultado incierto, sin anunciar éxito ni reintentar automáticamente. Se bloquean envíos dobles y se respeta `Retry-After`. No se guardan contraseñas ni tokens, ni se usan refresh tokens. No se añaden invitados, renombrado, recuperación, salas ni partidas en línea.
 
-### Conectar con la API
+### Conexión práctica por Wi-Fi
 
-Desde el servidor:
+Instala la misma app **Debug** en cada dispositivo y conecta todos a la misma red Wi-Fi de la computadora. La primera vez, en el acceso abre **Servidor**, escribe la dirección indicada por la terminal y pulsa **Guardar y conectar**. La app comprueba `/api/v1/health/ready` antes de guardar. Ejemplo: `192.168.0.31:8080`; añade `/api/v1` automáticamente. La dirección se recuerda al cerrar y abrir la app, sin recompilar. Si cambia la IP o la red, vuelve a Servidor antes de iniciar sesión. Configurar el servidor no restaura la sesión: sigue siendo necesario iniciar sesión al abrir un proceso nuevo.
 
-```sh
-./mvnw verify
-java -jar target/brilliant-server.jar
-```
-
-Desde Flutter, para el emulador Android estándar:
+En esta Mac, Java 24/25 falló al aceptar conexiones LAN incluso con un socket mínimo. Java 21 incluido en Android Studio respondió correctamente desde el Samsung. Arrancar desde terminal con:
 
 ```sh
-flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080/api/v1
+cd /Users/alfredojimenez/developer/brilliant_game/brilliant_server
+"/Applications/Android Studio.app/Contents/jbr/Contents/Home/bin/java" -jar target/brilliant-server-lan.jar --spring.profiles.active=lan
 ```
 
-En simulador iOS puede usarse `http://localhost:8080/api/v1`. El valor predeterminado es `http://127.0.0.1:8080/api/v1`; en un teléfono se debe configurar la dirección accesible del servidor. `API_BASE_URL` incluye `/api/v1` y se fija al compilar; cambiarla requiere ejecutar/compilar otra vez. El cliente no sigue redirecciones y solo envía Bearer al origen configurado. HTTP se admite únicamente en Debug; release/profile exige HTTPS. Android permite tráfico HTTP solo en el manifiesto Debug. iOS usa un plist Debug separado con permiso para red local y localhost; el plist de release no recibe excepciones de transporte.
+El perfil `lan` escucha en todas las interfaces y muestra las direcciones locales. Conserva SQLite y la clave en `./data`; usar siempre esta carpeta para conservar las cuentas. El artefacto `brilliant-server-lan.jar` es la copia local verificada de esta entrega. Para reconstruir en el futuro, detener antes el servidor, ejecutar `JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" ./mvnw verify` y arrancar `target/brilliant-server.jar` con el mismo perfil. No sobrescribir un JAR mientras Java lo usa.
+
+En un emulador Android estándar ejecutado en la misma Mac, configurar `10.0.2.2:8080`; en simulador iOS, `http://localhost:8080`. El teléfono físico usa la IP Wi-Fi de la Mac. Para el uso normal no hace falta túnel ADB ni USB.
+
+`shared_preferences` guarda exclusivamente la dirección, sin contraseñas ni tokens. La configuración guardada tiene prioridad sobre `--dart-define=API_BASE_URL=...`, que permanece disponible como configuración inicial de desarrollo. Cambiar el servidor requiere estar fuera de sesión y crea un cliente nuevo con formularios y navegación vacíos. Las cuentas pertenecen al servidor elegido.
+
+El cliente no sigue redirecciones y solo envía Bearer al origen configurado. HTTP se admite únicamente en Debug; release/profile exige HTTPS. Android permite HTTP solo en Debug e iOS conserva sus permisos de desarrollo separados. Esta entrega prepara conexión y cuentas para varios dispositivos; las salas y partidas sincronizadas siguen pendientes.
 
 ### Verificación de cuentas
 
@@ -585,3 +587,7 @@ Si falla la conexión, el panel ofrece reintentar o elegir **Salir solo de este 
 La API ya implementaba logout; no se modificó ni recompiló el servidor abierto. El recorrido contra el JAR comprueba por botones reales el cierre, la revocación inmediata de ese token, la conservación de otra sesión y el acceso de nuevo con la misma cuenta.
 
 Verificación del cierre de sesión: **317 pruebas Flutter aprobadas**, análisis sin avisos, APK Android Debug compilado y recorrido adicional Flutter → JAR correcto. Revisadas visualmente las capturas del panel de cuenta y del aviso de cierre no confirmado.
+
+## Conexión persistente: 4 de noviembre de 2026
+
+Análisis sin avisos, **347 pruebas Flutter aprobadas**, recorrido real Flutter → JAR correcto, APK Android Debug y app iOS para simulador compilados. Revisadas tres capturas nuevas de Servidor. El servidor pasó **20 pruebas**, incluida concurrencia de cuatro clientes. Samsung SM-N985F obtuvo HTTP 200 por Wi-Fi directo contra Java 21 en el puerto 8080. La comprobación con cuatro dispositivos físicos y las partidas en línea siguen pendientes.
