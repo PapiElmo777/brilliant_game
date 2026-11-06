@@ -235,70 +235,18 @@ class _ControlesMenu extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     mainAxisSize: MainAxisSize.min,
     children: [
-      DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: const LinearGradient(
-            colors: [Color(0xFF123F69), Color(0xFF061F45)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          boxShadow: const [
-            BoxShadow(color: Color(0x5533DFFF), blurRadius: 20),
-          ],
-        ),
-        child: SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: FilledButton(
-            key: const ValueKey('nueva_partida_menu'),
-            onPressed: onNuevaPartida,
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              disabledBackgroundColor: Colors.transparent,
-              foregroundColor: const Color(0xFFE8FCFF),
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: const BorderSide(color: Color(0xFF55DFFF), width: 1.3),
-              ),
-            ),
-            child: const FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.play_arrow_rounded, color: Color(0xFF68EDFF)),
-                  SizedBox(width: 10),
-                  Text(
-                    'UN JUGADOR',
-                    style: TextStyle(
-                      fontSize: 16,
-                      letterSpacing: 2,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
+      _BotonModoMenu(
+        clave: const ValueKey('nueva_partida_menu'),
+        texto: 'UN JUGADOR',
+        icono: Icons.play_arrow_rounded,
+        onPressed: onNuevaPartida,
       ),
       const SizedBox(height: 10),
-      SizedBox(
-        width: double.infinity,
-        height: 52,
-        child: OutlinedButton.icon(
-          key: const ValueKey('multijugador_menu'),
-          onPressed: onMultijugador,
-          icon: const Icon(Icons.groups),
-          label: const FittedBox(
-            child: Text(
-              'MULTIJUGADOR',
-              style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 2),
-            ),
-          ),
-        ),
+      _BotonModoMenu(
+        clave: const ValueKey('multijugador_menu'),
+        texto: 'MULTIJUGADOR',
+        icono: Icons.groups,
+        onPressed: onMultijugador,
       ),
       const SizedBox(height: 10),
       SizedBox(
@@ -324,5 +272,67 @@ class _ControlesMenu extends StatelessWidget {
         ),
       ),
     ],
+  );
+}
+
+class _BotonModoMenu extends StatelessWidget {
+  final Key clave;
+  final String texto;
+  final IconData icono;
+  final VoidCallback? onPressed;
+  const _BotonModoMenu({
+    required this.clave,
+    required this.texto,
+    required this.icono,
+    this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(16),
+      gradient: const LinearGradient(
+        colors: [Color(0xFF123F69), Color(0xFF061F45)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      boxShadow: const [BoxShadow(color: Color(0x5533DFFF), blurRadius: 20)],
+    ),
+    child: SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: FilledButton(
+        key: clave,
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          disabledBackgroundColor: Colors.transparent,
+          foregroundColor: const Color(0xFFE8FCFF),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFF55DFFF), width: 1.3),
+          ),
+        ),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icono, color: const Color(0xFF68EDFF)),
+              const SizedBox(width: 10),
+              Text(
+                texto,
+                style: const TextStyle(
+                  fontSize: 16,
+                  letterSpacing: 2,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
   );
 }
