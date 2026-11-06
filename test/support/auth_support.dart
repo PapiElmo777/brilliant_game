@@ -26,6 +26,9 @@ class FakeAuthRepository implements AuthRepository {
   Future<AuthSession> register(String username, String password) =>
       login(username, password);
   @override
+  Future<AuthSession> refresh(String refreshToken) => login(name, "");
+
+  @override
   Future<void> logout(String accessToken) async {
     logouts++;
     if (failure != null) throw failure!;

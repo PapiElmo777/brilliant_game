@@ -26,10 +26,12 @@ class AuthSession {
   final Account user;
   final String accessToken;
   final DateTime expiresAt;
+  final String? refreshToken;
   const AuthSession({
     required this.user,
     required this.accessToken,
     required this.expiresAt,
+    this.refreshToken,
   });
 }
 
@@ -66,6 +68,7 @@ class AuthFailure implements Exception {
 abstract interface class AuthRepository {
   Future<AuthSession> register(String username, String password);
   Future<AuthSession> login(String username, String password);
+  Future<AuthSession> refresh(String refreshToken);
   Future<void> logout(String accessToken);
   Future<void> checkSession(String accessToken);
   Future<void> deleteAccount(String accessToken, String currentPassword);
@@ -73,7 +76,7 @@ abstract interface class AuthRepository {
 }
 
 /// Solo habla con el origen configurado. No sigue redirecciones, no reintenta
-/// mutaciones y nunca guarda ni registra cuerpos, contraseñas o refresh tokens.
+/// mutaciones y nunca guarda ni registra cuerpos ni credenciales. Access y refresh viven solo en memoria.
 class HttpAuthRepository implements AuthRepository {
   final Uri baseUrl;
   final HttpClient _client;
@@ -193,11 +196,17 @@ class HttpAuthRepository implements AuthRepository {
       status,
       body: {'username': username.trim(), 'password': password},
     );
+    return _session(json);
+  }
+
+  AuthSession _session(Map<String, dynamic>? json) {
     if (json == null ||
         json['user'] is! Map<String, dynamic> ||
         json['accessToken'] is! String ||
         (json['accessToken'] as String).isEmpty ||
         json['tokenType'] != 'Bearer' ||
+        json['refreshToken'] is! String ||
+        (json['refreshToken'] as String).isEmpty ||
         json['expiresIn'] is! int ||
         (json['expiresIn'] as int) <= 0) {
       throw const AuthFailure('SERVER_ERROR');
@@ -206,6 +215,7 @@ class HttpAuthRepository implements AuthRepository {
       return AuthSession(
         user: Account.fromJson(json['user'] as Map<String, dynamic>),
         accessToken: json['accessToken'] as String,
+        refreshToken: json['refreshToken'] as String,
         expiresAt: DateTime.now().add(
           Duration(seconds: json['expiresIn'] as int),
         ),
@@ -221,6 +231,16 @@ class HttpAuthRepository implements AuthRepository {
   @override
   Future<AuthSession> login(String username, String password) =>
       _authenticate('auth/login', 200, username, password);
+  @override
+  Future<AuthSession> refresh(String refreshToken) async => _session(
+    await _send(
+      'POST',
+      'auth/refresh',
+      200,
+      body: {'refreshToken': refreshToken},
+    ),
+  );
+
   @override
   Future<void> logout(String accessToken) async {
     await _send('POST', 'auth/logout', 204, token: accessToken);

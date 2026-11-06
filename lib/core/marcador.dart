@@ -3,12 +3,12 @@ import 'dart:collection';
 import '../models/zona.dart';
 
 /// Puntos necesarios para ganar según el número de jugadores.
-const metaPorJugadores = {2: 26, 3: 24, 4: 22, 5: 20};
+const metaPorJugadores = {2: 26, 3: 24, 4: 22, 5: 20, 6: 20};
 
 int metaDePuntos(int jugadores) {
   final meta = metaPorJugadores[jugadores];
   if (meta == null) {
-    throw ArgumentError('La partida admite de 2 a 5 jugadores.');
+    throw ArgumentError('La partida admite de 2 a 6 jugadores.');
   }
   return meta;
 }
@@ -34,8 +34,7 @@ class PosicionRanking {
   final int puntos;
   final int zonasCompletadas;
 
-  /// Empezando en 1. Por ahora los empates comparten posición; el desempate
-  /// definitivo se decidirá con el multijugador.
+  /// Empezando en 1; solo los empates absolutos comparten posición.
   final int posicion;
 
   const PosicionRanking({
@@ -53,6 +52,8 @@ class Marcador {
   final int jugadores;
   final int meta;
   final Map<String, List<Reclamo>> _reclamos = {};
+  final Map<Reclamo, int> _secuencias = {};
+  int _secuencia = 0;
 
   Marcador({required this.jugadores}) : meta = metaDePuntos(jugadores);
 
@@ -84,6 +85,7 @@ class Marcador {
       puntos: zona.puntuaciones[puesto] ?? 0,
     );
     lista.add(reclamo);
+    _secuencias[reclamo] = ++_secuencia;
     return reclamo;
   }
 
@@ -94,6 +96,7 @@ class Marcador {
       throw StateError('Sólo se puede liberar el último reclamo de la zona.');
     }
     lista.removeLast();
+    _secuencias.remove(reclamo);
   }
 
   int puntosDe(String jugadorId) => _reclamos.values
@@ -107,16 +110,28 @@ class Marcador {
       .where((lista) => lista.any((r) => r.jugadorId == jugadorId))
       .length;
 
+  // Los reclamos de cero puntos no cambian cuándo se alcanzó la puntuación.
+  int _momentoPuntuacion(String jugadorId) => _secuencias.entries
+      .where((e) => e.key.jugadorId == jugadorId && e.key.puntos > 0)
+      .fold(0, (ultimo, e) => e.value > ultimo ? e.value : ultimo);
+
+  int _comparar(String a, String b) {
+    final puntos = puntosDe(b).compareTo(puntosDe(a));
+    if (puntos != 0) return puntos;
+    final zonas = zonasCompletadasDe(b).compareTo(zonasCompletadasDe(a));
+    if (zonas != 0) return zonas;
+    return _momentoPuntuacion(a).compareTo(_momentoPuntuacion(b));
+  }
+
   /// Ordena a los [jugadores] de la partida de mayor a menor puntuación.
   /// Incluye a quienes aún no tienen puntos.
   List<PosicionRanking> ranking(Iterable<String> jugadores) {
-    final ordenados = jugadores.toSet().toList()
-      ..sort((a, b) => puntosDe(b).compareTo(puntosDe(a)));
+    final ordenados = jugadores.toSet().toList()..sort(_comparar);
     final resultado = <PosicionRanking>[];
     for (var i = 0; i < ordenados.length; i++) {
       final id = ordenados[i];
       final puntos = puntosDe(id);
-      final empatado = i > 0 && resultado.last.puntos == puntos;
+      final empatado = i > 0 && _comparar(ordenados[i - 1], id) == 0;
       resultado.add(
         PosicionRanking(
           jugadorId: id,

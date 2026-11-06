@@ -43,7 +43,7 @@ void main() {
               'accessToken': 'token',
               'tokenType': 'Bearer',
               'expiresIn': 600,
-              'refreshToken': 'ignorado',
+              'refreshToken': 'refresh-in-memory',
             }),
           );
         }
@@ -69,6 +69,30 @@ void main() {
       ]);
     },
   );
+
+  test('Refresh usa cuerpo JSON sin Bearer ni secreto en URL', () async {
+    server.listen((request) async {
+      expect(request.uri.path, '/api/v1/auth/refresh');
+      expect(request.uri.query, isEmpty);
+      expect(request.headers.value('authorization'), isNull);
+      expect(jsonDecode(await utf8.decoder.bind(request).join()), {
+        'refreshToken': 'old-secret',
+      });
+      request.response.write(
+        jsonEncode({
+          'user': {'id': 'uuid', 'username': 'Piloto'},
+          'accessToken': 'new-access',
+          'refreshToken': 'new-secret',
+          'tokenType': 'Bearer',
+          'expiresIn': 600,
+        }),
+      );
+      await request.response.close();
+    });
+    final session = await repository.refresh('old-secret');
+    expect(session.accessToken, 'new-access');
+    expect(session.refreshToken, 'new-secret');
+  });
 
   for (final path in ['/api/v1+', '/api/v1/health/ready', '']) {
     test(

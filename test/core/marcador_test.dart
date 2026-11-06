@@ -14,7 +14,8 @@ void main() {
     expect(metaDePuntos(4), 22);
     expect(metaDePuntos(5), 20);
     expect(() => metaDePuntos(1), throwsArgumentError);
-    expect(() => metaDePuntos(6), throwsArgumentError);
+    expect(metaDePuntos(6), 20);
+    expect(() => metaDePuntos(7), throwsArgumentError);
     expect(Marcador(jugadores: 2).meta, 26);
   });
 
@@ -142,7 +143,7 @@ void main() {
     expect(() => ranking.clear(), throwsUnsupportedError);
   });
 
-  test('Los empates comparten posición por ahora', () {
+  test('Desempata por quien alcanzó primero su puntuación', () {
     final marcador = Marcador(jugadores: 3);
     marcador.reclamar(
       zona: zonaPrueba('verde_1', const TipoVerde()),
@@ -154,8 +155,29 @@ void main() {
     );
     expect(marcador.ranking(['ana', 'beto', 'caro']).map((p) => p.posicion), [
       1,
-      1,
+      2,
       3,
     ]);
+  });
+  test('Zonas desempatan y completar con cero no retrasa la puntuación', () {
+    final marcador = Marcador(jugadores: 6);
+    for (final id in ['ana', 'beto']) {
+      marcador.reclamar(
+        zona: zonaPrueba('verde_$id', const TipoVerde()),
+        jugadorId: id,
+      );
+    }
+    final zona = zonaPrueba('compartida', const TipoVerde());
+    for (final id in ['c', 'd', 'e', 'ana', 'beto', 'f']) {
+      marcador.reclamar(zona: zona, jugadorId: id);
+    }
+    expect(marcador.puntosDe('ana'), 4);
+    expect(marcador.puntosDe('beto'), 4);
+    expect(marcador.zonasCompletadasDe('f'), 1);
+    final orden = marcador.ranking(['beto', 'ana', 'c', 'd', 'e', 'f']);
+    expect(orden.first.jugadorId, 'ana');
+    expect(orden[1].jugadorId, 'beto');
+    expect(orden[2].jugadorId, 'c');
+    expect(orden.last.puntos, 0);
   });
 }
