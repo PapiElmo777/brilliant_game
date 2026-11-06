@@ -41,7 +41,12 @@ void main() {
         tester.widget<Image>(fondo).image,
         const AssetImage('assets/images/backgrounds/PantallaMenu1.png'),
       );
-      await tester.drag(fondo, const Offset(0, -180));
+      final multi = tester.getRect(
+        find.byKey(const ValueKey('multijugador_menu')),
+      );
+      expect(multi.top, greaterThan(rect.bottom));
+      expect(multi.bottom, lessThanOrEqualTo(size.height - 24));
+      await tester.dragFrom(const Offset(24, 100), const Offset(0, -60));
       await tester.pumpAndSettle();
       expect(tester.getRect(boton), rect);
       expect(tester.takeException(), isNull);

@@ -159,7 +159,7 @@ void main() {
         ]);
         await iniciarApp(tester, azarPartida: azar);
         await tester.pumpAndSettle();
-        await _pulsar(tester, find.text('NUEVA PARTIDA'));
+        await _pulsar(tester, find.text('UN JUGADOR'));
         await _pulsar(tester, find.byKey(const ValueKey('elegir_tablero_01')));
         expect(find.byKey(const ValueKey('campo_nombre')), findsNothing);
         expect(find.text('PREPARA TU MISIÓN, ANA'), findsOneWidget);
@@ -324,7 +324,7 @@ void main() {
           await _pulsar(tester, find.byTooltip('Volver al menú'));
           await _pulsar(tester, find.byKey(const ValueKey('confirmar_salida')));
         }
-        await _pulsar(tester, find.text('NUEVA PARTIDA'));
+        await _pulsar(tester, find.text('UN JUGADOR'));
         await _pulsar(tester, find.byKey(const ValueKey('elegir_tablero_01')));
         expect(find.byKey(const ValueKey('campo_nombre')), findsNothing);
         expect(

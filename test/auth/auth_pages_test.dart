@@ -92,7 +92,7 @@ void main() {
       await tester.pumpWidget(BrilliantGameApp(authRepository: repository));
       await tester.pumpAndSettle();
       expect(find.text('Iniciar sesión'), findsOneWidget);
-      expect(find.text('NUEVA PARTIDA'), findsNothing);
+      expect(find.text('UN JUGADOR'), findsNothing);
       await tester.pumpWidget(const SizedBox());
     },
   );

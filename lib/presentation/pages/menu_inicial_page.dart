@@ -12,7 +12,13 @@ class MenuInicialPage extends StatefulWidget {
   final void Function(DefinicionTablero tablero, String jugador) onNuevaPartida;
 
   final Account? cuenta;
-  const MenuInicialPage({super.key, required this.onNuevaPartida, this.cuenta});
+  final Future<void> Function()? onMultijugador;
+  const MenuInicialPage({
+    super.key,
+    required this.onNuevaPartida,
+    this.cuenta,
+    this.onMultijugador,
+  });
 
   @override
   State<MenuInicialPage> createState() => _MenuInicialPageState();
@@ -20,6 +26,17 @@ class MenuInicialPage extends StatefulWidget {
 
 class _MenuInicialPageState extends State<MenuInicialPage> {
   bool _selectorAbierto = false;
+  bool _multijugadorAbierto = false;
+  Future<void> _abrirMultijugador() async {
+    if (_multijugadorAbierto || widget.onMultijugador == null) return;
+    setState(() => _multijugadorAbierto = true);
+    try {
+      await widget.onMultijugador!();
+    } finally {
+      if (mounted) setState(() => _multijugadorAbierto = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -61,6 +78,10 @@ class _MenuInicialPageState extends State<MenuInicialPage> {
             fit: StackFit.expand,
             children: [
               _PortadaMenu(
+                onMultijugador:
+                    widget.onMultijugador == null || _multijugadorAbierto
+                    ? null
+                    : _abrirMultijugador,
                 onNuevaPartida:
                     estado.fase == FaseMenu.menuVisible ||
                         estado.fase == FaseMenu.partidaPreparada
@@ -100,7 +121,8 @@ class _MenuInicialPageState extends State<MenuInicialPage> {
 /// con alfa se mezclan con el cielo, sin paneles ni recortes de la batalla.
 class _PortadaMenu extends StatelessWidget {
   final VoidCallback? onNuevaPartida;
-  const _PortadaMenu({required this.onNuevaPartida});
+  final VoidCallback? onMultijugador;
+  const _PortadaMenu({required this.onNuevaPartida, this.onMultijugador});
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -109,8 +131,11 @@ class _PortadaMenu extends StatelessWidget {
       final barras = MediaQuery.paddingOf(context);
       final ancho = math.min(340.0, espacio.maxWidth - 48);
       final altoLogo = (espacio.maxHeight * .16).clamp(86.0, 140.0);
-      final arribaControles = espacio.maxHeight - barras.bottom - 16 - 104;
-      final controles = _ControlesMenu(onNuevaPartida: onNuevaPartida);
+      final arribaControles = espacio.maxHeight - barras.bottom - 16 - 166;
+      final controles = _ControlesMenu(
+        onNuevaPartida: onNuevaPartida,
+        onMultijugador: onMultijugador,
+      );
       return Stack(
         fit: StackFit.expand,
         children: [
@@ -144,7 +169,7 @@ class _PortadaMenu extends StatelessWidget {
             Positioned(
               left: espacio.maxHeight * 841 / 1870 + 24,
               right: barras.right + 24,
-              top: barras.top + 16,
+              top: barras.top + 64,
               bottom: barras.bottom + 16,
               child: Center(
                 child: ConstrainedBox(
@@ -152,7 +177,7 @@ class _PortadaMenu extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const _LogoMenu(ancho: 260, alto: 140),
+                      const _LogoMenu(ancho: 230, alto: 56),
                       const SizedBox(height: 12),
                       controles,
                     ],
@@ -172,7 +197,7 @@ class _PortadaMenu extends StatelessWidget {
               left: (espacio.maxWidth - ancho) / 2,
               width: ancho,
               top: arribaControles,
-              height: 104,
+              height: 166,
               child: controles,
             ),
           ],
@@ -204,7 +229,8 @@ class _LogoMenu extends StatelessWidget {
 
 class _ControlesMenu extends StatelessWidget {
   final VoidCallback? onNuevaPartida;
-  const _ControlesMenu({required this.onNuevaPartida});
+  final VoidCallback? onMultijugador;
+  const _ControlesMenu({required this.onNuevaPartida, this.onMultijugador});
   @override
   Widget build(BuildContext context) => Column(
     mainAxisSize: MainAxisSize.min,
@@ -245,7 +271,7 @@ class _ControlesMenu extends StatelessWidget {
                   Icon(Icons.play_arrow_rounded, color: Color(0xFF68EDFF)),
                   SizedBox(width: 10),
                   Text(
-                    'NUEVA PARTIDA',
+                    'UN JUGADOR',
                     style: TextStyle(
                       fontSize: 16,
                       letterSpacing: 2,
@@ -254,6 +280,22 @@ class _ControlesMenu extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+          ),
+        ),
+      ),
+      const SizedBox(height: 10),
+      SizedBox(
+        width: double.infinity,
+        height: 52,
+        child: OutlinedButton.icon(
+          key: const ValueKey('multijugador_menu'),
+          onPressed: onMultijugador,
+          icon: const Icon(Icons.groups),
+          label: const FittedBox(
+            child: Text(
+              'MULTIJUGADOR',
+              style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 2),
             ),
           ),
         ),

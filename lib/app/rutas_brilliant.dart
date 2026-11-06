@@ -18,6 +18,7 @@ abstract final class RutasBrilliant {
     RouteSettings settings, {
     Random? azarPartida,
     Account? cuenta,
+    WidgetBuilder? multijugadorBuilder,
   }) {
     if (settings.arguments case (
       DefinicionTablero definicion,
@@ -41,6 +42,13 @@ abstract final class RutasBrilliant {
       settings: const RouteSettings(name: menu),
       builder: (context) => MenuInicialPage(
         cuenta: cuenta,
+        onMultijugador: multijugadorBuilder == null
+            ? null
+            : () async {
+                await Navigator.of(
+                  context,
+                ).push(MaterialPageRoute<void>(builder: multijugadorBuilder));
+              },
         onNuevaPartida: (tablero, jugador) {
           // MenuBloc evita solicitudes duplicadas. La ruta del menú debe
           // seguir activa al completar la selección del nivel.

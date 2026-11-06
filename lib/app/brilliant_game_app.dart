@@ -2,6 +2,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../auth/auth_cubit.dart';
+import '../multiplayer/rooms_repository.dart';
+import '../presentation/pages/multijugador_page.dart';
 import '../auth/auth_repository.dart';
 import '../server/server_configuration.dart';
 import '../presentation/pages/acceso_page.dart';
@@ -12,6 +14,7 @@ import 'tema_brilliant.dart';
 class BrilliantGameApp extends StatefulWidget {
   final Random? azarPartida;
   final AuthRepository? authRepository;
+  final RoomsRepository? roomsRepository;
   final ServerSettingsStore? serverStore;
   final ServerProbe? serverProbe;
   final AuthRepository Function(Uri)? authRepositoryFactory;
@@ -19,6 +22,7 @@ class BrilliantGameApp extends StatefulWidget {
     super.key,
     this.azarPartida,
     this.authRepository,
+    this.roomsRepository,
     this.serverStore,
     this.serverProbe,
     this.authRepositoryFactory,
@@ -30,6 +34,7 @@ class BrilliantGameApp extends StatefulWidget {
 class _BrilliantGameAppState extends State<BrilliantGameApp>
     with WidgetsBindingObserver {
   AuthRepository? _repository;
+  RoomsRepository? _roomsRepository;
   AuthCubit? _auth;
   late final _store = widget.serverStore ?? PreferencesServerSettingsStore();
   late final _probe = widget.serverProbe ?? HttpServerProbe();
@@ -62,6 +67,8 @@ class _BrilliantGameAppState extends State<BrilliantGameApp>
         widget.authRepositoryFactory?.call(_server) ??
         HttpAuthRepository(baseUrl: _server);
     _auth = AuthCubit(_repository!);
+    _roomsRepository =
+        widget.roomsRepository ?? HttpRoomsRepository(baseUrl: _server);
   }
 
   Future<void> _load() async {
@@ -88,6 +95,7 @@ class _BrilliantGameAppState extends State<BrilliantGameApp>
     if (_auth?.state.session != null || _auth?.state.busy == true) return;
     final previousAuth = _auth;
     final previousRepository = _repository;
+    final previousRoomsRepository = _roomsRepository;
     setState(() {
       _server = address;
       _configured = true;
@@ -97,6 +105,7 @@ class _BrilliantGameAppState extends State<BrilliantGameApp>
     });
     previousAuth?.close();
     if (widget.authRepository == null) previousRepository?.close();
+    if (widget.roomsRepository == null) previousRoomsRepository?.close();
   }
 
   @override
@@ -104,6 +113,7 @@ class _BrilliantGameAppState extends State<BrilliantGameApp>
     WidgetsBinding.instance.removeObserver(this);
     _auth?.close();
     if (widget.authRepository == null) _repository?.close();
+    if (widget.roomsRepository == null) _roomsRepository?.close();
     super.dispose();
   }
 
@@ -158,6 +168,8 @@ class _BrilliantGameAppState extends State<BrilliantGameApp>
                   settings,
                   azarPartida: widget.azarPartida,
                   cuenta: state.session!.user,
+                  multijugadorBuilder: (_) =>
+                      MultijugadorPage(repository: _roomsRepository!),
                 ),
         ),
       ),

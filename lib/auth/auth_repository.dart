@@ -107,11 +107,11 @@ class HttpAuthRepository implements AuthRepository {
       baseUrl.path.replaceFirst(RegExp(r'/+$'), '').endsWith('/api/v1') &&
       (baseUrl.scheme == 'https' || (kDebugMode && baseUrl.scheme == 'http'));
 
-  Future<Map<String, dynamic>?> _send(
+  Future<Map<String, dynamic>?> sendJson(
     String method,
     String path,
     int expected, {
-    Map<String, String>? body,
+    Map<String, Object?>? body,
     String? token,
   }) async {
     if (!_validUrl) throw const AuthFailure('CONFIGURATION_ERROR');
@@ -190,7 +190,7 @@ class HttpAuthRepository implements AuthRepository {
     String username,
     String password,
   ) async {
-    final json = await _send(
+    final json = await sendJson(
       'POST',
       path,
       status,
@@ -233,7 +233,7 @@ class HttpAuthRepository implements AuthRepository {
       _authenticate('auth/login', 200, username, password);
   @override
   Future<AuthSession> refresh(String refreshToken) async => _session(
-    await _send(
+    await sendJson(
       'POST',
       'auth/refresh',
       200,
@@ -243,17 +243,17 @@ class HttpAuthRepository implements AuthRepository {
 
   @override
   Future<void> logout(String accessToken) async {
-    await _send('POST', 'auth/logout', 204, token: accessToken);
+    await sendJson('POST', 'auth/logout', 204, token: accessToken);
   }
 
   @override
   Future<void> checkSession(String accessToken) async {
-    await _send('GET', 'users/me', 200, token: accessToken);
+    await sendJson('GET', 'users/me', 200, token: accessToken);
   }
 
   @override
   Future<void> deleteAccount(String accessToken, String currentPassword) async {
-    await _send(
+    await sendJson(
       'DELETE',
       'users/me',
       204,

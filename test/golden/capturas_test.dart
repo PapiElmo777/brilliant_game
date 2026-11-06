@@ -39,7 +39,7 @@ Future<void> _pulsar(WidgetTester tester, String clave) async {
 }
 
 Future<void> _nuevaPartida(WidgetTester tester) async {
-  await tester.tap(find.text('NUEVA PARTIDA'));
+  await tester.tap(find.text('UN JUGADOR'));
   await tester.pumpAndSettle();
   await _pulsar(tester, 'elegir_tablero_01');
   await tester.pumpAndSettle();

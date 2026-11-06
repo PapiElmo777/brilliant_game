@@ -147,7 +147,7 @@ void main() {
       expect(find.byType(AlertDialog), findsNothing);
       expect(find.byType(PreparacionPage), findsOneWidget);
       await pulsarNivel(tester, find.byTooltip('Volver al menú'));
-      await pulsarNivel(tester, find.text('NUEVA PARTIDA'));
+      await pulsarNivel(tester, find.text('UN JUGADOR'));
       expect(find.byType(SeleccionNivelPage), findsOneWidget);
       await escogerNivel(tester, 3);
       naveDelNivel(tester, 3);

@@ -176,7 +176,7 @@ void main() {
       expect(serverStore.value, url.toString());
       await tap('auth_switch');
       await credentials(username);
-      expect(find.text('NUEVA PARTIDA'), findsOneWidget);
+      expect(find.text('UN JUGADOR'), findsOneWidget);
       // La misma cuenta sobrevive a reiniciar JAR y cliente. El cliente no
       // conserva tokens ni pide nuevamente registro después del reinicio.
       final registeredSession = tester
@@ -196,7 +196,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Iniciar sesión'), findsOneWidget);
       await credentials(username.toLowerCase());
-      expect(find.text('NUEVA PARTIDA'), findsOneWidget);
+      expect(find.text('UN JUGADOR'), findsOneWidget);
       final account = tester
           .element(find.byType(MenuInicialPage))
           .read<AuthCubit>()
@@ -307,7 +307,7 @@ void main() {
       expect(find.text('Cuenta eliminada.'), findsOneWidget);
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
-      expect(find.text('NUEVA PARTIDA'), findsNothing);
+      expect(find.text('UN JUGADOR'), findsNothing);
       await credentials(username);
       expect(find.text('Usuario o contraseña incorrectos.'), findsOneWidget);
       await tester.runAsync(() async {

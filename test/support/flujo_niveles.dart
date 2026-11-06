@@ -71,7 +71,7 @@ Future<void> precargarRecursos(WidgetTester tester) async {
 Future<void> selectorNivel(WidgetTester tester, {Random? dados}) async {
   await iniciarApp(tester, azarPartida: dados);
   await precargarRecursos(tester);
-  await pulsarNivel(tester, find.text('NUEVA PARTIDA'));
+  await pulsarNivel(tester, find.text('UN JUGADOR'));
   expect(find.byType(TextField), findsNothing);
 }
 

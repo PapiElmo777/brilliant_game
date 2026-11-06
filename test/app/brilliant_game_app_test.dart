@@ -8,7 +8,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Iniciar sesión'), findsOneWidget);
-    expect(find.text('NUEVA PARTIDA'), findsNothing);
+    expect(find.text('UN JUGADOR'), findsNothing);
     expect(tester.takeException(), isNull);
     final context = tester.element(find.byKey(const ValueKey('auth_submit')));
     expect(Theme.of(context).brightness, Brightness.dark);

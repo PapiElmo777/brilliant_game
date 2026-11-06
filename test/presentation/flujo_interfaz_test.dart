@@ -16,7 +16,7 @@ Future<void> pulsar(WidgetTester tester, Finder finder) async {
 }
 
 Future<void> nuevaPartida(WidgetTester tester, {String nombre = 'Ana'}) async {
-  await pulsar(tester, find.text('NUEVA PARTIDA'));
+  await pulsar(tester, find.text('UN JUGADOR'));
   await pulsar(tester, find.byKey(const ValueKey('elegir_tablero_01')));
   expect(find.byKey(const ValueKey('campo_nombre')), findsNothing);
 }
@@ -37,7 +37,7 @@ void main() {
       find.byWidgetPredicate((widget) => widget is FilledButton),
       findsNWidgets(2),
     );
-    expect(find.text('NUEVA PARTIDA'), findsOneWidget);
+    expect(find.text('UN JUGADOR'), findsOneWidget);
     expect(find.text('SALIR'), findsNothing);
     await nuevaPartida(tester);
     expect(find.byType(CeldaView), findsNWidgets(49));
@@ -62,7 +62,7 @@ void main() {
     tester,
   ) async {
     await iniciarApp(tester);
-    await pulsar(tester, find.text('NUEVA PARTIDA'));
+    await pulsar(tester, find.text('UN JUGADOR'));
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     expect(find.byType(SeleccionNivelPage), findsNothing);
@@ -146,7 +146,7 @@ void main() {
     await pulsar(tester, find.byKey(const ValueKey('confirmar_salida')));
     expect(find.byType(PartidaPage), findsNothing);
     expect(anterior.isClosed, isTrue);
-    await pulsar(tester, find.text('NUEVA PARTIDA'));
+    await pulsar(tester, find.text('UN JUGADOR'));
     await pulsar(tester, find.byKey(const ValueKey('elegir_tablero_01')));
     expect(find.byKey(const ValueKey('campo_nombre')), findsNothing);
     expect(blocDe(tester).state.numerosFaltantes.length, 6);

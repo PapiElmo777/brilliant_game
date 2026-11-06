@@ -40,21 +40,21 @@ void main() {
     await iniciarApp(tester, repository: repository);
     await tester.pump(const Duration(seconds: 10));
     expect(repository.sessionChecks, 1);
-    expect(find.text('NUEVA PARTIDA'), findsOneWidget);
+    expect(find.text('UN JUGADOR'), findsOneWidget);
     repository.sessionFailure = const AuthFailure(
       'SESSION_INVALID',
       status: 401,
     );
     await tester.pump(const Duration(seconds: 10));
     await tester.pumpAndSettle();
-    expect(find.text('NUEVA PARTIDA'), findsNothing);
+    expect(find.text('UN JUGADOR'), findsNothing);
     expect(
       find.text('La sesión terminó. Inicia sesión de nuevo.'),
       findsOneWidget,
     );
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(find.text('NUEVA PARTIDA'), findsNothing);
+    expect(find.text('UN JUGADOR'), findsNothing);
   });
 
   testWidgets('Comprueba la sesión al volver a primer plano', (tester) async {
