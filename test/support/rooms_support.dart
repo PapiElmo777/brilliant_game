@@ -116,6 +116,19 @@ class FakeRoomsRepository implements RoomsRepository {
       ...snapshot!,
       'room': updated,
       'sequence': (snapshot!['sequence'] as int) + 1,
+      if (path.endsWith('/messages'))
+        'messages': [
+          ...snapshot!['messages'] as List,
+          {
+            'id': id,
+            'sequence': (snapshot!['sequence'] as int) + 1,
+            'kind': 'PLAYER',
+            'text': body['text'],
+            'authorMemberId': 'propio',
+            'authorName': 'Ana',
+            'serverTime': '2026-11-06T00:00:00Z',
+          },
+        ],
       if (path.endsWith('/start'))
         'match': {
           'id': 'partida-1',
@@ -139,6 +152,74 @@ class FakeRoomsRepository implements RoomsRepository {
     return response;
   }
 
+  final channels = <FakeRoomChannel>[];
+  final channelTokens = <String>[];
+  @override
+  Future<RoomChannel> connect(String token, String roomId) async {
+    channelTokens.add(token);
+    final channel = FakeRoomChannel(snapshot!);
+    channels.add(channel);
+    return channel;
+  }
+
+  void publish(Map<String, dynamic> value, {String type = 'READY_CHANGED'}) {
+    snapshot = value;
+    for (final channel in channels.where((c) => !c.closed)) {
+      channel.add(type, value);
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> history(
+    String token,
+    String roomId,
+    int? before,
+  ) async => {'messages': [], 'nextBefore': null};
   @override
   void close() {}
+}
+
+class FakeRoomChannel implements RoomChannel {
+  late final StreamController<Map<String, dynamic>> controller;
+  bool closed = false;
+  int? code;
+  int pings = 0;
+  bool respondToPings = true;
+  FakeRoomChannel(Map<String, dynamic> initial) {
+    controller = StreamController(
+      onListen: () => scheduleMicrotask(() => add('SNAPSHOT', initial)),
+    );
+  }
+  void add(String type, Map<String, dynamic> data) {
+    if (!closed) {
+      controller.add({
+        'protocolVersion': 1,
+        'roomId': data['roomId'],
+        'sequence': data['sequence'],
+        'type': type,
+        'data': data,
+      });
+    }
+  }
+
+  @override
+  Stream<Map<String, dynamic>> get frames => controller.stream;
+  @override
+  int? get closeCode => code;
+  @override
+  void ping() {
+    pings++;
+    if (!closed && respondToPings) controller.add({'type': 'PONG'});
+  }
+
+  @override
+  Future<void> close() async {
+    closed = true;
+    controller.close();
+  }
+
+  void disconnect([int? closeCode]) {
+    code = closeCode;
+    close();
+  }
 }

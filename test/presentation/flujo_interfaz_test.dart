@@ -33,10 +33,9 @@ InicioBloc blocDe(WidgetTester tester) =>
 void main() {
   testWidgets('El menú abre las 49 celdas correctas', (tester) async {
     await iniciarApp(tester);
-    expect(
-      find.byWidgetPredicate((widget) => widget is FilledButton),
-      findsNWidgets(2),
-    );
+    expect(find.byKey(const ValueKey('nueva_partida_menu')), findsOneWidget);
+    expect(find.byKey(const ValueKey('multijugador_menu')), findsOneWidget);
+    expect(find.byKey(const ValueKey('account_menu')), findsOneWidget);
     expect(find.text('UN JUGADOR'), findsOneWidget);
     expect(find.text('SALIR'), findsNothing);
     await nuevaPartida(tester);

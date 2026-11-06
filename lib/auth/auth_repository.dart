@@ -113,6 +113,7 @@ class HttpAuthRepository implements AuthRepository {
     int expected, {
     Map<String, Object?>? body,
     String? token,
+    Map<String, String>? query,
   }) async {
     if (!_validUrl) throw const AuthFailure('CONFIGURATION_ERROR');
     HttpClientRequest? request;
@@ -122,6 +123,7 @@ class HttpAuthRepository implements AuthRepository {
       return await (() async {
         final uri = baseUrl.replace(
           path: '${baseUrl.path.replaceFirst(RegExp(r'/+$'), '')}/$path',
+          queryParameters: query,
         );
         request = await _client.openUrl(method, uri);
         if (timedOut) {

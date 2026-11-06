@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import '../auth/auth_repository.dart';
 
 abstract interface class RoomsRepository {
@@ -9,13 +13,20 @@ abstract interface class RoomsRepository {
     String path,
     Map<String, Object?> body,
   );
+  Future<RoomChannel> connect(String token, String roomId);
+  Future<Map<String, dynamic>> history(
+    String token,
+    String roomId,
+    int? before,
+  );
   void close();
 }
 
 /// Reutiliza las restricciones de origen, TLS, tamaño, timeout y redirecciones.
 class HttpRoomsRepository implements RoomsRepository {
   final HttpAuthRepository _http;
-  HttpRoomsRepository({required Uri baseUrl})
+  final Uri baseUrl;
+  HttpRoomsRepository({required this.baseUrl})
     : _http = HttpAuthRepository(baseUrl: baseUrl);
   @override
   Future<Map<String, dynamic>> list(String token) async =>
@@ -37,6 +48,77 @@ class HttpRoomsRepository implements RoomsRepository {
   ) async =>
       (await _http.sendJson(method, path, 200, token: token, body: body))!;
   @override
+  Future<Map<String, dynamic>> history(
+    String token,
+    String roomId,
+    int? before,
+  ) async => (await _http.sendJson(
+    'GET',
+    'rooms/${Uri.encodeComponent(roomId)}/messages',
+    200,
+    token: token,
+    query: {if (before != null) 'before': '$before'},
+  ))!;
+
+  @override
+  Future<RoomChannel> connect(String token, String roomId) async {
+    if (!baseUrl.hasAuthority ||
+        baseUrl.userInfo.isNotEmpty ||
+        baseUrl.hasQuery ||
+        baseUrl.hasFragment ||
+        !baseUrl.path.replaceFirst(RegExp(r'/+$'), '').endsWith('/api/v1') ||
+        !(baseUrl.scheme == 'https' ||
+            (kDebugMode && baseUrl.scheme == 'http'))) {
+      throw const AuthFailure('CONFIGURATION_ERROR');
+    }
+    final uri = baseUrl.replace(
+      scheme: baseUrl.scheme == 'https' ? 'wss' : 'ws',
+      path:
+          '${baseUrl.path.replaceFirst(RegExp(r'/+$'), '')}/rooms/${Uri.encodeComponent(roomId)}/events',
+    );
+    final client = _ChannelHttpClient(baseUrl);
+    var cancelled = false;
+    try {
+      final socket =
+          await WebSocket.connect(
+                uri.toString(),
+                customClient: client,
+                headers: {HttpHeaders.authorizationHeader: 'Bearer $token'},
+                compression: CompressionOptions.compressionOff,
+              )
+              .then((socket) async {
+                if (cancelled) {
+                  await socket.close();
+                  throw const AuthFailure('NETWORK_ERROR');
+                }
+                return socket;
+              })
+              .timeout(
+                const Duration(seconds: 15),
+                onTimeout: () {
+                  cancelled = true;
+                  client.close(force: true);
+                  throw const AuthFailure('NETWORK_ERROR');
+                },
+              );
+      return IoRoomChannel(socket, client);
+    } on WebSocketException catch (error) {
+      client.close(force: true);
+      throw AuthFailure(
+        error.httpStatusCode == 401
+            ? 'SESSION_INVALID'
+            : error.httpStatusCode == 403
+            ? 'NOT_ROOM_MEMBER'
+            : 'NETWORK_ERROR',
+        status: error.httpStatusCode,
+      );
+    } on IOException {
+      client.close(force: true);
+      throw const AuthFailure('NETWORK_ERROR');
+    }
+  }
+
+  @override
   void close() => _http.close();
 }
 
@@ -57,6 +139,7 @@ class LobbySnapshot {
   final int capacity, revision, sequence;
   final List<RoomMember> members;
   final Map<String, dynamic>? match;
+  final List<RoomMessage> messages;
   LobbySnapshot.fromJson(Map<String, dynamic> json)
     : id = json['roomId'] as String,
       name = (json['room'] as Map)['name'] as String,
@@ -67,6 +150,10 @@ class LobbySnapshot {
       revision = (json['room'] as Map)['revision'] as int,
       sequence = json['sequence'] as int,
       match = json['match'] as Map<String, dynamic>?,
+      messages = List.unmodifiable([
+        for (final m in json['messages'] as List)
+          RoomMessage.fromJson(Map<String, dynamic>.from(m as Map)),
+      ]),
       members = List.unmodifiable([
         for (final m in (json['room'] as Map)['members'] as List)
           RoomMember.fromJson(Map<String, dynamic>.from(m as Map)),
@@ -93,3 +180,79 @@ String roomsError(AuthFailure error) => switch (error.code) {
   'VALIDATION_ERROR' => 'Revisa el nombre de la sala y la capacidad.',
   _ => error.message,
 };
+
+class RoomMessage {
+  final String id, kind, text;
+  final String? authorId, authorName;
+  final int sequence;
+  final DateTime time;
+  RoomMessage.fromJson(Map<String, dynamic> json)
+    : id = json['id'] as String,
+      kind = json['kind'] as String,
+      text = json['text'] as String,
+      authorId = json['authorMemberId'] as String?,
+      authorName = json['authorName'] as String?,
+      sequence = json['sequence'] as int,
+      time = DateTime.parse(json['serverTime'] as String);
+}
+
+abstract interface class RoomChannel {
+  Stream<Map<String, dynamic>> get frames;
+  int? get closeCode;
+  void ping();
+  Future<void> close();
+}
+
+class IoRoomChannel implements RoomChannel {
+  final WebSocket socket;
+  final HttpClient client;
+  IoRoomChannel(this.socket, this.client);
+  @override
+  int? get closeCode => socket.closeCode;
+  @override
+  late final Stream<Map<String, dynamic>> frames = socket.map((frame) {
+    if (frame is! String || utf8.encode(frame).length > 65536) {
+      close();
+      throw const FormatException('Mensaje de canal inválido');
+    }
+    final value = jsonDecode(frame);
+    if (value is! Map<String, dynamic>) {
+      close();
+      throw const FormatException('Mensaje de canal inválido');
+    }
+    return value;
+  });
+  @override
+  void ping() => socket.add('{"type":"PING"}');
+  @override
+  Future<void> close() async {
+    try {
+      await socket.close().timeout(const Duration(seconds: 2));
+    } on Object {
+      // El cierre no debe bloquear la sustitución de un canal sin respuesta.
+    } finally {
+      client.close(force: true);
+    }
+  }
+}
+
+/// WebSocket.connect usa openUrl: impedir redirecciones conserva Bearer en el origen elegido.
+class _ChannelHttpClient implements HttpClient {
+  final HttpClient _client = HttpClient();
+  final Uri origin;
+  _ChannelHttpClient(this.origin);
+  @override
+  Future<HttpClientRequest> openUrl(String method, Uri url) async {
+    if (url.origin != origin.origin || method != 'GET') {
+      throw const AuthFailure('CONFIGURATION_ERROR');
+    }
+    final request = await _client.openUrl(method, url);
+    request.followRedirects = false;
+    return request;
+  }
+
+  @override
+  void close({bool force = false}) => _client.close(force: force);
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}

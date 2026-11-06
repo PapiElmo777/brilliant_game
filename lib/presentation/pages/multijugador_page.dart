@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../auth/auth_cubit.dart';
+import '../widgets/chat_sala.dart';
 import '../../catalogo/catalogo_tableros.dart';
 import '../../core/marcador.dart';
 import '../../multiplayer/rooms_cubit.dart';
@@ -22,6 +23,8 @@ class _MultijugadorPageState extends State<MultijugadorPage>
     with WidgetsBindingObserver {
   late final RoomsCubit _rooms;
   bool _askingLeave = false;
+  final _chatDraft = TextEditingController();
+  bool _chatOpen = false;
   @override
   void initState() {
     super.initState();
@@ -45,6 +48,7 @@ class _MultijugadorPageState extends State<MultijugadorPage>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _rooms.close();
+    _chatDraft.dispose();
     if (widget.closeRepository) widget.repository.close();
     super.dispose();
   }
@@ -85,6 +89,21 @@ class _MultijugadorPageState extends State<MultijugadorPage>
     if (accepted == true && mounted) await _rooms.leave();
   }
 
+  Future<void> _showChat() async {
+    if (_chatOpen) return;
+    _chatOpen = true;
+    _chatDraft.text = _rooms.state.chatDraft;
+    _rooms.setChatOpen(true);
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => ChatSala(rooms: _rooms, draft: _chatDraft),
+    );
+    _chatOpen = false;
+    if (mounted && !_rooms.isClosed) _rooms.setChatOpen(false);
+  }
+
   Future<void> _create() async {
     final result = await showDialog<(String, int)>(
       context: context,
@@ -94,14 +113,20 @@ class _MultijugadorPageState extends State<MultijugadorPage>
   }
 
   @override
-  Widget build(BuildContext context) => BlocBuilder<RoomsCubit, RoomsState>(
+  Widget build(BuildContext context) => BlocConsumer<RoomsCubit, RoomsState>(
     bloc: _rooms,
+    listener: (context, state) {
+      if (state.lobby == null && _chatOpen) Navigator.of(context).pop();
+    },
     builder: (context, state) {
       final lobby = state.lobby;
       final userId = context.read<AuthCubit>().state.session?.user.id;
       final own = lobby?.members.where((m) => m.userId == userId).firstOrNull;
       final host = own != null && own.id == lobby?.hostId;
-      final enabled = !state.busy && !state.uncertain;
+      final enabled =
+          !state.busy &&
+          !state.uncertain &&
+          (lobby == null || state.channelConnected);
       final inLobby = lobby?.state == 'LOBBY';
       return PopScope(
         canPop: lobby == null && !state.busy && !state.uncertain,
@@ -123,7 +148,7 @@ class _MultijugadorPageState extends State<MultijugadorPage>
             actions: [
               IconButton(
                 tooltip: 'Actualizar',
-                onPressed: enabled ? _rooms.refresh : null,
+                onPressed: state.busy ? null : _rooms.refresh,
                 icon: const Icon(Icons.refresh),
               ),
             ],
@@ -134,6 +159,14 @@ class _MultijugadorPageState extends State<MultijugadorPage>
                 constraints: const BoxConstraints(maxWidth: 900),
                 child: Column(
                   children: [
+                    if (lobby != null && !state.channelConnected)
+                      const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Text(
+                          'Reconectando con la sala…',
+                          key: ValueKey('estado_canal'),
+                        ),
+                      ),
                     if (state.busy || state.loading)
                       const LinearProgressIndicator(),
                     if (state.error != null)
@@ -171,50 +204,72 @@ class _MultijugadorPageState extends State<MultijugadorPage>
               : SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.all(12),
-                    child: inLobby
-                        ? FilledButton.icon(
-                            key: ValueKey(host ? 'iniciar_sala' : 'listo_sala'),
-                            onPressed: !enabled || own == null
-                                ? null
-                                : host
-                                ? lobby.members.length >= 2 &&
-                                          lobby.levelId != null &&
-                                          lobby.members.every(
-                                            (m) =>
-                                                m.connected &&
-                                                (m.id == lobby.hostId ||
-                                                    m.ready),
-                                          )
-                                      ? _rooms.startMatch
-                                      : null
-                                : () => _rooms.ready(!own.ready),
-                            icon: Icon(
-                              host
-                                  ? Icons.rocket_launch
-                                  : own?.ready == true
-                                  ? Icons.undo
-                                  : Icons.check,
-                            ),
-                            label: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              child: Text(
-                                host
-                                    ? 'Iniciar partida'
-                                    : own?.ready == true
-                                    ? 'Quitar Listo'
-                                    : 'Listo',
-                              ),
-                            ),
-                          )
-                        : Text(
-                            'Preparación · ${lobby.match?['target'] ?? ''} puntos para ganar',
-                            textAlign: TextAlign.center,
-                          ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: inLobby
+                              ? FilledButton.icon(
+                                  key: ValueKey(
+                                    host ? 'iniciar_sala' : 'listo_sala',
+                                  ),
+                                  onPressed: !enabled || own == null
+                                      ? null
+                                      : host
+                                      ? lobby.members.length >= 2 &&
+                                                lobby.levelId != null &&
+                                                lobby.members.every(
+                                                  (m) =>
+                                                      m.connected &&
+                                                      (m.id == lobby.hostId ||
+                                                          m.ready),
+                                                )
+                                            ? _rooms.startMatch
+                                            : null
+                                      : () => _rooms.ready(!own.ready),
+                                  icon: Icon(
+                                    host
+                                        ? Icons.rocket_launch
+                                        : own?.ready == true
+                                        ? Icons.undo
+                                        : Icons.check,
+                                  ),
+                                  label: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    child: Text(
+                                      host
+                                          ? 'Iniciar partida'
+                                          : own?.ready == true
+                                          ? 'Quitar Listo'
+                                          : 'Listo',
+                                    ),
+                                  ),
+                                )
+                              : Text(
+                                  'Preparación · ${lobby.match?['target'] ?? ''} puntos para ganar',
+                                  textAlign: TextAlign.center,
+                                ),
+                        ),
+                        const SizedBox(width: 12),
+                        _chatButton(state),
+                      ],
+                    ),
                   ),
                 ),
         ),
       );
     },
+  );
+  Widget _chatButton(RoomsState state) => FloatingActionButton(
+    key: const ValueKey('abrir_chat'),
+    tooltip: 'Chat de la sala',
+    onPressed: _showChat,
+    child: Badge(
+      isLabelVisible: state.unread > 0,
+      label: Text('${state.unread}'),
+      child: const Icon(Icons.chat_bubble_outline),
+    ),
   );
   Widget _list(RoomsState state, bool enabled) => ListView(
     padding: const EdgeInsets.all(16),

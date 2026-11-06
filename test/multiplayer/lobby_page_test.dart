@@ -51,10 +51,13 @@ void main() {
             .onPressed,
         isNull,
       );
-      rooms.snapshot = lobbyJson(
-        levelId: 'tablero_02',
-        revision: 1,
-        guestReady: true,
+      rooms.publish(
+        lobbyJson(
+          levelId: 'tablero_02',
+          revision: 1,
+          sequence: 4,
+          guestReady: true,
+        ),
       );
       await tester.pump(const Duration(seconds: 3));
       await tester.pumpAndSettle();
