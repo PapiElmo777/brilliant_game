@@ -137,6 +137,7 @@ class LobbySnapshot {
   final String id, name, state;
   final String? hostId, levelId;
   final int capacity, revision, sequence;
+  final DateTime serverTime;
   final List<RoomMember> members;
   final Map<String, dynamic>? match;
   final List<RoomMessage> messages;
@@ -149,6 +150,7 @@ class LobbySnapshot {
       capacity = (json['room'] as Map)['capacity'] as int,
       revision = (json['room'] as Map)['revision'] as int,
       sequence = json['sequence'] as int,
+      serverTime = DateTime.parse(json['serverTime'] as String),
       match = json['match'] as Map<String, dynamic>?,
       messages = List.unmodifiable([
         for (final m in json['messages'] as List)
@@ -160,7 +162,65 @@ class LobbySnapshot {
       ]);
 }
 
+class OnlineMatch {
+  final String id, levelId, state;
+  final int target;
+  final Map<String, int> board;
+  final bool prepared;
+  final Set<String> preparedIds;
+  final OnlineRound? round;
+  OnlineMatch.fromJson(Map<String, dynamic> json)
+    : id = json['id'] as String,
+      levelId = json['levelId'] as String,
+      state = json['state'] as String,
+      target = json['target'] as int,
+      board = Map.unmodifiable(
+        (json['ownBoard'] as Map? ?? {}).map(
+          (key, value) => MapEntry(key as String, value as int),
+        ),
+      ),
+      prepared = json['ownPreparationConfirmed'] == true,
+      preparedIds = Set.unmodifiable(
+        (json['preparedMemberIds'] as List? ?? []).cast<String>(),
+      ),
+      round = json['round'] == null
+          ? null
+          : OnlineRound.fromJson(
+              Map<String, dynamic>.from(json['round'] as Map),
+            );
+}
+
+class OnlineRound {
+  final String id;
+  final int number;
+  final List<int> dice;
+  final DateTime deadline;
+  final Set<String> resolvedIds;
+  final Map<String, dynamic>? ownAction;
+  OnlineRound.fromJson(Map<String, dynamic> json)
+    : id = json['id'] as String,
+      number = json['number'] as int,
+      dice = List.unmodifiable((json['dice'] as List).cast<int>()),
+      deadline = DateTime.parse(json['deadline'] as String),
+      resolvedIds = Set.unmodifiable(
+        (json['resolvedMemberIds'] as List).cast<String>(),
+      ),
+      ownAction = json['ownAction'] == null
+          ? null
+          : Map<String, dynamic>.from(json['ownAction'] as Map);
+}
+
 String roomsError(AuthFailure error) => switch (error.code) {
+  'INVALID_PREPARATION' =>
+    'Coloca una vez cada número del 1 al 6 en las casillas iniciales.',
+  'PREPARATION_ALREADY_CONFIRMED' ||
+  'PREPARATION_CLOSED' => 'La preparación ya fue confirmada.',
+  'INVALID_MOVE' =>
+    'Esa colocación no cumple las reglas de la zona o del ancla.',
+  'ROUND_EXPIRED' => 'La ronda terminó. Espera el estado actualizado.',
+  'ACTION_ALREADY_RESOLVED' => 'Ya confirmaste u omitiste esta ronda.',
+  'PREPARATION_PENDING' => 'Aún faltan preparaciones por confirmar.',
+  'NOT_MATCH_PARTICIPANT' => 'No perteneces a esta partida.',
   'ROOM_FULL' => 'La sala está llena.',
   'ROOM_ALREADY_STARTED' => 'La partida ya comenzó.',
   'ALREADY_IN_ROOM' =>

@@ -1,12 +1,16 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
+import 'package:brilliant_game/catalogo/catalogo_tableros.dart';
+import 'package:brilliant_game/core/preparacion_inicial.dart';
+import 'package:brilliant_game/core/anclas.dart';
 import 'package:brilliant_game/auth/auth_repository.dart';
 import 'package:brilliant_game/multiplayer/rooms_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
-    'Siete clientes Dart contra JAR: eventos, chat, reconexión y preparación',
+    'Siete clientes Dart contra JAR: preparación privada y rondas comunes',
     () async {
       final directory = await Directory.systemTemp.createTemp(
         'brilliant-rooms-e2e-',
@@ -232,6 +236,149 @@ void main() {
         );
         await isolated.close();
         await otherSubscription.cancel();
+        final preparedBoards = <Map<String, int>>[];
+        for (var i = 0; i < 6; i++) {
+          final preparation = PreparacionInicial(
+            CatalogoTableros.predeterminado().crearTablero('tablero_02'),
+          );
+          for (final (cell, value) in preparation.distribucionAleatoria(
+            Random(i + 17),
+          )) {
+            preparation.colocarValor(cell, value);
+          }
+          preparedBoards.add({
+            for (final c in preparation.celdas.values)
+              if (c.valor != null) c.id: c.valor!,
+          });
+        }
+        for (var actor = 0; actor < 6; actor++) {
+          final accepted = await send(
+            actor,
+            'PUT',
+            'matches/${(started['data'] as Map)['match']['id']}/preparation',
+            {'placements': preparedBoards[actor]},
+          );
+          expect(
+            (accepted['data'] as Map)['match']['ownBoard'],
+            preparedBoards[actor],
+          );
+          for (var viewer = 0; viewer < 6; viewer++) {
+            final event = await next(viewer, 'PREPARATION_CONFIRMED');
+            expect(
+              (event['data'] as Map)['match']['ownBoard'],
+              viewer <= actor ? preparedBoards[viewer] : <String, int>{},
+            );
+          }
+        }
+        Map<String, dynamic>? commonRound;
+        for (var viewer = 0; viewer < 6; viewer++) {
+          final event = await next(viewer, 'ROUND_STARTED');
+          final game = (event['data'] as Map)['match'] as Map;
+          expect(game['ownBoard'], preparedBoards[viewer]);
+          final round = Map<String, dynamic>.from(game['round'] as Map);
+          if (commonRound == null) {
+            commonRound = round;
+          } else {
+            expect(round, commonRound);
+          }
+          expect(
+            DateTime.parse(
+              round['deadline'] as String,
+            ).difference(DateTime.parse(round['startedAt'] as String)),
+            const Duration(seconds: 60),
+          );
+        }
+        final matchId = (started['data'] as Map)['match']['id'] as String;
+        final roundId = commonRound!['id'] as String;
+        final dice = (commonRound['dice'] as List).cast<int>();
+        int? placingPlayer, selectedDie;
+        String? destination;
+        for (var player = 0; player < 6 && placingPlayer == null; player++) {
+          final board = CatalogoTableros.predeterminado().crearTablero(
+            'tablero_02',
+          );
+          for (final e in preparedBoards[player].entries) {
+            board.colocarValor(e.key, e.value);
+          }
+          for (var die = 0; die < 2; die++) {
+            final legal = destinosConAncla(board, dice[die], dice[1 - die]);
+            if (legal.isNotEmpty) {
+              placingPlayer = player;
+              selectedDie = die;
+              destination = legal.first;
+              break;
+            }
+          }
+        }
+        expect(placingPlayer, isNotNull);
+        final order = [
+          placingPlayer!,
+          for (var i = 0; i < 6; i++)
+            if (i != placingPlayer) i,
+        ];
+        for (final player in order) {
+          await send(
+            player,
+            'POST',
+            'matches/$matchId/rounds/$roundId/actions',
+            player == placingPlayer
+                ? {
+                    'kind': 'PLACE',
+                    'dieIndex': selectedDie,
+                    'cellId': destination,
+                  }
+                : {'kind': 'SKIP'},
+          );
+          if (player == placingPlayer) {
+            preparedBoards[player][destination!] = dice[selectedDie!];
+          }
+          for (var viewer = 0; viewer < 6; viewer++) {
+            final event = await next(viewer, 'ACTION_RESOLVED');
+            expect(
+              (event['data'] as Map)['match']['ownBoard'],
+              preparedBoards[viewer],
+            );
+          }
+        }
+        Map<String, dynamic>? secondRound;
+        for (var viewer = 0; viewer < 6; viewer++) {
+          final event = await next(viewer, 'ROUND_STARTED');
+          final game = (event['data'] as Map)['match'] as Map;
+          expect(game['ownBoard'], preparedBoards[viewer]);
+          final round = Map<String, dynamic>.from(game['round'] as Map);
+          expect(round['number'], 2);
+          expect(round['id'], isNot(roundId));
+          if (secondRound == null) {
+            secondRound = round;
+          } else {
+            expect(round, secondRound);
+          }
+        }
+        await expectLater(
+          send(0, 'POST', 'matches/$matchId/rounds/$roundId/actions', {
+            'kind': 'SKIP',
+          }),
+          throwsA(
+            isA<AuthFailure>().having((e) => e.code, 'code', 'ROUND_EXPIRED'),
+          ),
+        );
+        await channels[placingPlayer].close();
+        await inboxes[placingPlayer].cancel();
+        final recovered = await rooms[placingPlayer].connect(
+          sessions[placingPlayer].accessToken,
+          id,
+        );
+        channels[placingPlayer] = recovered;
+        inboxes[placingPlayer] = StreamIterator(recovered.frames);
+        final recoveredFrame = await next(placingPlayer, 'SNAPSHOT');
+        expect(
+          (recoveredFrame['data'] as Map)['match']['ownBoard'],
+          preparedBoards[placingPlayer],
+        );
+        expect(
+          (recoveredFrame['data'] as Map)['match']['round']['id'],
+          secondRound!['id'],
+        );
         await auth[0].logout(sessions[0].accessToken);
         final transferred = await rooms[1].get(sessions[1].accessToken, id);
         expect((transferred['room'] as Map)['members'], hasLength(5));

@@ -137,6 +137,38 @@ class FakeRoomsRepository implements RoomsRepository {
           'levelId': updated['levelId'],
         },
     };
+    if (path.endsWith('/preparation')) {
+      final game = Map<String, dynamic>.from(snapshot!['match'] as Map);
+      game['ownBoard'] = Map<String, Object?>.from(body['placements'] as Map);
+      game['ownPreparationConfirmed'] = true;
+      game['preparedMemberIds'] = [
+        ...game['preparedMemberIds'] as List? ?? [],
+        'propio',
+      ];
+      snapshot = {...snapshot!, 'match': game};
+    }
+    if (path.endsWith('/actions')) {
+      final game = Map<String, dynamic>.from(snapshot!['match'] as Map);
+      final round = Map<String, dynamic>.from(game['round'] as Map);
+      round['ownAction'] = {
+        'kind': body['kind'],
+        'dieIndex': body['dieIndex'],
+        'cellId': body['cellId'],
+        'reason': 'PLAYER',
+      };
+      round['resolvedMemberIds'] = [
+        ...round['resolvedMemberIds'] as List,
+        'propio',
+      ];
+      if (body['kind'] == 'PLACE') {
+        game['ownBoard'] = {
+          ...game['ownBoard'] as Map,
+          body['cellId']: (round['dice'] as List)[body['dieIndex'] as int],
+        };
+      }
+      game['round'] = round;
+      snapshot = {...snapshot!, 'match': game};
+    }
     final response = <String, dynamic>{
       'commandId': id,
       'roomId': 'sala-1',
@@ -223,3 +255,56 @@ class FakeRoomChannel implements RoomChannel {
     close();
   }
 }
+
+Map<String, int> onlinePreparation() => {
+  'f1_c2': 1,
+  'f2_c6': 2,
+  'f4_c2': 3,
+  'f4_c5': 4,
+  'f6_c3': 5,
+  'f7_c5': 6,
+};
+Map<String, dynamic> onlineSnapshot({
+  bool prepared = false,
+  bool playing = false,
+  bool resolved = false,
+  int roundNumber = 1,
+  Map<String, int>? board,
+  int sequence = 5,
+}) => {
+  ...lobbyJson(
+    state: playing ? 'PLAYING' : 'PREPARING',
+    levelId: 'tablero_01',
+    sequence: sequence,
+  ),
+  'serverTime': '2026-11-06T00:00:00Z',
+  'match': {
+    'id': 'partida-1',
+    'state': playing ? 'ROUND_ACTIVE' : 'PREPARING',
+    'levelId': 'tablero_01',
+    'target': 26,
+    'participants': [],
+    'preparedMemberIds': prepared ? ['propio', 'otro'] : [],
+    'ownBoard': board ?? (prepared ? onlinePreparation() : <String, int>{}),
+    'ownPreparationConfirmed': prepared,
+    'round': !playing
+        ? null
+        : {
+            'id': 'ronda-$roundNumber',
+            'number': roundNumber,
+            'dice': [1, 2],
+            'startedAt': '2026-11-06T00:00:00Z',
+            'deadline': '2026-11-06T00:01:00Z',
+            'resolvedMemberIds': resolved ? ['propio'] : [],
+            'ownAction': resolved
+                ? {
+                    'kind': 'SKIP',
+                    'reason': 'PLAYER',
+                    'dieIndex': null,
+                    'cellId': null,
+                  }
+                : null,
+          },
+    'result': null,
+  },
+};

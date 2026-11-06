@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../auth/auth_cubit.dart';
 import '../widgets/chat_sala.dart';
+import '../widgets/partida_en_linea.dart';
 import '../../catalogo/catalogo_tableros.dart';
 import '../../core/marcador.dart';
 import '../../multiplayer/rooms_cubit.dart';
@@ -128,6 +129,9 @@ class _MultijugadorPageState extends State<MultijugadorPage>
           !state.uncertain &&
           (lobby == null || state.channelConnected);
       final inLobby = lobby?.state == 'LOBBY';
+      final game = lobby?.match == null
+          ? null
+          : OnlineMatch.fromJson(lobby!.match!);
       return PopScope(
         canPop: lobby == null && !state.busy && !state.uncertain,
         onPopInvokedWithResult: (didPop, _) {
@@ -136,6 +140,20 @@ class _MultijugadorPageState extends State<MultijugadorPage>
         child: Scaffold(
           appBar: AppBar(
             title: Text(lobby?.name ?? 'Multijugador'),
+            bottom: game?.round == null
+                ? null
+                : PreferredSize(
+                    preferredSize: const Size.fromHeight(36),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: FittedBox(
+                        child: Text(
+                          'Ronda ${game!.round!.number} · ${state.secondsRemaining ?? 0} s',
+                          key: const ValueKey('reloj_online'),
+                        ),
+                      ),
+                    ),
+                  ),
             leading: BackButton(
               onPressed: () {
                 if (lobby == null) {
@@ -192,7 +210,14 @@ class _MultijugadorPageState extends State<MultijugadorPage>
                     Expanded(
                       child: lobby == null
                           ? _list(state, enabled)
-                          : _lobby(lobby, host && enabled && inLobby, userId),
+                          : game == null
+                          ? _lobby(lobby, host && enabled && inLobby, userId)
+                          : PartidaEnLinea(
+                              key: ValueKey(game.id),
+                              lobby: lobby,
+                              state: state,
+                              rooms: _rooms,
+                            ),
                     ),
                   ],
                 ),
@@ -247,7 +272,12 @@ class _MultijugadorPageState extends State<MultijugadorPage>
                                   ),
                                 )
                               : Text(
-                                  'Preparación · ${lobby.match?['target'] ?? ''} puntos para ganar',
+                                  game?.round?.ownAction != null
+                                      ? 'Ronda resuelta · esperando'
+                                      : game?.prepared == true &&
+                                            game?.round == null
+                                      ? 'Preparación confirmada'
+                                      : 'Meta ${lobby.match?['target'] ?? ''} puntos',
                                   textAlign: TextAlign.center,
                                 ),
                         ),

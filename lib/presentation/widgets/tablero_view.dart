@@ -18,6 +18,7 @@ class TableroView extends StatefulWidget {
   /// En partida, permite tocar cualquier celda para que el BLoC informe si el
   /// destino no es válido.
   final bool interactiva;
+  final String? celdaPropuesta;
 
   /// Puestos ya reclamados de cada zona completada.
   final Map<String, int> puestosReclamados;
@@ -31,6 +32,7 @@ class TableroView extends StatefulWidget {
   }) : celdasPartida = null,
        destinos = const {},
        interactiva = true,
+       celdaPropuesta = null,
        puestosReclamados = const {};
 
   const TableroView.partida({
@@ -40,6 +42,7 @@ class TableroView extends StatefulWidget {
     required this.destinos,
     required this.onCeldaSeleccionada,
     this.interactiva = true,
+    this.celdaPropuesta,
     this.puestosReclamados = const {},
   }) : estado = null,
        celdasPartida = celdas,
@@ -126,7 +129,9 @@ class _TableroViewState extends State<TableroView> {
                       celda: celda,
                       tipo: zona.tipo,
                       esDestino: widget.destinos.contains(celda.id),
-                      seleccionada: estado?.celdaSeleccionada == celda.id,
+                      seleccionada:
+                          estado?.celdaSeleccionada == celda.id ||
+                          widget.celdaPropuesta == celda.id,
                       enPartida: estado == null,
                       pista: estado == null
                           ? null

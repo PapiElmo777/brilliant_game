@@ -16,6 +16,7 @@ class RoomsState {
       loadingHistory;
   final List<RoomMessage> messages;
   final int unread, chatCooldown;
+  final int? secondsRemaining;
   final String chatDraft;
   final bool hasMoreHistory;
   final String? error;
@@ -34,6 +35,7 @@ class RoomsState {
     this.hasMoreHistory = true,
     this.chatDraft = '',
     this.chatCooldown = 0,
+    this.secondsRemaining,
   });
 }
 
@@ -50,6 +52,9 @@ class RoomsCubit extends Cubit<RoomsState> {
   final DateTime Function() now;
   final Random _random = Random.secure();
   Timer? _poll, _heartbeat, _reconnect, _cooldownTimer;
+  Timer? _roundTicker;
+  final _serverWatch = Stopwatch();
+  DateTime? _serverBase;
   StreamSubscription<AuthState>? _authSubscription;
   StreamSubscription<Map<String, dynamic>>? _frames;
   RoomChannel? _channel;
@@ -110,8 +115,19 @@ class RoomsCubit extends Cubit<RoomsState> {
         hasMoreHistory: _hasMore,
         chatDraft: _draft,
         chatCooldown: _cooldown,
+        secondsRemaining: _remaining(update.lobby),
       ),
     );
+  }
+
+  int? _remaining(LobbySnapshot? snapshot) {
+    if (snapshot?.match == null) return null;
+    final round = OnlineMatch.fromJson(snapshot!.match!).round;
+    if (round == null || _serverBase == null) return null;
+    final remaining = round.deadline.difference(
+      _serverBase!.add(_serverWatch.elapsed),
+    );
+    return ((remaining.inMilliseconds + 999) ~/ 1000).clamp(0, 60);
   }
 
   void _status({String? error}) => _publish(
@@ -125,6 +141,10 @@ class RoomsCubit extends Cubit<RoomsState> {
   );
   void startPolling() {
     _active = true;
+    _roundTicker?.cancel();
+    _roundTicker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (state.lobby?.match?['round'] != null) _status();
+    });
     _poll?.cancel();
     _poll = Timer.periodic(const Duration(seconds: 3), (_) {
       if (state.lobby == null) {
@@ -138,6 +158,7 @@ class RoomsCubit extends Cubit<RoomsState> {
 
   void pausePolling() {
     _active = false;
+    _roundTicker?.cancel();
     _poll?.cancel();
     _reconnect?.cancel();
     _stopChannel();
@@ -190,6 +211,15 @@ class RoomsCubit extends Cubit<RoomsState> {
         incoming.sequence < old.sequence) {
       return old;
     }
+    final estimated = _serverBase?.add(_serverWatch.elapsed);
+    if (estimated == null ||
+        incoming.serverTime.isAfter(estimated) ||
+        old?.id != incoming.id) {
+      _serverBase = incoming.serverTime;
+      _serverWatch
+        ..reset()
+        ..start();
+    }
     if (old?.id != incoming.id) {
       _messages.clear();
       _unread = 0;
@@ -214,6 +244,8 @@ class RoomsCubit extends Cubit<RoomsState> {
   }
 
   void _clearLobby() {
+    ++_generation;
+    _pending = null;
     _stopChannel();
     _reconnect?.cancel();
     _messages.clear();
@@ -271,8 +303,8 @@ class RoomsCubit extends Cubit<RoomsState> {
         RoomsState(
           lobby: gone ? null : state.lobby,
           rooms: state.rooms,
-          busy: state.busy,
-          uncertain: state.uncertain,
+          busy: !gone && state.busy,
+          uncertain: !gone && state.uncertain,
           error: roomsError(e),
         ),
       );
@@ -593,6 +625,26 @@ class RoomsCubit extends Cubit<RoomsState> {
     }
   }
 
+  Future<void> confirmPreparation(
+    String matchId,
+    Map<String, int> placements,
+  ) => _send('PUT', 'matches/$matchId/preparation', {
+    'placements': Map<String, int>.unmodifiable(placements),
+  });
+  Future<void> confirmAction(
+    String matchId,
+    String roundId, {
+    int? dieIndex,
+    String? cellId,
+  }) {
+    if (state.secondsRemaining == 0) return Future.value();
+    return _send('POST', 'matches/$matchId/rounds/$roundId/actions', {
+      'kind': dieIndex == null ? 'SKIP' : 'PLACE',
+      'dieIndex': ?dieIndex,
+      if (dieIndex != null) 'cellId': cellId,
+    });
+  }
+
   Future<void> create(String name, int capacity) =>
       _send('POST', 'rooms', {'name': name, 'capacity': capacity});
   Future<void> join(String id) =>
@@ -650,6 +702,7 @@ class RoomsCubit extends Cubit<RoomsState> {
   Future<void> close() {
     ++_generation;
     _active = false;
+    _roundTicker?.cancel();
     _poll?.cancel();
     _reconnect?.cancel();
     _cooldownTimer?.cancel();
