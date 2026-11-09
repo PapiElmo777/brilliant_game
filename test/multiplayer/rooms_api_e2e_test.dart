@@ -10,7 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
-    'Siete clientes Dart contra JAR: preparación privada y rondas comunes',
+    'Siete clientes Dart contra JAR: rondas, premios privados y victoria por abandono',
     () async {
       final directory = await Directory.systemTemp.createTemp(
         'brilliant-rooms-e2e-',
@@ -379,10 +379,117 @@ void main() {
           (recoveredFrame['data'] as Map)['match']['round']['id'],
           secondRound!['id'],
         );
+        // Play legal decisions from Dart until Java awards a real shared zone.
+        var liveRound = secondRound;
+        List<dynamic> earnedClaims = [];
+        for (var turn = 0; turn < 80 && earnedClaims.isEmpty; turn++) {
+          for (final channel in channels.take(6)) {
+            channel.ping();
+          }
+          final currentDice = (liveRound['dice'] as List).cast<int>();
+          for (var player = 0; player < 6; player++) {
+            final board = CatalogoTableros.predeterminado().crearTablero(
+              'tablero_02',
+            );
+            for (final e in preparedBoards[player].entries) {
+              board.colocarValor(e.key, e.value);
+            }
+            final choices = <(int, String)>[];
+            for (var die = 0; die < 2; die++) {
+              for (final cell in destinosConAncla(
+                board,
+                currentDice[die],
+                currentDice[1 - die],
+              )) {
+                choices.add((die, cell));
+              }
+            }
+            choices.sort(
+              (a, b) => board
+                  .obtenerZonaDeCelda(a.$2)
+                  .celdas
+                  .values
+                  .where((c) => c.valor == null)
+                  .length
+                  .compareTo(
+                    board
+                        .obtenerZonaDeCelda(b.$2)
+                        .celdas
+                        .values
+                        .where((c) => c.valor == null)
+                        .length,
+                  ),
+            );
+            final choice = choices.firstOrNull;
+            final accepted = await send(
+              player,
+              'POST',
+              'matches/$matchId/rounds/${liveRound['id']}/actions',
+              choice == null
+                  ? {'kind': 'SKIP'}
+                  : {
+                      'kind': 'PLACE',
+                      'dieIndex': choice.$1,
+                      'cellId': choice.$2,
+                    },
+            );
+            if (choice != null) {
+              preparedBoards[player][choice.$2] = currentDice[choice.$1];
+            }
+            final acceptedGame = (accepted['data'] as Map)['match'] as Map;
+            earnedClaims = acceptedGame['claims'] as List;
+            for (var viewer = 0; viewer < 6; viewer++) {
+              final frame = await next(viewer, 'ACTION_RESOLVED');
+              expect(
+                (frame['data'] as Map)['match']['ownBoard'],
+                preparedBoards[viewer],
+              );
+            }
+          }
+          Map<String, dynamic>? shared;
+          for (var viewer = 0; viewer < 6; viewer++) {
+            final frame = await next(viewer, 'ROUND_STARTED');
+            final game = (frame['data'] as Map)['match'] as Map;
+            expect(game['ownBoard'], preparedBoards[viewer]);
+            expect(game['claims'], earnedClaims);
+            final round = Map<String, dynamic>.from(game['round'] as Map);
+            if (shared == null) {
+              shared = round;
+            } else {
+              expect(round, shared);
+            }
+            final scores = game['scores'] as List;
+            expect(
+              scores.fold<int>(0, (total, s) => total + (s['points'] as int)),
+              earnedClaims.fold<int>(
+                0,
+                (total, c) => total + (c['points'] as int),
+              ),
+            );
+          }
+          liveRound = shared!;
+        }
+        expect(
+          earnedClaims,
+          isNotEmpty,
+          reason: 'Las decisiones legales deben completar una zona real.',
+        );
         await auth[0].logout(sessions[0].accessToken);
         final transferred = await rooms[1].get(sessions[1].accessToken, id);
         expect((transferred['room'] as Map)['members'], hasLength(5));
         expect((transferred['match'] as Map)['target'], 20);
+        expect((transferred['match'] as Map)['claims'], earnedClaims);
+        for (var leaver = 1; leaver < 5; leaver++) {
+          await send(leaver, 'POST', 'rooms/$id/leave');
+        }
+        final finished = await next(5, 'MATCH_FINISHED');
+        final finalGame = (finished['data'] as Map)['match'] as Map;
+        expect(finalGame['state'], 'FINISHED');
+        expect(finalGame['result']['reason'], 'ABANDONMENT');
+        expect(finalGame['result']['ranking'][0]['username'], 'Piloto5');
+        expect(finalGame['claims'], earnedClaims);
+        final restoredResult = await rooms[5].get(sessions[5].accessToken, id);
+        expect((restoredResult['match'] as Map)['result'], finalGame['result']);
       } finally {
         for (final channel in channels) {
           await channel.close();

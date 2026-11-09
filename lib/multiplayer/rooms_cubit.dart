@@ -122,9 +122,14 @@ class RoomsCubit extends Cubit<RoomsState> {
 
   int? _remaining(LobbySnapshot? snapshot) {
     if (snapshot?.match == null) return null;
-    final round = OnlineMatch.fromJson(snapshot!.match!).round;
-    if (round == null || _serverBase == null) return null;
-    final remaining = round.deadline.difference(
+    final game = OnlineMatch.fromJson(snapshot!.match!);
+    final deadline = game.state == 'END_VOTE'
+        ? DateTime.parse(game.endVote!['deadline'] as String)
+        : game.state == 'ROUND_ACTIVE'
+        ? game.round?.deadline
+        : null;
+    if (deadline == null || _serverBase == null) return null;
+    final remaining = deadline.difference(
       _serverBase!.add(_serverWatch.elapsed),
     );
     return ((remaining.inMilliseconds + 999) ~/ 1000).clamp(0, 60);
@@ -143,7 +148,7 @@ class RoomsCubit extends Cubit<RoomsState> {
     _active = true;
     _roundTicker?.cancel();
     _roundTicker = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (state.lobby?.match?['round'] != null) _status();
+      if (state.lobby?.match != null) _status();
     });
     _poll?.cancel();
     _poll = Timer.periodic(const Duration(seconds: 3), (_) {
@@ -642,6 +647,14 @@ class RoomsCubit extends Cubit<RoomsState> {
       'kind': dieIndex == null ? 'SKIP' : 'PLACE',
       'dieIndex': ?dieIndex,
       if (dieIndex != null) 'cellId': cellId,
+    });
+  }
+
+  Future<void> castBallot(String matchId, String voteId, bool approve) {
+    if (state.secondsRemaining == 0) return Future.value();
+    return _send('PUT', 'matches/$matchId/end-vote/ballot', {
+      'voteId': voteId,
+      'approve': approve,
     });
   }
 

@@ -24,7 +24,7 @@ void main() {
         (tester) async {
           pantallaNivel(tester, size: size, escala: 1.5);
           final repo = FakeRoomsRepository()
-            ..snapshot = onlineSnapshot(prepared: playing, playing: playing);
+            ..snapshot = playing ? scoredSnapshot() : onlineSnapshot();
           await openRooms(tester, repo);
           await precargarRecursos(tester);
           await tester.pumpAndSettle();

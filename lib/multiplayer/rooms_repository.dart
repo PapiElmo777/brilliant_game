@@ -169,6 +169,8 @@ class OnlineMatch {
   final bool prepared;
   final Set<String> preparedIds;
   final OnlineRound? round;
+  final List<Map<String, dynamic>> scores, claims, zones;
+  final Map<String, dynamic>? endVote, result;
   OnlineMatch.fromJson(Map<String, dynamic> json)
     : id = json['id'] as String,
       levelId = json['levelId'] as String,
@@ -183,12 +185,26 @@ class OnlineMatch {
       preparedIds = Set.unmodifiable(
         (json['preparedMemberIds'] as List? ?? []).cast<String>(),
       ),
+      scores = _objects(json['scores']),
+      claims = _objects(json['claims']),
+      zones = _objects(json['zones']),
+      endVote = json['endVote'] == null
+          ? null
+          : Map<String, dynamic>.from(json['endVote'] as Map),
+      result = json['result'] == null
+          ? null
+          : Map<String, dynamic>.from(json['result'] as Map),
       round = json['round'] == null
           ? null
           : OnlineRound.fromJson(
               Map<String, dynamic>.from(json['round'] as Map),
             );
 }
+
+List<Map<String, dynamic>> _objects(Object? value) => List.unmodifiable([
+  for (final item in value as List? ?? [])
+    Map<String, dynamic>.from(item as Map),
+]);
 
 class OnlineRound {
   final String id;
@@ -217,6 +233,10 @@ String roomsError(AuthFailure error) => switch (error.code) {
   'PREPARATION_CLOSED' => 'La preparación ya fue confirmada.',
   'INVALID_MOVE' =>
     'Esa colocación no cumple las reglas de la zona o del ancla.',
+  'MATCH_FINISHED' => 'La partida ya terminó.',
+  'VOTE_ACTIVE' => 'Las rondas están en pausa durante la votación.',
+  'VOTE_NOT_ACTIVE' => 'Esta votación terminó. Revisa el estado actualizado.',
+  'BALLOT_ALREADY_CAST' => 'Tu voto ya quedó confirmado.',
   'ROUND_EXPIRED' => 'La ronda terminó. Espera el estado actualizado.',
   'ACTION_ALREADY_RESOLVED' => 'Ya confirmaste u omitiste esta ronda.',
   'PREPARATION_PENDING' => 'Aún faltan preparaciones por confirmar.',

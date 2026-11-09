@@ -13,6 +13,7 @@ import 'dados_partida.dart';
 import 'fondo_espacial.dart';
 import 'nave_marciano.dart';
 import 'tablero_view.dart';
+import 'estado_partida_online.dart';
 
 class PartidaEnLinea extends StatefulWidget {
   final LobbySnapshot lobby;
@@ -192,10 +193,19 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
   @override
   Widget build(BuildContext context) {
     final game = _game, round = game.round;
+    if (game.state == 'END_VOTE' || game.result != null) {
+      return EstadoPartidaOnline(
+        game: game,
+        lobby: widget.lobby,
+        state: widget.state,
+        rooms: widget.rooms,
+      );
+    }
     final board = game.prepared ? _board() : null;
     final editable = _enabled && !game.prepared && game.state == 'PREPARING';
     final canAct =
         _enabled &&
+        game.state == 'ROUND_ACTIVE' &&
         round != null &&
         round.ownAction == null &&
         (widget.state.secondsRemaining ?? 0) > 0;
@@ -227,6 +237,10 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
             destinos: canAct ? destinations : {},
             interactiva: canAct,
             celdaPropuesta: _target,
+            puestosReclamados: {
+              for (final zone in game.zones)
+                zone['zoneId'] as String: (zone['nextPlace'] as int) - 1,
+            },
             onCeldaSeleccionada: (id) {
               if (destinations.contains(id)) {
                 setState(() {
@@ -487,7 +501,23 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
     return FondoEspacial(
       ruta: _definition.recursos?.fondo,
       numeroEnContenido: true,
-      child: _layout(header: header, board: boardView, actions: actions),
+      child: _layout(
+        header: [
+          if (game.prepared && game.round != null && game.scores.isNotEmpty)
+            MarcadorOnline(
+              scores: game.scores,
+              ownId: widget.lobby.members
+                  .where(
+                    (m) => m.userId == widget.rooms.auth.state.session?.user.id,
+                  )
+                  .firstOrNull
+                  ?.id,
+            ),
+          ...header,
+        ],
+        board: boardView,
+        actions: actions,
+      ),
     );
   }
 }

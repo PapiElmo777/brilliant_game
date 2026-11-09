@@ -132,6 +132,9 @@ class _MultijugadorPageState extends State<MultijugadorPage>
       final game = lobby?.match == null
           ? null
           : OnlineMatch.fromJson(lobby!.match!);
+      final ownScore = game?.scores
+          .where((s) => s['memberId'] == own?.id)
+          .firstOrNull;
       return PopScope(
         canPop: lobby == null && !state.busy && !state.uncertain,
         onPopInvokedWithResult: (didPop, _) {
@@ -140,7 +143,10 @@ class _MultijugadorPageState extends State<MultijugadorPage>
         child: Scaffold(
           appBar: AppBar(
             title: Text(lobby?.name ?? 'Multijugador'),
-            bottom: game?.round == null
+            bottom:
+                game == null ||
+                    game.state == 'FINISHED' ||
+                    (game.round == null && game.state != 'END_VOTE')
                 ? null
                 : PreferredSize(
                     preferredSize: const Size.fromHeight(36),
@@ -148,7 +154,9 @@ class _MultijugadorPageState extends State<MultijugadorPage>
                       padding: const EdgeInsets.all(4),
                       child: FittedBox(
                         child: Text(
-                          'Ronda ${game!.round!.number} · ${state.secondsRemaining ?? 0} s',
+                          game.state == 'END_VOTE'
+                              ? 'Votación · ${state.secondsRemaining ?? 0} s'
+                              : 'Ronda ${game.round!.number} · ${state.secondsRemaining ?? 0} s',
                           key: const ValueKey('reloj_online'),
                         ),
                       ),
@@ -271,14 +279,37 @@ class _MultijugadorPageState extends State<MultijugadorPage>
                                     ),
                                   ),
                                 )
-                              : Text(
-                                  game?.round?.ownAction != null
-                                      ? 'Ronda resuelta · esperando'
-                                      : game?.prepared == true &&
-                                            game?.round == null
-                                      ? 'Preparación confirmada'
-                                      : 'Meta ${lobby.match?['target'] ?? ''} puntos',
-                                  textAlign: TextAlign.center,
+                              : Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (ownScore != null &&
+                                        game?.result == null)
+                                      Text(
+                                        '${ownScore['points']} / ${game!.target} puntos',
+                                        key: const ValueKey(
+                                          'puntos_propios_online',
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    if (ownScore == null ||
+                                        game?.result != null ||
+                                        game?.state == 'END_VOTE' ||
+                                        game?.round?.ownAction != null ||
+                                        game?.round == null)
+                                      Text(
+                                        game?.result != null
+                                            ? 'Partida finalizada'
+                                            : game?.state == 'END_VOTE'
+                                            ? 'Rondas en pausa'
+                                            : game?.round?.ownAction != null
+                                            ? 'Ronda resuelta · esperando'
+                                            : game?.prepared == true &&
+                                                  game?.round == null
+                                            ? 'Preparación confirmada'
+                                            : 'Meta ${lobby.match?['target'] ?? ''} puntos',
+                                        textAlign: TextAlign.center,
+                                      ),
+                                  ],
                                 ),
                         ),
                         const SizedBox(width: 12),

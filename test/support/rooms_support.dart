@@ -169,6 +169,16 @@ class FakeRoomsRepository implements RoomsRepository {
       game['round'] = round;
       snapshot = {...snapshot!, 'match': game};
     }
+    if (path.endsWith('/end-vote/ballot')) {
+      final game = Map<String, dynamic>.from(snapshot!['match'] as Map);
+      final vote = Map<String, dynamic>.from(game['endVote'] as Map);
+      vote['ballots'] = [
+        ...vote['ballots'] as List,
+        {'memberId': 'propio', 'approve': body['approve'] == true ? 1 : 0},
+      ];
+      game['endVote'] = vote;
+      snapshot = {...snapshot!, 'match': game};
+    }
     final response = <String, dynamic>{
       'commandId': id,
       'roomId': 'sala-1',
@@ -308,3 +318,75 @@ Map<String, dynamic> onlineSnapshot({
     'result': null,
   },
 };
+
+Map<String, dynamic> scoredSnapshot({
+  bool vote = false,
+  bool finished = false,
+  int sequence = 5,
+}) {
+  final snapshot = onlineSnapshot(
+    prepared: true,
+    playing: true,
+    sequence: sequence,
+  );
+  final game = snapshot['match'] as Map<String, dynamic>;
+  final scores = <Map<String, dynamic>>[
+    {
+      'memberId': 'propio',
+      'username': 'Ana',
+      'points': 11,
+      'completedZones': 2,
+      'abandoned': 0,
+      'joinOrder': 1,
+      'scoreSequence': 3,
+    },
+    {
+      'memberId': 'otro',
+      'username': 'Beto',
+      'points': 7,
+      'completedZones': 1,
+      'abandoned': 0,
+      'joinOrder': 2,
+      'scoreSequence': 4,
+    },
+  ];
+  game['scores'] = scores;
+  game['zones'] = [
+    {'zoneId': 'verde_1', 'nextPlace': 3, 'nextPoints': 2},
+  ];
+  game['claims'] = [
+    {
+      'zoneId': 'verde_1',
+      'memberId': 'propio',
+      'place': 1,
+      'points': 4,
+      'sequence': 3,
+    },
+  ];
+  if (vote) {
+    game['state'] = 'END_VOTE';
+    game['endVote'] = {
+      'id': 'votacion-1',
+      'startedAt': '2026-11-06T00:00:00Z',
+      'deadline': '2026-11-06T00:01:00Z',
+      'outcome': null,
+      'eligibleMemberIds': ['propio', 'otro'],
+      'required': 2,
+      'ballots': [],
+    };
+  }
+  if (finished) {
+    game['state'] = 'FINISHED';
+    game['result'] = {
+      'winnerMemberId': 'propio',
+      'reason': 'END_VOTE',
+      'finishedAt': '2026-11-06T00:00:30Z',
+      'ranking': [
+        for (var i = 0; i < scores.length; i++)
+          {...scores[i], 'position': i + 1},
+      ],
+    };
+    (snapshot['room'] as Map)['state'] = 'FINISHED';
+  }
+  return snapshot;
+}
