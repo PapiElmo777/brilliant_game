@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../multiplayer/rooms_cubit.dart';
 import '../../multiplayer/rooms_repository.dart';
+import 'final_partida_online.dart';
 
 class MarcadorOnline extends StatelessWidget {
   final List<Map<String, dynamic>> scores;
@@ -28,18 +29,20 @@ class MarcadorOnline extends StatelessWidget {
   );
 }
 
-/// Estado compartido de cierre/votación; las animaciones finales llegan en fase 6.
+/// Votación y cierre autoritativos, independientes del progreso de las animaciones.
 class EstadoPartidaOnline extends StatelessWidget {
   final OnlineMatch game;
   final LobbySnapshot lobby;
   final RoomsState state;
   final RoomsCubit rooms;
+  final VoidCallback onExit;
   const EstadoPartidaOnline({
     super.key,
     required this.game,
     required this.lobby,
     required this.state,
     required this.rooms,
+    required this.onExit,
   });
   @override
   Widget build(BuildContext context) {
@@ -49,45 +52,13 @@ class EstadoPartidaOnline extends StatelessWidget {
         ?.id;
     final result = game.result;
     if (result != null) {
-      final ranking = (result['ranking'] as List).cast<Map<String, dynamic>>();
-      final winner = ranking
-          .where((p) => p['memberId'] == result['winnerMemberId'])
-          .firstOrNull;
-      return ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Text(
-            winner == null
-                ? 'Partida finalizada'
-                : '${winner['username']} ganó',
-            key: const ValueKey('resultado_online'),
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          Text(switch (result['reason']) {
-            'TARGET' => 'Meta alcanzada',
-            'END_VOTE' => 'Finalizada por votación',
-            'ABANDONMENT' => 'Victoria por abandono',
-            _ => 'Sin participantes',
-          }, textAlign: TextAlign.center),
-          const SizedBox(height: 16),
-          for (final p in ranking)
-            ListTile(
-              leading: Text('${p['position']}.º'),
-              title: Text(
-                '${p['username']}${p['memberId'] == ownId ? ' · Tú' : ''}',
-              ),
-              subtitle: Text(
-                '${p['completedZones']} ${p['completedZones'] == 1 ? 'zona' : 'zonas'}${p['abandoned'] == 1 ? ' · Abandonó' : ''}',
-              ),
-              trailing: Text('${p['points']} pts'),
-            ),
-          const SizedBox(height: 12),
-          const Text(
-            'Usa la flecha de regreso para salir de la sala.',
-            textAlign: TextAlign.center,
-          ),
-        ],
+      return FinalPartidaOnline(
+        key: ValueKey(game.id),
+        game: game,
+        ownId: ownId,
+        state: state,
+        rooms: rooms,
+        onExit: onExit,
       );
     }
     final vote = game.endVote!;

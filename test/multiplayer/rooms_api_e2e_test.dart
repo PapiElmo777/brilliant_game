@@ -10,7 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
-    'Siete clientes Dart contra JAR: rondas, premios privados y victoria por abandono',
+    'Siete clientes Dart contra JAR: rondas, premios, final y revancha con otro mapa',
     () async {
       final directory = await Directory.systemTemp.createTemp(
         'brilliant-rooms-e2e-',
@@ -490,6 +490,81 @@ void main() {
         expect(finalGame['claims'], earnedClaims);
         final restoredResult = await rooms[5].get(sessions[5].accessToken, id);
         expect((restoredResult['match'] as Map)['result'], finalGame['result']);
+        final acceptedRematch = await send(
+          5,
+          'POST',
+          'matches/$matchId/rematch',
+        );
+        expect((acceptedRematch['data'] as Map)['match'], isNull);
+        expect(
+          (acceptedRematch['data'] as Map)['room']['members'],
+          hasLength(1),
+        );
+        var rematchRevision =
+            (acceptedRematch['data'] as Map)['room']['revision'] as int;
+        for (final newcomer in [1, 2]) {
+          await send(newcomer, 'POST', 'rooms/$id/join');
+          await channels[newcomer].close();
+          await inboxes[newcomer].cancel();
+          channels[newcomer] = await rooms[newcomer].connect(
+            sessions[newcomer].accessToken,
+            id,
+          );
+          inboxes[newcomer] = StreamIterator(channels[newcomer].frames);
+          expect((await next(newcomer, 'SNAPSHOT'))['data']['match'], isNull);
+        }
+        await send(5, 'PATCH', 'rooms/$id/settings', {
+          'expectedRevision': rematchRevision,
+          'capacity': 6,
+          'levelId': 'tablero_03',
+        });
+        rematchRevision++;
+        for (final guest in [1, 2]) {
+          await send(guest, 'PUT', 'rooms/$id/ready', {
+            'expectedRevision': rematchRevision,
+            'ready': true,
+          });
+        }
+        final rematchStarted = await send(5, 'POST', 'rooms/$id/start', {
+          'expectedRevision': rematchRevision,
+        });
+        final fresh = (rematchStarted['data'] as Map)['match'] as Map;
+        expect(fresh['id'], isNot(matchId));
+        expect(fresh['target'], 24);
+        expect(fresh['ownBoard'], isEmpty);
+        expect(fresh['claims'], isEmpty);
+        expect(fresh['round'], isNull);
+        for (final participant in [1, 2, 5]) {
+          final frame = await next(participant, 'MATCH_STARTED');
+          expect(frame['data']['match']['id'], fresh['id']);
+          expect(frame['data']['match']['ownBoard'], isEmpty);
+          final preparation = PreparacionInicial(
+            CatalogoTableros.predeterminado().crearTablero('tablero_03'),
+          );
+          for (final (cell, value) in preparation.distribucionAleatoria(
+            Random(participant + 72),
+          )) {
+            preparation.colocarValor(cell, value);
+          }
+          await send(participant, 'PUT', 'matches/${fresh['id']}/preparation', {
+            'placements': {
+              for (final c in preparation.celdas.values)
+                if (c.valor != null) c.id: c.valor!,
+            },
+          });
+        }
+        String? freshRound;
+        for (final participant in [1, 2, 5]) {
+          final frame = await next(participant, 'ROUND_STARTED');
+          final round = frame['data']['match']['round'] as Map;
+          if (freshRound == null) {
+            freshRound = round['id'] as String;
+          } else {
+            expect(round['id'], freshRound);
+          }
+          expect(round['number'], 1);
+          expect(frame['data']['match']['levelId'], 'tablero_03');
+        }
       } finally {
         for (final channel in channels) {
           await channel.close();

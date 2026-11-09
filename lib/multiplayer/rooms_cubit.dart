@@ -78,6 +78,9 @@ class RoomsCubit extends Cubit<RoomsState> {
   _Command? _pending;
   String _draft = '';
   final Map<String, RoomMessage> _messages = {};
+  final Set<String> _shownResults = {};
+  bool resultWasShown(String id) => _shownResults.contains(id);
+  void markResultShown(String id) => _shownResults.add(id);
   RoomsCubit(this.repository, this.auth, {DateTime Function()? now})
     : now = now ?? DateTime.now,
       super(const RoomsState()) {
@@ -649,6 +652,9 @@ class RoomsCubit extends Cubit<RoomsState> {
       if (dieIndex != null) 'cellId': cellId,
     });
   }
+
+  Future<void> acceptRematch(String matchId) =>
+      _send('POST', 'matches/$matchId/rematch', {});
 
   Future<void> castBallot(String matchId, String voteId, bool approve) {
     if (state.secondsRemaining == 0) return Future.value();

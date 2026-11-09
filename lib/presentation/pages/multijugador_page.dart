@@ -54,7 +54,7 @@ class _MultijugadorPageState extends State<MultijugadorPage>
     super.dispose();
   }
 
-  Future<void> _leave() async {
+  Future<void> _leave({bool toMenu = false}) async {
     if (_askingLeave || _rooms.state.busy) return;
     if (_rooms.state.uncertain) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -87,7 +87,15 @@ class _MultijugadorPageState extends State<MultijugadorPage>
       ),
     );
     _askingLeave = false;
-    if (accepted == true && mounted) await _rooms.leave();
+    if (accepted == true && mounted) {
+      await _rooms.leave();
+      if (toMenu) {
+        await WidgetsBinding.instance.endOfFrame;
+        if (mounted && _rooms.state.lobby == null) {
+          Navigator.maybePop(context);
+        }
+      }
+    }
   }
 
   Future<void> _showChat() async {
@@ -225,6 +233,7 @@ class _MultijugadorPageState extends State<MultijugadorPage>
                               lobby: lobby,
                               state: state,
                               rooms: _rooms,
+                              onExit: () => _leave(toMenu: true),
                             ),
                     ),
                   ],

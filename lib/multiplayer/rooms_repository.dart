@@ -170,7 +170,7 @@ class OnlineMatch {
   final Set<String> preparedIds;
   final OnlineRound? round;
   final List<Map<String, dynamic>> scores, claims, zones;
-  final Map<String, dynamic>? endVote, result;
+  final Map<String, dynamic>? endVote, result, rematch;
   OnlineMatch.fromJson(Map<String, dynamic> json)
     : id = json['id'] as String,
       levelId = json['levelId'] as String,
@@ -191,6 +191,9 @@ class OnlineMatch {
       endVote = json['endVote'] == null
           ? null
           : Map<String, dynamic>.from(json['endVote'] as Map),
+      rematch = json['rematch'] == null
+          ? null
+          : Map<String, dynamic>.from(json['rematch'] as Map),
       result = json['result'] == null
           ? null
           : Map<String, dynamic>.from(json['result'] as Map),
@@ -233,6 +236,8 @@ String roomsError(AuthFailure error) => switch (error.code) {
   'PREPARATION_CLOSED' => 'La preparación ya fue confirmada.',
   'INVALID_MOVE' =>
     'Esa colocación no cumple las reglas de la zona o del ancla.',
+  'REMATCH_CLOSED' => 'La siguiente partida ya comenzó. Puedes salir al menú.',
+  'REMATCH_NOT_ACCEPTED' => 'Acepta la revancha para entrar al nuevo lobby.',
   'MATCH_FINISHED' => 'La partida ya terminó.',
   'VOTE_ACTIVE' => 'Las rondas están en pausa durante la votación.',
   'VOTE_NOT_ACTIVE' => 'Esta votación terminó. Revisa el estado actualizado.',

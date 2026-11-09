@@ -19,11 +19,13 @@ class PartidaEnLinea extends StatefulWidget {
   final LobbySnapshot lobby;
   final RoomsState state;
   final RoomsCubit rooms;
+  final VoidCallback onExit;
   const PartidaEnLinea({
     super.key,
     required this.lobby,
     required this.state,
     required this.rooms,
+    required this.onExit,
   });
   @override
   State<PartidaEnLinea> createState() => _PartidaEnLineaState();
@@ -199,6 +201,7 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
         lobby: widget.lobby,
         state: widget.state,
         rooms: widget.rooms,
+        onExit: widget.onExit,
       );
     }
     final board = game.prepared ? _board() : null;

@@ -179,6 +179,25 @@ class FakeRoomsRepository implements RoomsRepository {
       game['endVote'] = vote;
       snapshot = {...snapshot!, 'match': game};
     }
+    if (path.endsWith('/rematch')) {
+      final own = (updated['members'] as List).firstWhere(
+        (m) => m['memberId'] == 'propio',
+      );
+      snapshot = {
+        ...snapshot!,
+        'match': null,
+        'room': {
+          ...updated,
+          'state': 'LOBBY',
+          'levelId': null,
+          'hostMemberId': 'propio',
+          'revision': (updated['revision'] as int) + 1,
+          'members': [
+            {...own as Map, 'ready': false},
+          ],
+        },
+      };
+    }
     final response = <String, dynamic>{
       'commandId': id,
       'roomId': 'sala-1',
@@ -377,6 +396,7 @@ Map<String, dynamic> scoredSnapshot({
   }
   if (finished) {
     game['state'] = 'FINISHED';
+    game['rematch'] = {'available': true, 'acceptedCount': 0};
     game['result'] = {
       'winnerMemberId': 'propio',
       'reason': 'END_VOTE',
