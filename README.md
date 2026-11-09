@@ -20,10 +20,10 @@ En esta Mac, Java 24/25 falló al aceptar conexiones LAN incluso con un socket m
 
 ```sh
 cd /Users/alfredojimenez/developer/brilliant_game/brilliant_server
-"/Applications/Android Studio.app/Contents/jbr/Contents/Home/bin/java" -jar target/brilliant-server-lan.jar --spring.profiles.active=lan
+"/Applications/Android Studio.app/Contents/jbr/Contents/Home/bin/java" -jar target/brilliant-server.jar --spring.profiles.active=lan
 ```
 
-El perfil `lan` escucha en todas las interfaces y muestra las direcciones locales. Conserva SQLite y la clave en `./data`; usar siempre esta carpeta para conservar las cuentas. El artefacto `brilliant-server-lan.jar` es la copia local verificada de esta entrega. Para reconstruir en el futuro, detener antes el servidor, ejecutar `JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" ./mvnw verify` y arrancar `target/brilliant-server.jar` con el mismo perfil. No sobrescribir un JAR mientras Java lo usa.
+El perfil `lan` escucha en todas las interfaces y muestra las direcciones locales. Conserva SQLite y la clave en `./data`; usar siempre esta carpeta para conservar las cuentas. Usar `target/brilliant-server.jar`, el artefacto actual, o abrir `../brilliant_server/iniciar_servidor.command` con doble clic. Los nombres históricos con sufijos pueden contener versiones antiguas sin salas. Para reconstruir en el futuro, detener antes el servidor, ejecutar `JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" ./mvnw verify` y arrancar `target/brilliant-server.jar` con el mismo perfil. No sobrescribir un JAR mientras Java lo usa.
 
 En un emulador Android estándar ejecutado en la misma Mac, configurar `10.0.2.2:8080`; en simulador iOS, `http://localhost:8080`. El teléfono físico usa la IP Wi-Fi de la Mac. Para el uso normal no hace falta túnel ADB ni USB.
 
@@ -694,3 +694,12 @@ V007 mantiene los checksums V001–V006 y agrega la vista de partida del miembro
 Verificación: 440 pruebas Flutter, análisis sin avisos, 83 pruebas Java y recorrido adicional Dart→JAR con siete clientes/seis canales: final con premios y revancha de tres participantes, otro mapa, meta 24, preparación limpia y nueva ronda común. Incluye migración/reapertura V006→V007, aceptación concurrente e idempotente, privacidad de vistas y permisos. Ocho capturas de ranking/animaciones nuevas o actualizadas, revisadas visualmente. JAR y APK Debug generados. Las pruebas usan cuentas, bases y claves temporales; no equivalen a seis teléfonos físicos.
 
 Commits en español en `multiplayer`, sin merge a main. No se reinició el servidor LAN ni se tocaron datos reales. Respaldar SQLite con el proceso detenido antes de aplicar V007; no volver después a un JAR anterior. Próxima entrega: evaluación completa, accesibilidad y comprobación LAN de varios dispositivos (fase 7). La política de reinicio del proceso Java sigue pendiente de decisión explícita.
+
+
+## Corrección del servidor usado por los dispositivos — 9 de noviembre de 2026
+
+El error genérico al listar o crear salas se debía a que el proceso LAN ejecutaba `brilliant-server-lan.jar` del 5 de noviembre, anterior al multijugador, con base V002. La app actual no encontraba las rutas de salas. Se respaldaron SQLite y la clave, se detuvo ese proceso y se arrancó `target/brilliant-server.jar` actual con Java 21/perfil LAN, aplicando V003–V007 y conservando las tres cuentas existentes. Las copias históricas LAN/cuentas/IP se actualizaron con el servidor detenido.
+
+Para los siguientes arranques usar **`brilliant_server/iniciar_servidor.command`** (doble clic) o el JAR estándar. El iniciador fija la carpeta del servidor y usa el artefacto actual; evita seleccionar un JAR de una entrega antigua. Se corrigió la instrucción inicial que todavía apuntaba al nombre histórico LAN.
+
+Verificación en la red real: Samsung SM-N985F y emulador Android, ambos configurados con `10.22.17.233:8080`, registraron cuentas temporales y listaron salas con 200. El Samsung creó una sala con 200, el emulador se unió con 200 y ambos consultaron el mismo lobby con dos participantes. Las cuentas temporales se eliminaron con 204. Se verificaron integridad SQLite, conservación de cuentas/contraseñas protegidas y clave original. Esta prueba usa HTTP desde ambos dispositivos; no es un recorrido visual de botones ni una prueba de seis teléfonos. El servidor actualizado queda abierto en una ventana visible de Terminal.
