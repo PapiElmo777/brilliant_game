@@ -595,7 +595,11 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                           onSeleccionar: (id) => setState(() {
                             _die = id;
                             _target = null;
-                            _dicePhase = FasePartida.moviendoDados;
+                            // Los dados ya están arriba después de la primera elección.
+                            // Cambiar de dado no vuelve a solicitar esa animación.
+                            if (_dicePhase == FasePartida.eligiendoNumero) {
+                              _dicePhase = FasePartida.moviendoDados;
+                            }
                           }),
                           onMovimientoCompletado: () => setState(
                             () => _dicePhase = FasePartida.eligiendoDestino,

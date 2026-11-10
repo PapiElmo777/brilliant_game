@@ -55,6 +55,19 @@ void main() {
       findsOneWidget,
     );
   });
+  testWidgets('Permite alternar ambos dados antes de confirmar', (tester) async {
+    pantallaNivel(tester);
+    final repo = FakeRoomsRepository()
+      ..snapshot = onlineSnapshot(prepared: true, playing: true);
+    await openRooms(tester, repo);
+    for (final id in [0, 1, 0, 1]) {
+      await tester.tap(find.byKey(ValueKey('dado_online_$id')));
+      await tester.pumpAndSettle();
+      expect(tester.widget<FichaDado>(find.byKey(ValueKey('dado_online_$id'))).seleccionado, isTrue);
+      expect(tester.widget<FichaDado>(find.byKey(ValueKey('dado_online_${1 - id}'))).onTap, isNotNull);
+    }
+    expect(repo.commands, isEmpty);
+  });
   testWidgets(
     'Elegir dado y celda mantiene una propuesta local hasta confirmar',
     (tester) async {
