@@ -1,46 +1,71 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../bloc/inicio_bloc.dart';
 import '../../bloc/inicio_estado.dart';
+import '../../bloc/inicio_evento.dart';
+import '../../bloc/partida_estado.dart';
 import '../../catalogo/catalogo_tableros.dart';
-import '../../catalogo/definicion_tablero.dart';
 import '../../core/anclas.dart';
-import '../../core/preparacion_inicial.dart';
-import '../../core/tablero.dart';
 import '../../models/tirada.dart';
 import '../../multiplayer/rooms_cubit.dart';
 import '../../multiplayer/rooms_repository.dart';
+import '../pages/partida_page.dart' show GloboAlien, PanelPuntos;
+import 'bandeja_numeros.dart';
 import 'dados_partida.dart';
+import 'diseno_juego_fijo.dart';
+import 'disparo_numero_overlay.dart';
+import 'estado_partida_online.dart';
 import 'fondo_espacial.dart';
+import 'historial_tiradas.dart';
+import 'meteoritos_animacion.dart';
+import 'nave_entrada.dart';
 import 'nave_marciano.dart';
 import 'tablero_view.dart';
-import 'estado_partida_online.dart';
 
+/// Comparte el diseño y las animaciones del modo local. Java decide las jugadas.
 class PartidaEnLinea extends StatefulWidget {
   final LobbySnapshot lobby;
   final RoomsState state;
   final RoomsCubit rooms;
   final VoidCallback onExit;
+  final VoidCallback onBack;
+  final Widget chatButton;
   const PartidaEnLinea({
     super.key,
     required this.lobby,
     required this.state,
     required this.rooms,
     required this.onExit,
+    required this.onBack,
+    required this.chatButton,
   });
   @override
   State<PartidaEnLinea> createState() => _PartidaEnLineaState();
 }
 
 class _PartidaEnLineaState extends State<PartidaEnLinea> {
-  late final DefinicionTablero _definition = CatalogoTableros.predeterminado()
-      .obtenerDefinicion(_game.levelId);
-  late final PreparacionInicial _preparation = PreparacionInicial(
-    _definition.crearTablero(),
-  );
-  final _scroll = ScrollController();
-  int? _number, _die;
-  String? _initialCell, _target, _error;
   OnlineMatch get _game => OnlineMatch.fromJson(widget.lobby.match!);
+  late final _definition = CatalogoTableros.predeterminado().obtenerDefinicion(
+    _game.levelId,
+  );
+  late final _inicio = InicioBloc(
+    _definition.crearTablero(),
+    animarEntrada: true,
+  );
+  final _ship = GlobalKey(),
+      _canvas = GlobalKey(),
+      _above = GlobalKey(),
+      _below = GlobalKey();
+  late final _cells = {
+    for (final zone in _definition.zonas)
+      for (final cell in zone.celdas) cell.id: GlobalKey(),
+  };
+  int? _die;
+  String? _target;
+  FasePartida _dicePhase = FasePartida.eligiendoNumero;
+  late bool _meteors = _game.round != null;
+  DisparoPendiente? _shot;
+  int _shotSequence = 0;
   bool get _enabled =>
       widget.state.channelConnected &&
       !widget.state.busy &&
@@ -50,152 +75,90 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
     super.didUpdateWidget(oldWidget);
     final old = OnlineMatch.fromJson(oldWidget.lobby.match!);
     if (old.round?.id != _game.round?.id) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _scroll.hasClients) _scroll.jumpTo(0);
-      });
-    }
-    if (old.round?.id != _game.round?.id || _game.round?.ownAction != null) {
       _die = null;
       _target = null;
-      _error = null;
+      _dicePhase = FasePartida.eligiendoNumero;
+      _meteors = _game.round != null;
     }
-    if (_game.prepared) {
-      _number = null;
-      _initialCell = null;
+    if (old.round != null) {
+      for (final cell in _game.board.entries) {
+        if (!old.board.containsKey(cell.key)) {
+          _shot = DisparoPendiente(
+            id: ++_shotSequence,
+            numero: cell.value,
+            celdaId: cell.key,
+          );
+          break;
+        }
+      }
+    }
+    if (_game.round?.ownAction != null) {
+      _target = null;
     }
   }
 
   @override
   void dispose() {
-    _scroll.dispose();
+    _inicio.close();
     super.dispose();
   }
 
-  Tablero _board() {
-    final board = _definition.crearTablero();
-    for (final entry in _game.board.entries) {
-      board.colocarValor(entry.key, entry.value);
-    }
-    return board;
-  }
-
-  void _prepareCell(String id) {
-    if (!_enabled || _game.prepared) return;
-    try {
-      if (_number != null) {
-        _preparation.colocarValor(id, _number!);
-        _number = null;
-        _initialCell = null;
-      } else if (_initialCell != null) {
-        if (_initialCell == id) {
-          _preparation.vaciarCelda(id);
-        } else {
-          _preparation.intercambiar(_initialCell!, id);
-        }
-        _initialCell = null;
-      } else if (_preparation.celdas[id]?.valor != null) {
-        _initialCell = id;
-      } else {
-        throw ArgumentError('Elige primero un número del 1 al 6.');
-      }
-      setState(() => _error = null);
-    } on ArgumentError catch (e) {
-      setState(() => _error = '${e.message}');
-    }
-  }
-
-  void _randomize() {
-    try {
-      for (final (cell, value) in _preparation.distribucionAleatoria(
-        Random(),
-      )) {
-        _preparation.colocarValor(cell, value);
-      }
-      setState(() {
-        _number = null;
-        _initialCell = null;
-        _error = null;
-      });
-    } on Object {
-      setState(
-        () => _error =
-            'No se pudo completar ese acomodo. Revisa los números colocados.',
-      );
-    }
-  }
-
   Widget _fit(Widget child) => FittedBox(fit: BoxFit.scaleDown, child: child);
-  Widget _layout({
-    required List<Widget> header,
-    required Widget board,
-    required Widget actions,
-  }) => LayoutBuilder(
-    key: const ValueKey('contenido_partida_online'),
-    builder: (context, size) {
-      final horizontal = size.maxWidth > 600;
-      final boardView = Center(
-        child: AspectRatio(aspectRatio: 1, child: board),
-      );
-      if (size.maxHeight < (horizontal ? 196 : 250)) {
-        return ListView(
-          controller: _scroll,
-          padding: const EdgeInsets.all(8),
+  void _ranking() => showModalBottomSheet<void>(
+    context: context,
+    useSafeArea: true,
+    builder: (context) => ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Row(
           children: [
-            ...header,
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 360),
-                child: board,
+            const Expanded(
+              child: Text(
+                'Ranking',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
             ),
-            const SizedBox(height: 8),
-            actions,
+            IconButton(
+              key: const ValueKey('cerrar_ranking'),
+              tooltip: 'Cerrar ranking',
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.close),
+            ),
           ],
-        );
-      }
-      return Padding(
-        padding: const EdgeInsets.all(8),
-        child: horizontal
-            ? Row(
-                children: [
-                  Expanded(child: boardView),
-                  const SizedBox(width: 16),
-                  SizedBox(
-                    width: min(380, size.maxWidth * .5),
-                    child: Column(
-                      children: [
-                        ...header,
-                        Expanded(
-                          child: Center(
-                            child: SizedBox(
-                              width: 90,
-                              child: NaveMarciano(
-                                recursos: _definition.recursos,
-                              ),
-                            ),
-                          ),
-                        ),
-                        actions,
-                      ],
-                    ),
-                  ),
-                ],
-              )
-            : Column(
-                children: [
-                  ...header,
-                  Expanded(child: boardView),
-                  const SizedBox(height: 6),
-                  actions,
-                ],
-              ),
-      );
-    },
+        ),
+        for (final s in _game.scores)
+          ListTile(
+            title: Text('${s['username']}'),
+            trailing: Text('${s['points']} pts'),
+          ),
+      ],
+    ),
   );
+  List<RegistroTirada> _history(OnlineMatch game) => [
+    for (final h in game.history)
+      if (h['kind'] == 'PLACE')
+        RegistroTirada.colocada(
+          Tirada(
+            h['number'] as int,
+            (h['dice'] as List)[0] as int,
+            (h['dice'] as List)[1] as int,
+          ),
+          h['dieIndex'] as int,
+          h['cellId'] as String,
+        )
+      else
+        RegistroTirada.omitida(
+          Tirada(
+            h['number'] as int,
+            (h['dice'] as List)[0] as int,
+            (h['dice'] as List)[1] as int,
+          ),
+        ),
+  ];
   @override
   Widget build(BuildContext context) {
     final game = _game, round = game.round;
-    if (game.state == 'END_VOTE' || game.result != null) {
+    if (game.result != null || game.state == 'END_VOTE') {
       return EstadoPartidaOnline(
         game: game,
         lobby: widget.lobby,
@@ -204,323 +167,498 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
         onExit: widget.onExit,
       );
     }
-    final board = game.prepared ? _board() : null;
-    final editable = _enabled && !game.prepared && game.state == 'PREPARING';
-    final canAct =
-        _enabled &&
-        game.state == 'ROUND_ACTIVE' &&
-        round != null &&
-        round.ownAction == null &&
-        (widget.state.secondsRemaining ?? 0) > 0;
-    final destinations = round != null && _die != null
-        ? destinosConAncla(board!, round.dice[_die!], round.dice[1 - _die!])
-        : <String>{};
-    final waiting = widget.lobby.members
-        .where((m) => !game.preparedIds.contains(m.id))
-        .length;
-    final initialState = InicioEstado(
-      fase: _preparation.estaLista ? FaseInicio.listo : FaseInicio.preparando,
-      celdas: _preparation.celdas,
-      numerosFaltantes: _preparation.numerosFaltantes,
-      numeroSeleccionado: _number,
-      celdaSeleccionada: _initialCell,
-    );
-    final boardView = !game.prepared
-        ? AbsorbPointer(
-            absorbing: !editable,
-            child: TableroView(
-              definicion: _definition,
-              estado: initialState,
-              onCeldaSeleccionada: _prepareCell,
-            ),
-          )
-        : TableroView.partida(
-            definicion: _definition,
-            celdas: board!.celdas,
-            destinos: canAct ? destinations : {},
-            interactiva: canAct,
-            celdaPropuesta: _target,
-            puestosReclamados: {
-              for (final zone in game.zones)
-                zone['zoneId'] as String: (zone['nextPlace'] as int) - 1,
-            },
-            onCeldaSeleccionada: (id) {
-              if (destinations.contains(id)) {
-                setState(() {
-                  _target = id;
-                  _error = null;
-                });
-              } else {
-                setState(() => _error = 'Casilla no válida para ese dado.');
-              }
-            },
-          );
-    final header = <Widget>[];
-    Widget actions;
-    if (round == null) {
-      final status =
-          _error ??
-          (game.prepared
-              ? (waiting == 1
-                    ? 'Preparación confirmada. Falta 1 participante.'
-                    : 'Preparación confirmada. Faltan $waiting participantes.')
-              : '${6 - _preparation.numerosFaltantes.length}/6 colocados · toca una casilla +');
-      header.add(
-        SizedBox(
-          height: 44,
-          child: _fit(
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Preparando la misión',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    return BlocBuilder<InicioBloc, InicioEstado>(
+      bloc: _inicio,
+      builder: (context, initial) {
+        final board = _definition.crearTablero();
+        for (final e in game.board.entries) {
+          board.colocarValor(e.key, e.value);
+        }
+        final preparing = round == null;
+        final editable = _enabled && !game.prepared;
+        final canAct =
+            _enabled &&
+            round != null &&
+            round.ownAction == null &&
+            (widget.state.secondsRemaining ?? 0) > 0 &&
+            !_meteors &&
+            _shot == null;
+        final own = widget.lobby.members
+            .where((m) => m.userId == widget.rooms.auth.state.session?.user.id)
+            .firstOrNull;
+        final points =
+            game.scores
+                    .where((s) => s['memberId'] == own?.id)
+                    .firstOrNull?['points']
+                as int? ??
+            0;
+        final selected = round?.ownAction?['dieIndex'] as int? ?? _die;
+        final destinations = round != null && _die != null
+            ? destinosConAncla(board, round.dice[_die!], round.dice[1 - _die!])
+            : <String>{};
+        final waiting = widget.lobby.members
+            .where((m) => !game.preparedIds.contains(m.id))
+            .length;
+        final message = preparing
+            ? (game.prepared
+                  ? 'Preparación confirmada. ${waiting == 1 ? 'Falta 1 participante.' : 'Faltan $waiting participantes.'}'
+                  : initial.error ??
+                        (initial.numeroSeleccionado == null
+                            ? '${6 - initial.numerosFaltantes.length} de 6 colocados'
+                            : 'Número ${initial.numeroSeleccionado} seleccionado · toca una celda +'))
+            : round.ownAction != null
+            ? 'Jugada confirmada · esperando a los demás'
+            : _target != null
+            ? 'Confirma tu jugada'
+            : _die == null
+            ? 'Elige un dado para colocar su número'
+            : 'El otro dado es el ancla · elige una casilla';
+        final drawCells = {
+          for (final entry in board.celdas.entries)
+            entry.key: entry.key == _shot?.celdaId
+                ? entry.value.sinValor()
+                : entry.value,
+        };
+        final table = !game.prepared
+            ? AbsorbPointer(
+                absorbing: !editable,
+                child: TableroView(
+                  definicion: _definition,
+                  estado: initial,
+                  clavesCeldas: _cells,
+                  onCeldaSeleccionada: (id) =>
+                      _inicio.add(CeldaInicialSeleccionada(id)),
                 ),
-                Text(
-                  status,
-                  style: TextStyle(
-                    color: _error != null
-                        ? Colors.amber
-                        : const Color(0xFFB1C4D4),
+              )
+            : TableroView.partida(
+                definicion: _definition,
+                celdas: drawCells,
+                clavesCeldas: _cells,
+                destinos: canAct ? destinations : {},
+                interactiva: canAct,
+                celdaPropuesta: _target,
+                puestosReclamados: {
+                  for (final z in game.zones)
+                    z['zoneId'] as String: (z['nextPlace'] as int) - 1,
+                },
+                onCeldaSeleccionada: (id) {
+                  if (destinations.contains(id)) setState(() => _target = id);
+                },
+              );
+        return FondoEspacial(
+          key: const ValueKey('contenido_partida_online'),
+          ruta: _definition.recursos?.fondo,
+          numeroEnContenido: true,
+          child: LayoutBuilder(
+            builder: (context, space) {
+              final m = MedidasJuegoFijo(space);
+              final shipWidth = m.compacto
+                  ? (preparing ? 48.0 : 56.0)
+                  : preparing
+                  ? 134.0
+                  : (space.maxHeight * .17).clamp(110.0, 160.0);
+              final shipHeight =
+                  shipWidth / (_definition.recursos?.proporcionNave ?? 1.65);
+              final numberHeight = m.compacto
+                  ? 0.0
+                  : FondoEspacial.altoNumero(m.anchoPanel);
+              final ship = SizedBox(
+                key: _ship,
+                width: shipWidth,
+                child: NaveEntrada(
+                  llegando:
+                      preparing &&
+                      !game.prepared &&
+                      initial.faseVisual == FaseVisualInicio.llegandoNave,
+                  onCompletada: () =>
+                      _inicio.add(const LlegadaNaveCompletada()),
+                  child: NaveMarciano(
+                    recursos: _definition.recursos,
+                    hazActivo:
+                        initial.faseVisual != FaseVisualInicio.llegandoNave ||
+                        game.prepared,
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-      );
-      if (!game.prepared) {
-        header.add(
-          SizedBox(
-            height: 48,
-            child: Row(
-              children: [
-                for (var i = 1; i <= 6; i++)
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      child: ChoiceChip(
-                        key: ValueKey('numero_online_$i'),
-                        showCheckmark: false,
-                        label: Text(
-                          '$i',
-                          textScaler: TextScaler.noScaling,
-                          style: const TextStyle(fontSize: 20),
-                        ),
-                        selected: _number == i,
-                        onSelected:
-                            editable &&
-                                _preparation.numerosFaltantes.contains(i)
-                            ? (_) => setState(() {
-                                _number = i;
-                                _initialCell = null;
-                                _error = null;
-                              })
-                            : null,
+              );
+              final top = m.compacto
+                  ? SizedBox(
+                      height: preparing ? 62 : 68,
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 78,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 54,
+                                  height: 18,
+                                  child: NumeroFondoNivel(
+                                    ruta: _definition.recursos?.fondo,
+                                    compacto: true,
+                                  ),
+                                ),
+                                ship,
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                SizedBox(
+                                  height: 22,
+                                  child: preparing
+                                      ? _fit(const Text('PREPARA TU MISIÓN'))
+                                      : PanelPuntos(
+                                          puntos: points,
+                                          meta: game.target,
+                                          compacto: true,
+                                        ),
+                                ),
+                                Expanded(
+                                  child: _fit(
+                                    preparing
+                                        ? Text(
+                                            message,
+                                            maxLines: 2,
+                                            textAlign: TextAlign.center,
+                                          )
+                                        : GloboAlien(
+                                            mensaje: message,
+                                            compacto: true,
+                                          ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        );
-        header.add(
-          SizedBox(
-            height: 40,
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    key: const ValueKey('acomodo_online_aleatorio'),
-                    onPressed: editable && !_preparation.estaLista
-                        ? _randomize
-                        : null,
-                    child: _fit(const Text('Acomodo aleatorio')),
-                  ),
-                ),
-                Expanded(
-                  child: TextButton(
-                    onPressed: !editable
-                        ? null
-                        : () {
-                            _preparation.reiniciar();
-                            setState(() {
-                              _number = null;
-                              _initialCell = null;
-                              _error = null;
-                            });
-                          },
-                    child: _fit(const Text('Reiniciar')),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }
-      actions = game.prepared
-          ? SizedBox(
-              height: 48,
-              child: _fit(Text('$waiting participantes por confirmar')),
-            )
-          : SizedBox(
-              height: 48,
-              width: double.infinity,
-              child: FilledButton(
-                key: const ValueKey('confirmar_preparacion_online'),
-                onPressed: editable && _preparation.estaLista
-                    ? () => widget.rooms.confirmPreparation(game.id, {
-                        for (final c in _preparation.celdas.values)
-                          if (c.valor != null) c.id: c.valor!,
-                      })
-                    : null,
-                child: _fit(const Text('Confirmar preparación')),
-              ),
-            );
-    } else {
-      final status =
-          _error ??
-          (round.ownAction != null
-              ? 'Esperando a los demás'
-              : widget.state.secondsRemaining == 0
-              ? 'Tiempo agotado'
-              : _target != null
-              ? '${round.dice[_die!]} en $_target · sin confirmar'
-              : _die == null
-              ? 'Elige dado; el otro es el ancla'
-              : destinations.isEmpty
-              ? 'Sin destinos: prueba el otro dado u omite'
-              : 'Elige una casilla resaltada');
-      final resolved = round.resolvedIds
-          .intersection(widget.lobby.members.map((m) => m.id).toSet())
-          .length;
-      header.add(
-        SizedBox(
-          height: 70,
-          child: Row(
-            children: [
-              TweenAnimationBuilder<double>(
-                key: ValueKey('dados_online_${round.id}'),
-                tween: Tween(begin: 0, end: 1),
-                duration: MediaQuery.disableAnimationsOf(context)
-                    ? Duration.zero
-                    : const Duration(milliseconds: 550),
-                builder: (context, t, _) => Transform.translate(
-                  offset: Offset(
-                    0,
-                    (1 - Curves.easeInOutCubic.transform(t)) * 12,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (var i = 0; i < 2; i++)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: Transform.rotate(
-                            angle: (1 - t) * (i == 0 ? -.12 : .13),
-                            child: FichaDado(
-                              key: ValueKey('dado_online_$i'),
-                              dado: Dado(i, round.dice[i]),
-                              seleccionado: _die == i,
-                              onTap: canAct
-                                  ? () => setState(() {
-                                      _die = i;
-                                      _target = null;
-                                      _error = null;
-                                    })
-                                  : null,
+                    )
+                  : Column(
+                      children: [
+                        SizedBox(
+                          height: numberHeight,
+                          child: NumeroFondoNivel(
+                            ruta: _definition.recursos?.fondo,
+                          ),
+                        ),
+                        SizedBox(
+                          height: shipHeight,
+                          child: preparing
+                              ? Center(child: ship)
+                              : Row(
+                                  children: [
+                                    const Spacer(),
+                                    ship,
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(left: 8),
+                                        child: PanelPuntos(
+                                          puntos: points,
+                                          meta: game.target,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                        SizedBox(
+                          height: 22,
+                          child: _fit(
+                            Text(
+                              preparing
+                                  ? 'PREPARA TU MISIÓN'
+                                  : 'MISIÓN DE ${own?.name.toUpperCase() ?? ''}',
+                              style: const TextStyle(
+                                letterSpacing: 1.5,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
                         ),
-                    ],
-                  ),
-                ),
-              ),
-              Expanded(
-                child: _fit(
-                  SizedBox(
-                    width: 160,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          status,
-                          key: _target == null
-                              ? null
-                              : const ValueKey('propuesta_online'),
-                          maxLines: 3,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: _error == null
-                                ? const Color(0xFFB1C4D4)
-                                : Colors.amber,
+                        if (!preparing)
+                          SizedBox(
+                            height: 54,
+                            child: _fit(GloboAlien(mensaje: message)),
                           ),
-                        ),
-                        Text(
-                          '$resolved/${widget.lobby.members.length} resolvieron',
-                          style: const TextStyle(fontSize: 12),
-                        ),
                       ],
+                    );
+              final prepActions = Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: editable && !initial.interaccionBloqueada
+                          ? () => _inicio.add(const PreparacionReiniciada())
+                          : null,
+                      child: _fit(const Text('Cancelar selección')),
                     ),
                   ),
-                ),
-              ),
-            ],
+                  Expanded(
+                    child: TextButton(
+                      key: const ValueKey('acomodo_online_aleatorio'),
+                      onPressed:
+                          editable &&
+                              !initial.interaccionBloqueada &&
+                              initial.numerosFaltantes.isNotEmpty
+                          ? () => _inicio.add(
+                              const ColocacionAleatoriaSolicitada(),
+                            )
+                          : null,
+                      child: _fit(const Text('Acomodo aleatorio')),
+                    ),
+                  ),
+                ],
+              );
+              final headerHeight = m.compacto
+                  ? (preparing ? 62.0 : 68.0)
+                  : numberHeight + shipHeight + 22 + (preparing ? 0 : 54);
+              final diceState = round == null
+                  ? null
+                  : PartidaEstado(
+                      fase: _meteors
+                          ? FasePartida.tirando
+                          : round.ownAction != null
+                          ? FasePartida.rondaResuelta
+                          : _dicePhase,
+                      tirada: Tirada(
+                        round.number,
+                        round.dice[0],
+                        round.dice[1],
+                      ),
+                      celdas: board.celdas,
+                      historial: _history(game),
+                      meta: game.target,
+                      dadoSeleccionado: selected,
+                      destinos: destinations,
+                      puntos: points,
+                    );
+              final actionRow = Row(
+                children: [
+                  Expanded(
+                    child: FilledButton(
+                      key: const ValueKey('confirmar_jugada_online'),
+                      onPressed: canAct && _target != null
+                          ? () => widget.rooms.confirmAction(
+                              game.id,
+                              round.id,
+                              dieIndex: _die,
+                              cellId: _target,
+                            )
+                          : null,
+                      child: _fit(const Text('Confirmar jugada')),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton(
+                      key: const ValueKey('omitir_ronda_online'),
+                      onPressed: canAct
+                          ? () => widget.rooms.confirmAction(game.id, round.id)
+                          : null,
+                      child: _fit(const Text('Omitir ronda')),
+                    ),
+                  ),
+                ],
+              );
+              final preparationFooter = game.prepared
+                  ? _fit(const Text('Posiciones iniciales confirmadas'))
+                  : FilledButton(
+                      key: const ValueKey('confirmar_preparacion_online'),
+                      onPressed: editable && initial.puedeIniciar
+                          ? () => widget.rooms.confirmPreparation(game.id, {
+                              for (final c in initial.celdas.values)
+                                if (c.valor != null) c.id: c.valor!,
+                            })
+                          : null,
+                      child: _fit(const Text('Confirmar preparación')),
+                    );
+              return Stack(
+                key: _canvas,
+                fit: StackFit.expand,
+                children: [
+                  DisenoJuegoFijo(
+                    medidas: m,
+                    altoControles:
+                        headerHeight +
+                        (preparing ? (m.compacto ? 84 : 120) : 80),
+                    cabecera: Row(
+                      children: [
+                        IconButton(
+                          tooltip: 'Salir de la sala',
+                          onPressed: widget.onBack,
+                          icon: const Icon(Icons.arrow_back_rounded),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        Expanded(
+                          child: _fit(
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                  'BRILLIANT',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                if (round != null)
+                                  Text(
+                                    'Ronda ${round.number} · ${widget.state.secondsRemaining ?? 0} s',
+                                    key: const ValueKey('reloj_online'),
+                                    style: const TextStyle(fontSize: 11),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (round != null)
+                          Flexible(
+                            flex: 2,
+                            child: HistorialTiradas(
+                              registros: _history(game),
+                              celdas: board.celdas,
+                            ),
+                          ),
+                        IconButton(
+                          tooltip: 'Ranking',
+                          key: const ValueKey('ranking_online'),
+                          onPressed: _ranking,
+                          icon: const Icon(Icons.emoji_events_rounded),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        widget.chatButton,
+                      ],
+                    ),
+                    controles: Column(
+                      children: [
+                        top,
+                        if (preparing) ...[
+                          SizedBox(
+                            height: m.compacto ? 48 : 52,
+                            child: AbsorbPointer(
+                              absorbing: !editable,
+                              child: BandejaNumeros(
+                                prefijoClave: 'numero_online_',
+                                estado: initial,
+                                altura: 48,
+                                onPresentacionCompletada: () => _inicio.add(
+                                  const PresentacionNumerosCompletada(),
+                                ),
+                                onSeleccionado: (n) =>
+                                    _inicio.add(NumeroInicialSeleccionado(n)),
+                              ),
+                            ),
+                          ),
+                          if (!m.compacto)
+                            SizedBox(
+                              height: 28,
+                              child: _fit(
+                                Text(message, textAlign: TextAlign.center),
+                              ),
+                            ),
+                          SizedBox(
+                            height: m.compacto ? 36 : 40,
+                            child: prepActions,
+                          ),
+                        ] else
+                          SizedBox(
+                            key: _above,
+                            height: 80,
+                            width: double.infinity,
+                          ),
+                      ],
+                    ),
+                    tablero: table,
+                    pie: preparing
+                        ? Center(child: preparationFooter)
+                        : SizedBox(
+                            key: _below,
+                            width: double.infinity,
+                            child: selected == null && round.ownAction == null
+                                ? null
+                                : Center(child: actionRow),
+                          ),
+                  ),
+                  if (round != null && diceState != null)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        ignoring: !canAct,
+                        child: DadosPartida(
+                          key: ValueKey('dados_${round.id}'),
+                          prefijoClave: 'dado_online_',
+                          estado: diceState,
+                          lienzo: _canvas,
+                          arriba: _above,
+                          abajo: _below,
+                          onSeleccionar: (id) => setState(() {
+                            _die = id;
+                            _target = null;
+                            _dicePhase = FasePartida.moviendoDados;
+                          }),
+                          onMovimientoCompletado: () => setState(
+                            () => _dicePhase = FasePartida.eligiendoDestino,
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (round != null &&
+                      selected == null &&
+                      round.ownAction == null)
+                    Positioned(
+                      bottom: 0,
+                      right: 12,
+                      child: IconButton(
+                        key: const ValueKey('omitir_ronda_online'),
+                        tooltip: 'Omitir ronda',
+                        onPressed: canAct
+                            ? () =>
+                                  widget.rooms.confirmAction(game.id, round.id)
+                            : null,
+                        icon: const Icon(Icons.skip_next),
+                      ),
+                    ),
+                  if ((preparing ? initial.disparoPendiente : _shot)
+                      case final shot?)
+                    Positioned.fill(
+                      child: DisparoNumeroOverlay(
+                        key: ValueKey(
+                          'disparo_${preparing ? 'inicio' : 'ronda'}_${shot.id}',
+                        ),
+                        disparo: shot,
+                        origen: _ship,
+                        destino: _cells[shot.celdaId]!,
+                        fraccionOrigen: Offset(
+                          .5,
+                          _definition.recursos?.emisionY ?? .68,
+                        ),
+                        onCompletado: () {
+                          if (preparing) {
+                            _inicio.add(DisparoNumeroCompletado(shot.id));
+                          } else {
+                            setState(() => _shot = null);
+                          }
+                        },
+                      ),
+                    ),
+                  if (_meteors && _shot == null && round != null)
+                    Positioned.fill(
+                      child: MeteoritosAnimacion(
+                        key: ValueKey('meteoros_${round.id}'),
+                        tiradaId: round.number,
+                        onImpacto: (_) {},
+                        onCompletada: (_) {
+                          if (mounted) setState(() => _meteors = false);
+                        },
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
-        ),
-      );
-      actions = SizedBox(
-        height: 48,
-        child: Row(
-          children: [
-            Expanded(
-              child: FilledButton(
-                key: const ValueKey('confirmar_jugada_online'),
-                onPressed: canAct && _target != null
-                    ? () => widget.rooms.confirmAction(
-                        game.id,
-                        round.id,
-                        dieIndex: _die,
-                        cellId: _target,
-                      )
-                    : null,
-                child: _fit(const Text('Confirmar jugada')),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: OutlinedButton(
-                key: const ValueKey('omitir_ronda_online'),
-                onPressed: canAct
-                    ? () => widget.rooms.confirmAction(game.id, round.id)
-                    : null,
-                child: _fit(const Text('Omitir ronda')),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-    return FondoEspacial(
-      ruta: _definition.recursos?.fondo,
-      numeroEnContenido: true,
-      child: _layout(
-        header: [
-          if (game.prepared && game.round != null && game.scores.isNotEmpty)
-            MarcadorOnline(
-              scores: game.scores,
-              ownId: widget.lobby.members
-                  .where(
-                    (m) => m.userId == widget.rooms.auth.state.session?.user.id,
-                  )
-                  .firstOrNull
-                  ?.id,
-            ),
-          ...header,
-        ],
-        board: boardView,
-        actions: actions,
-      ),
+        );
+      },
     );
   }
 }

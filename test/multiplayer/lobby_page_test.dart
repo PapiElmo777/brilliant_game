@@ -63,13 +63,13 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('iniciar_sala')));
       await tester.pumpAndSettle();
-      expect(find.text('Preparando la misión'), findsOneWidget);
-      await tester.tap(find.byType(BackButton));
+      expect(find.text('PREPARA TU MISIÓN'), findsOneWidget);
+      await tester.tap(find.byTooltip('Salir de la sala'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Cancelar'));
       await tester.pumpAndSettle();
-      expect(find.text('Preparando la misión'), findsOneWidget);
-      await tester.tap(find.byType(BackButton));
+      expect(find.text('PREPARA TU MISIÓN'), findsOneWidget);
+      await tester.tap(find.byTooltip('Salir de la sala'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('confirmar_salida_sala')));
       await tester.pumpAndSettle();

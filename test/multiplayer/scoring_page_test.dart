@@ -10,8 +10,12 @@ void main() {
     pantallaNivel(tester);
     final repo = FakeRoomsRepository()..snapshot = scoredSnapshot();
     await openRooms(tester, repo);
-    expect(find.text('Tú: 11 pts'), findsOneWidget);
-    expect(find.text('Beto: 7 pts'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('ranking_online')));
+    await tester.pumpAndSettle();
+    expect(find.text('Beto'), findsOneWidget);
+    expect(find.text('7 pts'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('cerrar_ranking')));
+    await tester.pumpAndSettle();
     expect(
       tester
           .widget<TableroView>(find.byType(TableroView))
@@ -22,7 +26,9 @@ void main() {
       scoredSnapshot(sequence: 6)..['match']['scores'][1]['points'] = 13,
     );
     await tester.pumpAndSettle();
-    expect(find.text('Beto: 13 pts'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('ranking_online')));
+    await tester.pumpAndSettle();
+    expect(find.text('13 pts'), findsOneWidget);
     expect(repo.commands, isEmpty);
   });
   testWidgets(

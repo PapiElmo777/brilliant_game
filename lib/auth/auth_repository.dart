@@ -7,7 +7,8 @@ import 'package:flutter/foundation.dart';
 class Account {
   final String id;
   final String username;
-  const Account({required this.id, required this.username});
+  final String? avatarId;
+  const Account({required this.id, required this.username, this.avatarId});
 
   factory Account.fromJson(Map<String, dynamic> json) {
     final id = json['id'];
@@ -18,7 +19,11 @@ class Account {
         username.isEmpty) {
       throw const FormatException('Cuenta inválida');
     }
-    return Account(id: id, username: username);
+    return Account(
+      id: id,
+      username: username,
+      avatarId: json['avatarId'] as String?,
+    );
   }
 }
 
@@ -77,7 +82,22 @@ abstract interface class AuthRepository {
 
 /// Solo habla con el origen configurado. No sigue redirecciones, no reintenta
 /// mutaciones y nunca guarda ni registra cuerpos ni credenciales. Access y refresh viven solo en memoria.
-class HttpAuthRepository implements AuthRepository {
+abstract interface class AvatarRepository {
+  Future<Account> saveAvatar(String token, String? avatarId);
+}
+
+class HttpAuthRepository implements AuthRepository, AvatarRepository {
+  @override
+  Future<Account> saveAvatar(String token, String? avatarId) async =>
+      Account.fromJson(
+        (await sendJson(
+          'PUT',
+          'users/me/avatar',
+          200,
+          token: token,
+          body: {'avatarId': avatarId},
+        ))!,
+      );
   final Uri baseUrl;
   final HttpClient _client;
   final Duration timeout;

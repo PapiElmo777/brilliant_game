@@ -86,6 +86,13 @@ void main() {
           rooms.add(HttpRoomsRepository(baseUrl: base));
           sessions.add(await auth.last.register('Piloto$i', 'a!2'));
         }
+        final avatar = await auth[5].saveAvatar(
+          sessions[5].accessToken,
+          'tablero_03',
+        );
+        expect(avatar.avatarId, 'tablero_03');
+        sessions[5] = await auth[5].refresh(sessions[5].refreshToken!);
+        expect(sessions[5].user.avatarId, 'tablero_03');
         var sequence = 0;
         Future<Map<String, dynamic>> send(
           int user,
@@ -347,6 +354,7 @@ void main() {
           expect(game['ownBoard'], preparedBoards[viewer]);
           final round = Map<String, dynamic>.from(game['round'] as Map);
           expect(round['number'], 2);
+          expect(game['ownHistory'], hasLength(1));
           expect(round['id'], isNot(roundId));
           if (secondRound == null) {
             secondRound = round;

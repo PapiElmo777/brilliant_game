@@ -132,7 +132,8 @@ void main() {
         'a!2',
       );
       await tap(tester, 'auth_submit');
-      expect(find.text('PilotoB'), findsOneWidget);
+      expect(find.text('Bienvenido PilotoB'), findsOneWidget);
+      expect(find.text('Bienvenido PilotoA'), findsNothing);
       await tester.pumpWidget(const SizedBox());
     },
   );

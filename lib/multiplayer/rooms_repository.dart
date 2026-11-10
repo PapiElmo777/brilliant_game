@@ -169,7 +169,7 @@ class OnlineMatch {
   final bool prepared;
   final Set<String> preparedIds;
   final OnlineRound? round;
-  final List<Map<String, dynamic>> scores, claims, zones;
+  final List<Map<String, dynamic>> scores, claims, zones, history;
   final Map<String, dynamic>? endVote, result, rematch;
   OnlineMatch.fromJson(Map<String, dynamic> json)
     : id = json['id'] as String,
@@ -185,6 +185,7 @@ class OnlineMatch {
       preparedIds = Set.unmodifiable(
         (json['preparedMemberIds'] as List? ?? []).cast<String>(),
       ),
+      history = _objects(json['ownHistory']),
       scores = _objects(json['scores']),
       claims = _objects(json['claims']),
       zones = _objects(json['zones']),

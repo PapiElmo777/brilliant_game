@@ -147,9 +147,7 @@ void main() {
       type: 'ROUND_STARTED',
     );
     await tester.pumpAndSettle();
-    final confirm = find.byKey(const ValueKey('confirmar_jugada_online'));
-    await revealOnline(tester, confirm);
-    expect(tester.widget<FilledButton>(confirm).onPressed, isNull);
+    expect(find.byKey(const ValueKey('confirmar_jugada_online')), findsNothing);
     expect(repo.commands, isEmpty);
     expect(
       tester

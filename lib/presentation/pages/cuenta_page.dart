@@ -2,9 +2,50 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../auth/auth_cubit.dart';
 import '../widgets/fondo_espacial.dart';
+import '../widgets/avatar_usuario.dart';
+import '../../catalogo/catalogo_tableros.dart';
 
 class CuentaPage extends StatelessWidget {
   const CuentaPage({super.key});
+  Future<void> _avatars(BuildContext context) async {
+    final auth = context.read<AuthCubit>();
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Seleccionar avatar'),
+        content: SizedBox(
+          width: 340,
+          child: GridView.count(
+            shrinkWrap: true,
+            crossAxisCount: 2,
+            children: [
+              for (final level
+                  in CatalogoTableros.predeterminado().definiciones.values)
+                InkWell(
+                  key: ValueKey('avatar_${level.id}'),
+                  onTap: () => Navigator.pop(context, level.id),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AvatarUsuario(avatarId: level.id, size: 72),
+                      Text(level.nombre ?? level.id),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+        ],
+      ),
+    );
+    if (selected != null) await auth.selectAvatar(selected);
+  }
+
   @override
   Widget build(BuildContext context) => BlocBuilder<AuthCubit, AuthState>(
     builder: (context, state) => PopScope(
@@ -22,6 +63,20 @@ class CuentaPage extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      Center(
+                        child: AvatarUsuario(
+                          key: const ValueKey('avatar_cuenta'),
+                          avatarId: state.session?.user.avatarId,
+                          size: 96,
+                        ),
+                      ),
+                      TextButton(
+                        key: const ValueKey('seleccionar_avatar'),
+                        onPressed: state.busy ? null : () => _avatars(context),
+                        child: const Text('Seleccionar avatar'),
+                      ),
+                      if (state.error != null && !state.logoutUnconfirmed)
+                        Text(state.error!),
                       Text(
                         state.session?.user.username ?? '',
                         textAlign: TextAlign.center,

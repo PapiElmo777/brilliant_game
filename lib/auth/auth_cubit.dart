@@ -30,6 +30,46 @@ class AuthCubit extends Cubit<AuthState> {
   int _generation = 0;
   AuthCubit(this.repository) : super(const AuthState());
 
+  Future<void> selectAvatar(String? avatarId) async {
+    if (state.busy) return;
+    await _refreshing;
+    final session = state.session;
+    final generation = _generation;
+    if (isClosed || session == null || state.busy) return;
+    final avatars = repository;
+    if (avatars is! AvatarRepository) return;
+    emit(AuthState(session: session, busy: true));
+    try {
+      final user = await (avatars as AvatarRepository).saveAvatar(
+        session.accessToken,
+        avatarId,
+      );
+      if (isClosed || generation != _generation) return;
+      if (user.id != session.user.id) {
+        invalidate();
+        return;
+      }
+      emit(
+        AuthState(
+          session: AuthSession(
+            user: user,
+            accessToken: session.accessToken,
+            expiresAt: session.expiresAt,
+            refreshToken: session.refreshToken,
+          ),
+        ),
+      );
+    } on AuthFailure catch (error) {
+      if (!isClosed && generation == _generation) {
+        if (error.invalidSession) {
+          invalidate();
+        } else {
+          emit(AuthState(session: session, error: error.message));
+        }
+      }
+    }
+  }
+
   void clearError() {
     if (!state.busy) {
       emit(AuthState(session: state.session, cooldown: state.cooldown));

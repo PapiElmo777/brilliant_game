@@ -106,10 +106,11 @@ class _FinalPartidaOnlineState extends State<FinalPartidaOnline> {
             Positioned(
               top: 8,
               right: 8,
-              child: FilledButton.tonal(
+              child: IconButton.filledTonal(
+                tooltip: 'Ver ranking',
                 key: const ValueKey('ver_ranking_online'),
                 onPressed: _complete,
-                child: const Text('Ver ranking'),
+                icon: const Icon(Icons.emoji_events_rounded),
               ),
             ),
           ],

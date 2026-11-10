@@ -1,4 +1,6 @@
 import 'dart:math' as math;
+import '../../auth/auth_cubit.dart';
+import '../widgets/avatar_usuario.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -78,6 +80,7 @@ class _MenuInicialPageState extends State<MenuInicialPage> {
             fit: StackFit.expand,
             children: [
               _PortadaMenu(
+                nombre: widget.cuenta?.username,
                 onMultijugador:
                     widget.onMultijugador == null || _multijugadorAbierto
                     ? null
@@ -96,15 +99,20 @@ class _MenuInicialPageState extends State<MenuInicialPage> {
                     alignment: Alignment.topRight,
                     child: Padding(
                       padding: const EdgeInsets.all(12),
-                      child: FilledButton.icon(
-                        key: const ValueKey('account_menu'),
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => const CuentaPage(),
+                      child: BlocBuilder<AuthCubit, AuthState>(
+                        builder: (context, auth) => IconButton(
+                          key: const ValueKey('account_menu'),
+                          tooltip: 'Mi cuenta',
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const CuentaPage(),
+                            ),
+                          ),
+                          icon: AvatarUsuario(
+                            avatarId: auth.session?.user.avatarId,
+                            size: 44,
                           ),
                         ),
-                        icon: const Icon(Icons.account_circle),
-                        label: Text(widget.cuenta!.username),
                       ),
                     ),
                   ),
@@ -122,7 +130,12 @@ class _MenuInicialPageState extends State<MenuInicialPage> {
 class _PortadaMenu extends StatelessWidget {
   final VoidCallback? onNuevaPartida;
   final VoidCallback? onMultijugador;
-  const _PortadaMenu({required this.onNuevaPartida, this.onMultijugador});
+  final String? nombre;
+  const _PortadaMenu({
+    required this.onNuevaPartida,
+    this.onMultijugador,
+    this.nombre,
+  });
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -177,7 +190,19 @@ class _PortadaMenu extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const _LogoMenu(ancho: 230, alto: 56),
+                      _LogoMenu(ancho: 230, alto: nombre == null ? 56 : 48),
+                      if (nombre != null)
+                        SizedBox(
+                          height: 18,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              'Bienvenido $nombre',
+                              key: const ValueKey('bienvenida_usuario'),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
                       const SizedBox(height: 12),
                       controles,
                     ],
@@ -189,10 +214,24 @@ class _PortadaMenu extends StatelessWidget {
             Positioned(
               left: (espacio.maxWidth - ancho) / 2,
               width: ancho,
-              top: arribaControles - 12 - altoLogo,
+              top: arribaControles - (nombre == null ? 12 : 46) - altoLogo,
               height: altoLogo,
               child: _LogoMenu(ancho: ancho, alto: altoLogo),
             ),
+            if (nombre != null)
+              Positioned(
+                left: 24,
+                right: 24,
+                top: arribaControles - 42,
+                height: 30,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Bienvenido $nombre',
+                    key: const ValueKey('bienvenida_usuario'),
+                  ),
+                ),
+              ),
             Positioned(
               left: (espacio.maxWidth - ancho) / 2,
               width: ancho,

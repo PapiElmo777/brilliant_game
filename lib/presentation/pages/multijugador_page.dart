@@ -140,6 +140,9 @@ class _MultijugadorPageState extends State<MultijugadorPage>
       final game = lobby?.match == null
           ? null
           : OnlineMatch.fromJson(lobby!.match!);
+      final mission =
+          game != null &&
+          (game.state == 'PREPARING' || game.state == 'ROUND_ACTIVE');
       final ownScore = game?.scores
           .where((s) => s['memberId'] == own?.id)
           .firstOrNull;
@@ -149,44 +152,46 @@ class _MultijugadorPageState extends State<MultijugadorPage>
           if (!didPop && lobby != null) _leave();
         },
         child: Scaffold(
-          appBar: AppBar(
-            title: Text(lobby?.name ?? 'Multijugador'),
-            bottom:
-                game == null ||
-                    game.state == 'FINISHED' ||
-                    (game.round == null && game.state != 'END_VOTE')
-                ? null
-                : PreferredSize(
-                    preferredSize: const Size.fromHeight(36),
-                    child: Padding(
-                      padding: const EdgeInsets.all(4),
-                      child: FittedBox(
-                        child: Text(
-                          game.state == 'END_VOTE'
-                              ? 'Votación · ${state.secondsRemaining ?? 0} s'
-                              : 'Ronda ${game.round!.number} · ${state.secondsRemaining ?? 0} s',
-                          key: const ValueKey('reloj_online'),
+          appBar: mission
+              ? null
+              : AppBar(
+                  title: Text(lobby?.name ?? 'Multijugador'),
+                  bottom:
+                      game == null ||
+                          game.state == 'FINISHED' ||
+                          (game.round == null && game.state != 'END_VOTE')
+                      ? null
+                      : PreferredSize(
+                          preferredSize: const Size.fromHeight(36),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: FittedBox(
+                              child: Text(
+                                game.state == 'END_VOTE'
+                                    ? 'Votación · ${state.secondsRemaining ?? 0} s'
+                                    : 'Ronda ${game.round!.number} · ${state.secondsRemaining ?? 0} s',
+                                key: const ValueKey('reloj_online'),
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                  leading: BackButton(
+                    onPressed: () {
+                      if (lobby == null) {
+                        Navigator.maybePop(context);
+                      } else {
+                        _leave();
+                      }
+                    },
                   ),
-            leading: BackButton(
-              onPressed: () {
-                if (lobby == null) {
-                  Navigator.maybePop(context);
-                } else {
-                  _leave();
-                }
-              },
-            ),
-            actions: [
-              IconButton(
-                tooltip: 'Actualizar',
-                onPressed: state.busy ? null : _rooms.refresh,
-                icon: const Icon(Icons.refresh),
-              ),
-            ],
-          ),
+                  actions: [
+                    IconButton(
+                      tooltip: 'Actualizar',
+                      onPressed: state.busy ? null : _rooms.refresh,
+                      icon: const Icon(Icons.refresh),
+                    ),
+                  ],
+                ),
           body: SafeArea(
             child: Center(
               child: ConstrainedBox(
@@ -234,6 +239,8 @@ class _MultijugadorPageState extends State<MultijugadorPage>
                               state: state,
                               rooms: _rooms,
                               onExit: () => _leave(toMenu: true),
+                              onBack: () => _leave(),
+                              chatButton: _chatButton(state, compact: true),
                             ),
                     ),
                   ],
@@ -241,7 +248,7 @@ class _MultijugadorPageState extends State<MultijugadorPage>
               ),
             ),
           ),
-          bottomNavigationBar: lobby == null
+          bottomNavigationBar: lobby == null || mission
               ? null
               : SafeArea(
                   child: Padding(
@@ -331,16 +338,27 @@ class _MultijugadorPageState extends State<MultijugadorPage>
       );
     },
   );
-  Widget _chatButton(RoomsState state) => FloatingActionButton(
-    key: const ValueKey('abrir_chat'),
-    tooltip: 'Chat de la sala',
-    onPressed: _showChat,
-    child: Badge(
-      isLabelVisible: state.unread > 0,
-      label: Text('${state.unread}'),
-      child: const Icon(Icons.chat_bubble_outline),
-    ),
-  );
+  Widget _chatButton(RoomsState state, {bool compact = false}) => compact
+      ? IconButton.filledTonal(
+          key: const ValueKey('abrir_chat'),
+          tooltip: 'Chat de la sala',
+          onPressed: _showChat,
+          icon: Badge(
+            isLabelVisible: state.unread > 0,
+            label: Text('${state.unread}'),
+            child: const Icon(Icons.chat_bubble_outline),
+          ),
+        )
+      : FloatingActionButton(
+          key: const ValueKey('abrir_chat'),
+          tooltip: 'Chat de la sala',
+          onPressed: _showChat,
+          child: Badge(
+            isLabelVisible: state.unread > 0,
+            label: Text('${state.unread}'),
+            child: const Icon(Icons.chat_bubble_outline),
+          ),
+        );
   Widget _list(RoomsState state, bool enabled) => ListView(
     padding: const EdgeInsets.all(16),
     children: [

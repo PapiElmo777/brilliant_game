@@ -44,9 +44,9 @@ class TableroView extends StatefulWidget {
     this.interactiva = true,
     this.celdaPropuesta,
     this.puestosReclamados = const {},
+    this.clavesCeldas = const {},
   }) : estado = null,
-       celdasPartida = celdas,
-       clavesCeldas = const {};
+       celdasPartida = celdas;
 
   @override
   State<TableroView> createState() => _TableroViewState();

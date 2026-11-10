@@ -78,6 +78,7 @@ class FichaDado extends StatelessWidget {
 
 class DadosPartida extends StatefulWidget {
   final PartidaEstado estado;
+  final String prefijoClave;
   final GlobalKey lienzo;
   final GlobalKey arriba;
   final GlobalKey abajo;
@@ -87,6 +88,7 @@ class DadosPartida extends StatefulWidget {
   const DadosPartida({
     super.key,
     required this.estado,
+    this.prefijoClave = 'dado_',
     required this.lienzo,
     required this.arriba,
     required this.abajo,
@@ -214,7 +216,7 @@ class _DadosPartidaState extends State<DadosPartida>
               child: Transform.rotate(
                 angle: (1 - t) * (dado.id == 0 ? -.12 : .13),
                 child: FichaDado(
-                  key: ValueKey('dado_${dado.id}'),
+                  key: ValueKey('${widget.prefijoClave}${dado.id}'),
                   dado: dado,
                   seleccionado: widget.estado.dadoSeleccionado == dado.id,
                   onTap: widget.estado.puedeSeleccionar

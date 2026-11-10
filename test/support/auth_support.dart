@@ -4,7 +4,15 @@ import 'package:brilliant_game/auth/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-class FakeAuthRepository implements AuthRepository {
+class FakeAuthRepository implements AuthRepository, AvatarRepository {
+  String? avatarId;
+  @override
+  Future<Account> saveAvatar(String token, String? value) async {
+    if (failure != null) throw failure!;
+    avatarId = value;
+    return Account(id: 'uuid-de-prueba', username: name, avatarId: value);
+  }
+
   final String name;
   AuthFailure? failure;
   int deletes = 0;
@@ -16,7 +24,7 @@ class FakeAuthRepository implements AuthRepository {
   Future<AuthSession> login(String username, String password) async {
     if (failure != null) throw failure!;
     return AuthSession(
-      user: Account(id: 'uuid-de-prueba', username: name),
+      user: Account(id: 'uuid-de-prueba', username: name, avatarId: avatarId),
       accessToken: 'token-de-prueba',
       expiresAt: DateTime.now().add(const Duration(hours: 1)),
     );

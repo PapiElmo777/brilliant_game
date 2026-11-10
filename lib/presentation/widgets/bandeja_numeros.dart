@@ -4,6 +4,7 @@ import '../../bloc/inicio_estado.dart';
 
 class BandejaNumeros extends StatefulWidget {
   final InicioEstado estado;
+  final String prefijoClave;
   final ValueChanged<int> onSeleccionado;
   final double? altura;
   final VoidCallback? onPresentacionCompletada;
@@ -11,6 +12,7 @@ class BandejaNumeros extends StatefulWidget {
   const BandejaNumeros({
     super.key,
     required this.estado,
+    this.prefijoClave = 'numero_',
     required this.onSeleccionado,
     this.altura,
     this.onPresentacionCompletada,
@@ -117,7 +119,7 @@ class _BandejaNumerosState extends State<BandejaNumeros>
                         width: 48,
                         height: alturaFicha,
                         child: OutlinedButton(
-                          key: ValueKey('numero_$numero'),
+                          key: ValueKey('${widget.prefijoClave}$numero'),
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.zero,
                             disabledForegroundColor:
