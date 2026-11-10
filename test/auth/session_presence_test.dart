@@ -67,22 +67,25 @@ void main() {
     expect(find.byType(BrilliantGameApp), findsOneWidget);
   });
 
-  testWidgets('Servidor apagado vuelve a login con una ventana y limpia rutas', (tester) async {
-    final repository = FakeAuthRepository();
-    await iniciarApp(tester, repository: repository);
-    repository.sessionFailure = const AuthFailure('NETWORK_ERROR');
-    await tester.pump(const Duration(seconds: 10));
-    await tester.pumpAndSettle();
-    expect(find.byType(AlertDialog), findsOneWidget);
-    expect(find.text('Conexión perdida'), findsOneWidget);
-    expect(find.text('UN JUGADOR'), findsNothing);
-    await tester.tap(find.text('Aceptar'));
-    await tester.pumpAndSettle();
-    expect(find.text('Iniciar sesión'), findsOneWidget);
-    await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
-    expect(find.text('UN JUGADOR'), findsNothing);
-  });
+  testWidgets(
+    'Servidor apagado vuelve a login con una ventana y limpia rutas',
+    (tester) async {
+      final repository = FakeAuthRepository();
+      await iniciarApp(tester, repository: repository);
+      repository.sessionFailure = const AuthFailure('NETWORK_ERROR');
+      await tester.pump(const Duration(seconds: 10));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text('Conexión perdida'), findsOneWidget);
+      expect(find.text('UN JUGADOR'), findsNothing);
+      await tester.tap(find.text('Aceptar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Iniciar sesión'), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('UN JUGADOR'), findsNothing);
+    },
+  );
 
   test('Un fallo de red cierra la sesión y solicita el aviso', () async {
     final repository = FakeAuthRepository()

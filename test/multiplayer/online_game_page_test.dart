@@ -55,7 +55,9 @@ void main() {
       findsOneWidget,
     );
   });
-  testWidgets('Permite alternar ambos dados antes de confirmar', (tester) async {
+  testWidgets('Permite alternar ambos dados antes de confirmar', (
+    tester,
+  ) async {
     pantallaNivel(tester);
     final repo = FakeRoomsRepository()
       ..snapshot = onlineSnapshot(prepared: true, playing: true);
@@ -63,10 +65,46 @@ void main() {
     for (final id in [0, 1, 0, 1]) {
       await tester.tap(find.byKey(ValueKey('dado_online_$id')));
       await tester.pumpAndSettle();
-      expect(tester.widget<FichaDado>(find.byKey(ValueKey('dado_online_$id'))).seleccionado, isTrue);
-      expect(tester.widget<FichaDado>(find.byKey(ValueKey('dado_online_${1 - id}'))).onTap, isNotNull);
+      expect(
+        tester
+            .widget<FichaDado>(find.byKey(ValueKey('dado_online_$id')))
+            .seleccionado,
+        isTrue,
+      );
+      expect(
+        tester
+            .widget<FichaDado>(find.byKey(ValueKey('dado_online_${1 - id}')))
+            .onTap,
+        isNotNull,
+      );
     }
     expect(repo.commands, isEmpty);
+  });
+  testWidgets('El reloj avanza sin reconstruir el tablero cada segundo', (
+    tester,
+  ) async {
+    pantallaNivel(tester);
+    final repo = FakeRoomsRepository()
+      ..snapshot = onlineSnapshot(prepared: true, playing: true);
+    await openRooms(tester, repo);
+    final before = tester.widget<TableroView>(find.byType(TableroView));
+    final clockBefore = tester
+        .widget<Text>(find.byKey(const ValueKey('reloj_online')))
+        .data;
+    // El reloj del servidor usa Stopwatch para resistir cambios de hora.
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 1100)),
+    );
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump();
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('reloj_online'))).data,
+      isNot(clockBefore),
+    );
+    expect(
+      identical(before, tester.widget<TableroView>(find.byType(TableroView))),
+      isTrue,
+    );
   });
   testWidgets(
     'Elegir dado y celda mantiene una propuesta local hasta confirmar',
@@ -85,7 +123,10 @@ void main() {
       final preview = tester.widget<CeldaView>(cell);
       expect(preview.numeroPropuesto, 1);
       expect(preview.seleccionada, isTrue);
-      expect(find.descendant(of: cell, matching: find.text('1')), findsOneWidget);
+      expect(
+        find.descendant(of: cell, matching: find.text('1')),
+        findsOneWidget,
+      );
       expect(
         tester
             .widget<TableroView>(find.byType(TableroView))

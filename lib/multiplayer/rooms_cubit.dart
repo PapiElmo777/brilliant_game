@@ -98,10 +98,16 @@ class RoomsCubit extends Cubit<RoomsState> {
       }
     });
   }
+  List<RoomMessage>? _sortedMessages;
+  Map<String, dynamic>? _clockMatch;
+  OnlineMatch? _clockGame;
+
   void _publish(RoomsState update) {
     if (isClosed) return;
-    final messages = _messages.values.toList()
-      ..sort((a, b) => a.sequence.compareTo(b.sequence));
+    final messages = _sortedMessages ??= List.unmodifiable(
+      _messages.values.toList()
+        ..sort((a, b) => a.sequence.compareTo(b.sequence)),
+    );
     super.emit(
       RoomsState(
         lobby: update.lobby,
@@ -112,7 +118,7 @@ class RoomsCubit extends Cubit<RoomsState> {
         error: update.error,
         channelConnected: _ready,
         connecting: _connecting,
-        messages: List.unmodifiable(messages),
+        messages: messages,
         unread: _unread,
         loadingHistory: _loadingHistory,
         hasMoreHistory: _hasMore,
@@ -125,7 +131,11 @@ class RoomsCubit extends Cubit<RoomsState> {
 
   int? _remaining(LobbySnapshot? snapshot) {
     if (snapshot?.match == null) return null;
-    final game = OnlineMatch.fromJson(snapshot!.match!);
+    if (!identical(_clockMatch, snapshot!.match)) {
+      _clockMatch = snapshot.match;
+      _clockGame = OnlineMatch.fromJson(_clockMatch!);
+    }
+    final game = _clockGame!;
     final deadline = game.state == 'END_VOTE'
         ? DateTime.parse(game.endVote!['deadline'] as String)
         : game.state == 'ROUND_ACTIVE'
@@ -151,7 +161,10 @@ class RoomsCubit extends Cubit<RoomsState> {
     _active = true;
     _roundTicker?.cancel();
     _roundTicker = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (state.lobby?.match != null) _status();
+      if (state.lobby?.match != null &&
+          _remaining(state.lobby) != state.secondsRemaining) {
+        _status();
+      }
     });
     _poll?.cancel();
     _poll = Timer.periodic(const Duration(seconds: 3), (_) {
@@ -195,12 +208,14 @@ class RoomsCubit extends Cubit<RoomsState> {
   void _unauthorized(AuthFailure error, String? token) {
     if (error.connectionFailure && auth.state.session?.accessToken == token) {
       auth.checkSession();
-    } else if (error.status == 401 && auth.state.session?.accessToken == token) {
+    } else if (error.status == 401 &&
+        auth.state.session?.accessToken == token) {
       auth.invalidate();
     }
   }
 
   void _merge(Iterable<RoomMessage> messages) {
+    _sortedMessages = null;
     for (final m in messages) {
       _messages[m.id] = m;
     }
@@ -232,6 +247,7 @@ class RoomsCubit extends Cubit<RoomsState> {
     }
     if (old?.id != incoming.id) {
       _messages.clear();
+      _sortedMessages = null;
       _unread = 0;
       _hasMore = true;
       _draft = '';
@@ -259,6 +275,7 @@ class RoomsCubit extends Cubit<RoomsState> {
     _stopChannel();
     _reconnect?.cancel();
     _messages.clear();
+    _sortedMessages = null;
     _unread = 0;
     _draft = '';
     _readSequence = 0;

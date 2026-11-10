@@ -28,7 +28,10 @@ class _AccesoPageState extends State<AccesoPage> {
   bool _connectionDialogShown = false;
 
   void _notifyConnectionLost(AuthState state) {
-    if (!state.connectionLost) { _connectionDialogShown = false; return; }
+    if (!state.connectionLost) {
+      _connectionDialogShown = false;
+      return;
+    }
     if (_connectionDialogShown) return;
     _connectionDialogShown = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -38,12 +41,20 @@ class _AccesoPageState extends State<AccesoPage> {
         barrierDismissible: false,
         builder: (context) => AlertDialog(
           title: const Text('Conexión perdida'),
-          content: const Text('Se perdió la conexión con el servidor. Revisa tu conexión e inicia sesión de nuevo.'),
-          actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Aceptar'))],
+          content: const Text(
+            'Se perdió la conexión con el servidor. Revisa tu conexión e inicia sesión de nuevo.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Aceptar'),
+            ),
+          ],
         ),
       );
     });
   }
+
   @override
   void dispose() {
     _username.dispose();

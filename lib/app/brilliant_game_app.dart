@@ -17,6 +17,7 @@ class BrilliantGameApp extends StatefulWidget {
   final AuthRepository? authRepository;
   final RoomsRepository? roomsRepository;
   final ServerSettingsStore? serverStore;
+  final SessionStore? sessionStore;
   final ServerProbe? serverProbe;
   final AuthRepository Function(Uri)? authRepositoryFactory;
   const BrilliantGameApp({
@@ -25,6 +26,7 @@ class BrilliantGameApp extends StatefulWidget {
     this.authRepository,
     this.roomsRepository,
     this.serverStore,
+    this.sessionStore,
     this.serverProbe,
     this.authRepositoryFactory,
   });
@@ -71,13 +73,13 @@ class _BrilliantGameAppState extends State<BrilliantGameApp>
         widget.authRepository ??
         widget.authRepositoryFactory?.call(_server) ??
         HttpAuthRepository(baseUrl: _server);
-    _auth = AuthCubit(
-      _repository!,
-      sessionStore: widget.authRepository == null
-          ? SecureSessionStore(_server.toString())
-          : null,
-    );
-    if (widget.authRepository == null) _auth!.restoreSession();
+    final sessionStore =
+        widget.sessionStore ??
+        (widget.authRepository == null && widget.authRepositoryFactory == null
+            ? SecureSessionStore(_server.toString())
+            : null);
+    _auth = AuthCubit(_repository!, sessionStore: sessionStore);
+    if (sessionStore != null) _auth!.restoreSession();
     _roomsRepository =
         widget.roomsRepository ?? HttpRoomsRepository(baseUrl: _server);
   }

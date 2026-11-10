@@ -22,6 +22,9 @@ class MeteoritosAnimacion extends StatefulWidget {
   /// Multiplica la velocidad de reproducción del clip.
   final int velocidad;
 
+  /// Cuadro del recurso en que los meteoritos llegan al tablero.
+  final int cuadroImpacto;
+
   const MeteoritosAnimacion({
     super.key,
     required this.tiradaId,
@@ -29,6 +32,7 @@ class MeteoritosAnimacion extends StatefulWidget {
     required this.onCompletada,
     this.cargar,
     this.velocidad = 7,
+    this.cuadroImpacto = 18,
   });
 
   @override
@@ -126,8 +130,8 @@ class _MeteoritosAnimacionState extends State<MeteoritosAnimacion>
         _indice++;
       });
       _desecharImagen(anterior);
-      // El impacto se revela en el cuadro 120 del recurso de 24 fps.
-      if (_indice >= 120 && !_impacto) {
+      // El clip conserva uno de cada siete cuadros a velocidad x7.
+      if (_indice >= widget.cuadroImpacto && !_impacto) {
         _impacto = true;
         widget.onImpacto(widget.tiradaId);
       }

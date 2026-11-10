@@ -94,84 +94,88 @@ class _TableroViewState extends State<TableroView> {
         resaltada != null &&
         resaltada.celdas.any((celda) => celda.columna == 0) &&
         resaltada.celdas.any((celda) => celda.columna == 6);
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: const Color(0xCC071226),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF355972)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33000000),
-            blurRadius: 24,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
-      child: AspectRatio(
-        aspectRatio: 1,
-        child: LayoutBuilder(
-          builder: (context, espacio) => Stack(
-            children: [
-              GridView.builder(
-                padding: EdgeInsets.zero,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: celdas.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 7,
-                  crossAxisSpacing: 4,
-                  mainAxisSpacing: 4,
+    return RepaintBoundary(
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: const Color(0xCC071226),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFF355972)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x33000000),
+              blurRadius: 24,
+              offset: Offset(0, 8),
+            ),
+          ],
+        ),
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: LayoutBuilder(
+            builder: (context, espacio) => Stack(
+              children: [
+                GridView.builder(
+                  padding: EdgeInsets.zero,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: celdas.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 7,
+                    crossAxisSpacing: 4,
+                    mainAxisSpacing: 4,
+                  ),
+                  itemBuilder: (context, index) {
+                    final celda = celdas[index];
+                    final zona = zonas[celda.id]!;
+                    return KeyedSubtree(
+                      key: widget.clavesCeldas[celda.id],
+                      child: CeldaView(
+                        key: ValueKey('celda_${celda.id}'),
+                        celda: celda,
+                        numeroPropuesto: widget.celdaPropuesta == celda.id
+                            ? widget.numeroPropuesto
+                            : null,
+                        tipo: zona.tipo,
+                        esDestino: widget.destinos.contains(celda.id),
+                        seleccionada:
+                            estado?.celdaSeleccionada == celda.id ||
+                            widget.celdaPropuesta == celda.id,
+                        enPartida: estado == null,
+                        pista: estado == null
+                            ? null
+                            : widget._pistaPreparacion(celda),
+                        enZonaResaltada: idsResaltados.contains(celda.id),
+                        atenuada:
+                            resaltada != null &&
+                            !idsResaltados.contains(celda.id),
+                        completada: idsCompletos.contains(celda.id),
+                        onMantener: (presionada) =>
+                            _resaltar(presionada ? zona : null),
+                        onTap:
+                            (estado != null
+                                ? !estado.interaccionBloqueada
+                                : widget.interactiva)
+                            ? () => widget.onCeldaSeleccionada(celda.id)
+                            : null,
+                      ),
+                    );
+                  },
                 ),
-                itemBuilder: (context, index) {
-                  final celda = celdas[index];
-                  final zona = zonas[celda.id]!;
-                  return KeyedSubtree(
-                    key: widget.clavesCeldas[celda.id],
-                    child: CeldaView(
-                      key: ValueKey('celda_${celda.id}'),
-                      celda: celda,
-                      numeroPropuesto: widget.celdaPropuesta == celda.id ? widget.numeroPropuesto : null,
-                      tipo: zona.tipo,
-                      esDestino: widget.destinos.contains(celda.id),
-                      seleccionada:
-                          estado?.celdaSeleccionada == celda.id ||
-                          widget.celdaPropuesta == celda.id,
-                      enPartida: estado == null,
-                      pista: estado == null
-                          ? null
-                          : widget._pistaPreparacion(celda),
-                      enZonaResaltada: idsResaltados.contains(celda.id),
-                      atenuada:
-                          resaltada != null &&
-                          !idsResaltados.contains(celda.id),
-                      completada: idsCompletos.contains(celda.id),
-                      onMantener: (presionada) =>
-                          _resaltar(presionada ? zona : null),
-                      onTap:
-                          (estado != null
-                              ? !estado.interaccionBloqueada
-                              : widget.interactiva)
-                          ? () => widget.onCeldaSeleccionada(celda.id)
-                          : null,
-                    ),
-                  );
-                },
-              ),
-              if (resaltada != null)
-                // La ficha se muestra en la mitad contraria a la zona.
-                Positioned(
-                  left: fichaAngosta ? espacio.maxWidth / 7 + 2 : 6,
-                  right: fichaAngosta ? espacio.maxWidth / 7 + 2 : 6,
-                  top: _zonaArriba(resaltada) ? null : 6,
-                  bottom: _zonaArriba(resaltada) ? 6 : null,
-                  child: IgnorePointer(
-                    child: FichaZona(
-                      zona: resaltada,
-                      reclamados: widget.puestosReclamados[resaltada.id] ?? 0,
+                if (resaltada != null)
+                  // La ficha se muestra en la mitad contraria a la zona.
+                  Positioned(
+                    left: fichaAngosta ? espacio.maxWidth / 7 + 2 : 6,
+                    right: fichaAngosta ? espacio.maxWidth / 7 + 2 : 6,
+                    top: _zonaArriba(resaltada) ? null : 6,
+                    bottom: _zonaArriba(resaltada) ? 6 : null,
+                    child: IgnorePointer(
+                      child: FichaZona(
+                        zona: resaltada,
+                        reclamados: widget.puestosReclamados[resaltada.id] ?? 0,
+                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -348,8 +352,10 @@ class CeldaView extends StatelessWidget {
         : const Color(0xFF071226);
     final valorVisible = celda.valor ?? numeroPropuesto;
     final estado = numeroPropuesto != null && celda.valor == null
-      ? 'número $numeroPropuesto provisional, pendiente de confirmar'
-      : celda.valor == null ? 'vacía' : 'número ${celda.valor}';
+        ? 'número $numeroPropuesto provisional, pendiente de confirmar'
+        : celda.valor == null
+        ? 'vacía'
+        : 'número ${celda.valor}';
     final resaltada = esDestino || seleccionada || enZonaResaltada;
     return Semantics(
       button: true,

@@ -124,6 +124,24 @@ class _MultijugadorPageState extends State<MultijugadorPage>
   @override
   Widget build(BuildContext context) => BlocConsumer<RoomsCubit, RoomsState>(
     bloc: _rooms,
+    buildWhen: (previous, current) =>
+        !identical(previous.lobby, current.lobby) ||
+        !identical(previous.rooms, current.rooms) ||
+        !identical(previous.messages, current.messages) ||
+        previous.busy != current.busy ||
+        previous.loading != current.loading ||
+        previous.uncertain != current.uncertain ||
+        previous.error != current.error ||
+        previous.channelConnected != current.channelConnected ||
+        previous.connecting != current.connecting ||
+        previous.unread != current.unread ||
+        previous.chatCooldown != current.chatCooldown ||
+        previous.loadingHistory != current.loadingHistory ||
+        previous.hasMoreHistory != current.hasMoreHistory ||
+        previous.chatDraft != current.chatDraft ||
+        (previous.secondsRemaining == 0) != (current.secondsRemaining == 0) ||
+        // Las pantallas de votación conservan su contador actual.
+        current.lobby?.match?['state'] == 'END_VOTE',
     listener: (context, state) {
       if (state.lobby == null && _chatOpen) Navigator.of(context).pop();
     },

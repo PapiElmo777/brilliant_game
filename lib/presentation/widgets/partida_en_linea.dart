@@ -6,6 +6,7 @@ import '../../bloc/inicio_evento.dart';
 import '../../bloc/partida_estado.dart';
 import '../../catalogo/catalogo_tableros.dart';
 import '../../core/anclas.dart';
+import '../../core/tablero.dart';
 import '../../models/tirada.dart';
 import '../../multiplayer/rooms_cubit.dart';
 import '../../multiplayer/rooms_repository.dart';
@@ -44,7 +45,29 @@ class PartidaEnLinea extends StatefulWidget {
 }
 
 class _PartidaEnLineaState extends State<PartidaEnLinea> {
-  OnlineMatch get _game => OnlineMatch.fromJson(widget.lobby.match!);
+  Map<String, dynamic>? _matchSource;
+  OnlineMatch? _parsedGame;
+  OnlineMatch get _game {
+    if (!identical(_matchSource, widget.lobby.match)) {
+      _matchSource = widget.lobby.match;
+      _parsedGame = OnlineMatch.fromJson(_matchSource!);
+    }
+    return _parsedGame!;
+  }
+
+  OnlineMatch? _boardSource;
+  Tablero? _parsedBoard;
+  Tablero _board(OnlineMatch game) {
+    if (!identical(_boardSource, game)) {
+      _boardSource = game;
+      _parsedBoard = _definition.crearTablero();
+      for (final e in game.board.entries) {
+        _parsedBoard!.colocarValor(e.key, e.value);
+      }
+    }
+    return _parsedBoard!;
+  }
+
   late final _definition = CatalogoTableros.predeterminado().obtenerDefinicion(
     _game.levelId,
   );
@@ -73,6 +96,7 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
   @override
   void didUpdateWidget(PartidaEnLinea oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (identical(oldWidget.lobby.match, widget.lobby.match)) return;
     final old = OnlineMatch.fromJson(oldWidget.lobby.match!);
     if (old.round?.id != _game.round?.id) {
       _die = null;
@@ -170,10 +194,7 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
     return BlocBuilder<InicioBloc, InicioEstado>(
       bloc: _inicio,
       builder: (context, initial) {
-        final board = _definition.crearTablero();
-        for (final e in game.board.entries) {
-          board.colocarValor(e.key, e.value);
-        }
+        final board = _board(game);
         final preparing = round == null;
         final editable = _enabled && !game.prepared;
         final canAct =
@@ -237,7 +258,9 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                 destinos: canAct ? destinations : {},
                 interactiva: canAct,
                 celdaPropuesta: canAct ? _target : null,
-                numeroPropuesto: canAct && _die != null ? round.dice[_die!] : null,
+                numeroPropuesto: canAct && _die != null
+                    ? round.dice[_die!]
+                    : null,
                 puestosReclamados: {
                   for (final z in game.zones)
                     z['zoneId'] as String: (z['nextPlace'] as int) - 1,
@@ -505,10 +528,14 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                                   ),
                                 ),
                                 if (round != null)
-                                  Text(
-                                    'Ronda ${round.number} · ${widget.state.secondsRemaining ?? 0} s',
-                                    key: const ValueKey('reloj_online'),
-                                    style: const TextStyle(fontSize: 11),
+                                  BlocSelector<RoomsCubit, RoomsState, int?>(
+                                    bloc: widget.rooms,
+                                    selector: (state) => state.secondsRemaining,
+                                    builder: (context, seconds) => Text(
+                                      'Ronda ${round.number} · ${seconds ?? widget.state.secondsRemaining ?? 0} s',
+                                      key: const ValueKey('reloj_online'),
+                                      style: const TextStyle(fontSize: 11),
+                                    ),
                                   ),
                               ],
                             ),

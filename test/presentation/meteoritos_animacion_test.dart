@@ -55,6 +55,7 @@ void main() {
       Widget pantalla() => MaterialApp(
         home: MeteoritosAnimacion(
           tiradaId: 7,
+          cuadroImpacto: 120,
           cargar: () async {
             cargas++;
             return codec;
@@ -94,6 +95,7 @@ void main() {
             data: MediaQueryData(disableAnimations: reducido),
             child: MeteoritosAnimacion(
               tiradaId: 2,
+              cuadroImpacto: 120,
               cargar: () async {
                 cargas++;
                 throw StateError('Error de recurso');
@@ -119,6 +121,7 @@ void main() {
       MaterialApp(
         home: MeteoritosAnimacion(
           tiradaId: 3,
+          cuadroImpacto: 120,
           cargar: () => carga.future,
           onImpacto: eventos.add,
           onCompletada: eventos.add,
@@ -140,6 +143,7 @@ void main() {
       MaterialApp(
         home: MeteoritosAnimacion(
           tiradaId: 4,
+          cuadroImpacto: 120,
           cargar: () => carga.future,
           onImpacto: eventos.add,
           onCompletada: eventos.add,
@@ -174,6 +178,7 @@ void main() {
             Positioned.fill(
               child: MeteoritosAnimacion(
                 tiradaId: 5,
+                cuadroImpacto: 120,
                 cargar: () async => codec,
                 onImpacto: (id) => eventos.add('impacto$id'),
                 onCompletada: (id) => eventos.add('fin$id'),

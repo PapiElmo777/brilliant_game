@@ -10,11 +10,11 @@ La app arranca en login; crear cuenta abre directamente el menú. El menú tiene
 
 Desde el 3 de noviembre de 2026, el registro requiere **3–128 caracteres y al menos un carácter especial** (puntuación o símbolo, por ejemplo `a!2`). Los espacios no satisfacen el requisito de carácter especial. Las cuentas anteriores conservan acceso aunque su contraseña no tenga símbolo.
 
-La sesión vive solo en memoria; un proceso nuevo requiere login. La caducidad, el cierre de sesión y el borrado desmontan las rutas protegidas. Un fallo de red al borrar muestra resultado incierto, sin anunciar éxito ni reintentar automáticamente. Se bloquean envíos dobles y se respeta `Retry-After`. No se guardan contraseñas ni tokens, ni se usan refresh tokens. No se añaden invitados, renombrado, recuperación, salas ni partidas en línea.
+La sesión se conserva hasta **10 minutos al cerrar o dejar en segundo plano la app**, mediante almacenamiento protegido del dispositivo y validación contra el servidor al reabrir. No se guarda la contraseña. Cerrar sesión, caducar o perder la conexión desmonta las rutas protegidas y borra el acceso guardado. La pérdida de conexión muestra una ventana en login. Los apartados de entregas anteriores que siguen conservan su contexto histórico; las correcciones del 9 de noviembre al final describen el comportamiento vigente.
 
 ### Conexión práctica por Wi-Fi
 
-Instala la misma app **Debug** en cada dispositivo y conecta todos a la misma red Wi-Fi de la computadora. La primera vez, en el acceso abre **Servidor**, escribe la dirección indicada por la terminal y pulsa **Guardar y conectar**. La app comprueba `/api/v1/health/ready` antes de guardar. Ejemplo: `192.168.0.31:8080`; añade `/api/v1` automáticamente. La dirección se recuerda al cerrar y abrir la app, sin recompilar. Si cambia la IP o la red, vuelve a Servidor antes de iniciar sesión. Configurar el servidor no restaura la sesión: sigue siendo necesario iniciar sesión al abrir un proceso nuevo.
+Instala la misma app **Debug** en cada dispositivo y conecta todos a la misma red Wi-Fi de la computadora. La primera vez, en el acceso abre **Servidor**, escribe la dirección indicada por la terminal y pulsa **Guardar y conectar**. La app comprueba `/api/v1/health/ready` antes de guardar. Ejemplo: `192.168.0.31:8080`; añade `/api/v1` automáticamente. La dirección se recuerda al cerrar y abrir la app, sin recompilar. Si cambia la IP o la red, vuelve a Servidor antes de iniciar sesión. La sesión guardada pertenece únicamente al servidor elegido y puede recuperarse dentro de los diez minutos.
 
 En esta Mac, Java 24/25 falló al aceptar conexiones LAN incluso con un socket mínimo. Java 21 incluido en Android Studio respondió correctamente desde el Samsung. Arrancar desde terminal con:
 
@@ -723,3 +723,15 @@ cd /Users/alfredojimenez/developer/brilliant_game/brilliant_server
 ```
 
 El iniciador usa Java 21 y target/brilliant-server.jar en perfil LAN. La IP se obtiene al arrancar; al cambiar de red hay que actualizar Servidor en la app. La red usada al finalizar esta corrección anuncia 192.168.0.31:8080. Para ver el diseño y elegir avatar hay que ejecutar/instalar el APK de esta actualización. Trabajo en multiplayer, commits en español y sin merge a main; la evaluación de seis teléfonos sigue pendiente.
+
+
+## Correcciones de uso y rendimiento — 9 de noviembre de 2026
+
+- Cerrar sesión visible junto a Mi cuenta en el menú; conserva el cierre remoto y la limpieza de navegación existentes.
+- Access/refresh en almacenamiento seguro de Android/iOS, separado por servidor, sin contraseña. Se recupera el acceso antes de diez minutos y se valida/rota el token; logout, caducidad o pérdida de conexión borran la copia. En segundo plano se suspenden presencia y renovación. La reserva de cuenta en Java pasa a 600 segundos; la reserva de un lugar en sala sigue siendo 45 segundos.
+- Se permite alternar dados antes de confirmar sin volver a bloquear la animación completada. Cambiar el dado descarta la celda propuesta.
+- La celda elegida muestra el número provisional y su estado accesible, manteniendo intacto el tablero confirmado hasta la respuesta de Java.
+- Fallos de presencia o renovación por red/servidor vuelven a login con una ventana. Un canal caído o una respuesta incierta de sala comprueban también HTTP antes de decidir si se perdió el servidor. La detección depende del latido de diez segundos y del tiempo de espera de red.
+- El reloj actualiza su texto sin reconstruir el tablero cada segundo; se reutilizan partida interpretada, tablero y mensajes ordenados. El tablero tiene su propio límite de repintado. El clip de meteoritos pasa de 235 a 34 cuadros (28.045.974 a 4.009.562 bytes), preservando duración, transparencia y píxeles visibles de los cuadros retenidos, con el impacto sincronizado al nuevo recurso. `tool/optimize_meteor_clip.py` documenta la conversión desde el recurso original.
+
+Los clientes simulados pueden inyectar SessionStore y no acceden al almacenamiento del teléfono. La recuperación no reconstruye una navegación antigua: abre el menú con la cuenta validada. Para usar la reserva de diez minutos se necesita actualizar también Java. La mejora de fluidez debe comprobarse en el teléfono; las pruebas de interfaz comprueban que el reloj no reconstruya el tablero, sin afirmar una medición de FPS en un dispositivo físico.
