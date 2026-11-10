@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../auth/auth_cubit.dart';
+import '../auth/session_store.dart';
 import '../multiplayer/rooms_repository.dart';
 import '../presentation/pages/multijugador_page.dart';
 import '../auth/auth_repository.dart';
@@ -58,7 +59,11 @@ class _BrilliantGameAppState extends State<BrilliantGameApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _auth?.checkSession();
+    if (state == AppLifecycleState.resumed) _auth?.resumeSession();
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _auth?.suspendSession();
+    }
   }
 
   void _createAuth() {
@@ -66,7 +71,13 @@ class _BrilliantGameAppState extends State<BrilliantGameApp>
         widget.authRepository ??
         widget.authRepositoryFactory?.call(_server) ??
         HttpAuthRepository(baseUrl: _server);
-    _auth = AuthCubit(_repository!);
+    _auth = AuthCubit(
+      _repository!,
+      sessionStore: widget.authRepository == null
+          ? SecureSessionStore(_server.toString())
+          : null,
+    );
+    if (widget.authRepository == null) _auth!.restoreSession();
     _roomsRepository =
         widget.roomsRepository ?? HttpRoomsRepository(baseUrl: _server);
   }

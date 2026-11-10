@@ -54,7 +54,7 @@ class AuthFailure implements Exception {
     'CURRENT_PASSWORD_INVALID' => 'La contraseña actual es incorrecta.',
     'USERNAME_UNAVAILABLE' => 'Ese nombre de usuario ya está ocupado.',
     'SESSION_ALREADY_ACTIVE' =>
-      'La cuenta ya tiene una sesión abierta en otro dispositivo. Cierra esa sesión o espera 45 segundos si la app se cerró.',
+      'La cuenta ya tiene una sesión abierta en otro dispositivo. Cierra esa sesión o espera 10 minutos si la app se cerró.',
     'VALIDATION_ERROR' =>
       'Revisa los datos. Para crear cuenta, usa de 3 a 128 caracteres, al menos uno especial, y evita contraseñas comunes.',
     'RATE_LIMITED' =>

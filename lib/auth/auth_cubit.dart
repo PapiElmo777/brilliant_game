@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'auth_repository.dart';
+import 'session_store.dart';
 
 class AuthState {
   final AuthSession? session;
@@ -28,7 +29,108 @@ class AuthCubit extends Cubit<AuthState> {
   Timer? _presence;
   bool _checkingSession = false;
   int _generation = 0;
-  AuthCubit(this.repository) : super(const AuthState());
+  final SessionStore? sessionStore;
+  Future<void> _storage = Future.value();
+  DateTime? _backgroundedAt;
+  bool _background = false;
+  static const retention = Duration(minutes: 10);
+  AuthCubit(this.repository, {this.sessionStore})
+    : super(AuthState(busy: sessionStore != null));
+
+  void _persist(AuthSession? session) {
+    final store = sessionStore;
+    if (store == null) return;
+    final value = session == null
+        ? null
+        : encodeSession(session, DateTime.now());
+    _storage = _storage
+        .then((_) => value == null ? store.clear() : store.write(value))
+        .catchError((Object _) {});
+  }
+
+  @override
+  void onChange(Change<AuthState> change) {
+    super.onChange(change);
+    if (change.currentState.session != change.nextState.session) {
+      _persist(change.nextState.session);
+    }
+  }
+
+  Future<void> restoreSession() async {
+    if (sessionStore == null) return;
+    final generation = _generation;
+    try {
+      final raw = await sessionStore!.read();
+      if (isClosed || generation != _generation) return;
+      if (raw == null) {
+        emit(const AuthState());
+        return;
+      }
+      final (saved, date) = decodeSession(raw);
+      if (DateTime.now().difference(date) >= retention ||
+          date.isAfter(DateTime.now())) {
+        invalidate();
+        return;
+      }
+      // Consume el secreto guardado antes de rotarlo para evitar replay tras un cierre abrupto.
+      await sessionStore!.clear();
+      final session = saved.refreshToken != null
+          ? await repository.refresh(saved.refreshToken!)
+          : saved;
+      await repository.checkSession(session.accessToken);
+      if (!_background && generation == _generation) _persist(state.session);
+      if (isClosed || generation != _generation) return;
+      if (!session.expiresAt.isAfter(DateTime.now())) {
+        invalidate();
+        return;
+      }
+      _scheduleSession(session);
+      _startPresence();
+      emit(AuthState(session: session));
+      await _storage;
+    } on Object {
+      if (!isClosed && generation == _generation) invalidate();
+    }
+  }
+
+  void _startPresence() {
+    _presence?.cancel();
+    if (!_background) {
+      _presence = Timer.periodic(
+        const Duration(seconds: 10),
+        (_) => checkSession(),
+      );
+    }
+  }
+
+  Future<void> suspendSession() async {
+    _background = true;
+    _backgroundedAt = DateTime.now();
+    _presence?.cancel();
+    _renewal?.cancel();
+    _expiry?.cancel();
+    _persist(state.session);
+    await _storage;
+  }
+
+  Future<void> resumeSession() async {
+    _background = false;
+    final date = _backgroundedAt;
+    _backgroundedAt = null;
+    if (state.session == null) return;
+    if (date != null && DateTime.now().difference(date) >= retention) {
+      invalidate();
+      return;
+    }
+    if (state.session!.expiresAt.difference(DateTime.now()) <=
+        const Duration(seconds: 60)) {
+      await renewSession();
+    }
+    if (state.session == null || isClosed) return;
+    _scheduleSession(state.session!);
+    _startPresence();
+    await checkSession();
+  }
 
   Future<void> selectAvatar(String? avatarId) async {
     if (state.busy) return;
@@ -95,11 +197,7 @@ class AuthCubit extends Cubit<AuthState> {
         return;
       }
       _scheduleSession(session);
-      _presence?.cancel();
-      _presence = Timer.periodic(
-        const Duration(seconds: 10),
-        (_) => checkSession(),
-      );
+      _startPresence();
       emit(AuthState(session: session));
     } on AuthFailure catch (error) {
       if (!isClosed && generation == _generation) {
@@ -115,6 +213,7 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   void _scheduleSession(AuthSession session) {
+    if (_background) return;
     _expiry?.cancel();
     _renewal?.cancel();
     final remaining = session.expiresAt.difference(DateTime.now());
@@ -211,6 +310,7 @@ class AuthCubit extends Cubit<AuthState> {
     _checkingSession = true;
     try {
       await repository.checkSession(session.accessToken);
+      if (!_background && generation == _generation) _persist(state.session);
     } on AuthFailure catch (error) {
       if (!isClosed &&
           generation == _generation &&
@@ -258,6 +358,7 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   void _clearSession(String message) {
+    _persist(null);
     ++_generation;
     _uncertainRefreshToken = null;
     _refreshNotBefore = null;
