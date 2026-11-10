@@ -216,8 +216,13 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                 as int? ??
             0;
         final selected = round?.ownAction?['dieIndex'] as int? ?? _die;
+        final movesByDie = round == null ? <Set<String>>[] : [
+          destinosConAncla(board, round.dice[0], round.dice[1]),
+          destinosConAncla(board, round.dice[1], round.dice[0]),
+        ];
+        final noMoves = round != null && movesByDie.every((cells) => cells.isEmpty);
         final destinations = round != null && _die != null
-            ? destinosConAncla(board, round.dice[_die!], round.dice[1 - _die!])
+            ? movesByDie[_die!]
             : <String>{};
         final waiting = widget.lobby.members
             .where((m) => !game.preparedIds.contains(m.id))
@@ -231,10 +236,14 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                             : 'Número ${initial.numeroSeleccionado} seleccionado · toca una celda +'))
             : round.ownAction != null
             ? 'Jugada confirmada · esperando a los demás'
+            : noMoves && (!_meteors || _diceRevealed)
+            ? 'Ninguno de los dados tiene destinos disponibles. Puedes omitir la ronda.'
             : _target != null
             ? 'Confirma tu jugada'
             : _die == null
             ? 'Elige un dado para colocar su número'
+            : destinations.isEmpty
+            ? 'Este número no tiene destinos. Cambia al otro dado.'
             : 'El otro dado es el ancla · elige una casilla';
         final drawCells = {
           for (final entry in board.celdas.entries)
@@ -447,6 +456,8 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                           ? FasePartida.tirando
                           : round.ownAction != null
                           ? FasePartida.rondaResuelta
+                          : noMoves
+                          ? FasePartida.sinMovimientos
                           : _dicePhase,
                       tirada: Tirada(
                         round.number,
@@ -606,7 +617,7 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                         : SizedBox(
                             key: _below,
                             width: double.infinity,
-                            child: selected == null && round.ownAction == null
+                            child: selected == null && round.ownAction == null && !noMoves
                                 ? null
                                 : Center(child: actionRow),
                           ),
@@ -639,7 +650,7 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                     ),
                   if (round != null &&
                       selected == null &&
-                      round.ownAction == null)
+                      round.ownAction == null && !noMoves)
                     Positioned(
                       bottom: 0,
                       right: 12,

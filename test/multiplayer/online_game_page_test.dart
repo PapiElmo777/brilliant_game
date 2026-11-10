@@ -107,6 +107,31 @@ void main() {
       isTrue,
     );
   });
+  testWidgets('Avisa sin destinos en ambos dados y ofrece omitir sin elegir dado', (tester) async {
+    pantallaNivel(tester);
+    final repo = FakeRoomsRepository()..snapshot = onlineSnapshot(prepared: true, playing: true, board: {'f1_c2': 3});
+    await openRooms(tester, repo);
+    expect(find.text('Ninguno de los dados tiene destinos disponibles. Puedes omitir la ronda.'), findsOneWidget);
+    final skip = find.byKey(const ValueKey('omitir_ronda_online'));
+    await revealOnline(tester, skip);
+    await tester.tap(skip);
+    await tester.pumpAndSettle();
+    expect(repo.commands.single['kind'], 'SKIP');
+  });
+  testWidgets('No anuncia bloqueo cuando al menos un dado tiene destinos', (tester) async {
+    pantallaNivel(tester);
+    final snapshot = onlineSnapshot(prepared: true, playing: true, board: {'f1_c2': 3});
+    snapshot['match']['round']['dice'] = [3, 1];
+    final repo = FakeRoomsRepository()..snapshot = snapshot;
+    await openRooms(tester, repo);
+    expect(find.textContaining('Ninguno de los dados'), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('dado_online_0')));
+    await tester.pumpAndSettle();
+    expect(find.text('Este número no tiene destinos. Cambia al otro dado.'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('dado_online_1')));
+    await tester.pumpAndSettle();
+    expect(find.text('Este número no tiene destinos. Cambia al otro dado.'), findsNothing);
+  });
   testWidgets('Los dados se revelan al impacto, antes de terminar la explosión', (tester) async {
     pantallaNivel(tester);
     final repo = FakeRoomsRepository()..snapshot = onlineSnapshot(prepared: true, playing: true);
