@@ -82,7 +82,7 @@ void main() {
     },
   );
   testWidgets(
-    'Refresh incierto no reenvía el secreto y caduca el acceso actual',
+    'Refresh sin conexión sale al login y no reenvía el secreto',
     (tester) async {
       final repository = RefreshRepository()
         ..refreshFailure = const AuthFailure('NETWORK_ERROR');
@@ -90,7 +90,8 @@ void main() {
       await auth.authenticate('Ana', 'a!2', register: false);
       await tester.pump(const Duration(minutes: 9));
       expect(repository.refreshes, 1);
-      expect(auth.state.session, isNotNull);
+      expect(auth.state.session, isNull);
+      expect(auth.state.connectionLost, isTrue);
       await tester.pump(const Duration(minutes: 1));
       expect(repository.refreshes, 1);
       expect(auth.state.session, isNull);

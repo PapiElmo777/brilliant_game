@@ -67,15 +67,32 @@ void main() {
     expect(find.byType(BrilliantGameApp), findsOneWidget);
   });
 
-  test('Un fallo de red no afirma que se cerró la sesión', () async {
+  testWidgets('Servidor apagado vuelve a login con una ventana y limpia rutas', (tester) async {
+    final repository = FakeAuthRepository();
+    await iniciarApp(tester, repository: repository);
+    repository.sessionFailure = const AuthFailure('NETWORK_ERROR');
+    await tester.pump(const Duration(seconds: 10));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.text('Conexión perdida'), findsOneWidget);
+    expect(find.text('UN JUGADOR'), findsNothing);
+    await tester.tap(find.text('Aceptar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Iniciar sesión'), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('UN JUGADOR'), findsNothing);
+  });
+
+  test('Un fallo de red cierra la sesión y solicita el aviso', () async {
     final repository = FakeAuthRepository()
       ..sessionFailure = const AuthFailure('NETWORK_ERROR');
     final auth = AuthCubit(repository);
     addTearDown(auth.close);
     await auth.authenticate('Ana', 'a!2', register: false);
     await auth.checkSession();
-    expect(auth.state.session, isNotNull);
-    expect(auth.state.error, isNull);
+    expect(auth.state.session, isNull);
+    expect(auth.state.connectionLost, isTrue);
   });
 
   test(

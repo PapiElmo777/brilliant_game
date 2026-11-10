@@ -46,6 +46,8 @@ class AuthFailure implements Exception {
   final int retryAfter;
   const AuthFailure(this.code, {this.status, this.retryAfter = 0});
 
+  bool get connectionFailure => code == 'NETWORK_ERROR' || code == 'SERVER_ERROR' || (status != null && status! >= 500);
+
   bool get invalidSession => status == 401 && code != 'INVALID_CREDENTIALS';
   String get message => switch (code) {
     'INVALID_CREDENTIALS' => 'Usuario o contraseña incorrectos.',

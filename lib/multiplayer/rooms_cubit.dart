@@ -193,7 +193,9 @@ class RoomsCubit extends Cubit<RoomsState> {
   }
 
   void _unauthorized(AuthFailure error, String? token) {
-    if (error.status == 401 && auth.state.session?.accessToken == token) {
+    if (error.connectionFailure && auth.state.session?.accessToken == token) {
+      auth.checkSession();
+    } else if (error.status == 401 && auth.state.session?.accessToken == token) {
       auth.invalidate();
     }
   }
@@ -467,9 +469,9 @@ class RoomsCubit extends Cubit<RoomsState> {
     if (code == 4003) {
       refresh(resync: true);
     }
-    if (code == 4001) {
-      auth.checkSession();
-    }
+    // Un canal caído también verifica HTTP: si el servidor no responde,
+    // AuthCubit cierra la sesión y muestra el aviso en login.
+    if (_active) auth.checkSession();
     if (!_active || state.lobby == null) return;
     _status(error: 'Reconectando con la sala…');
     final delay = 1 << min(_attempt++, 3);

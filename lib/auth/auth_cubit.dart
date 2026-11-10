@@ -9,12 +9,14 @@ class AuthState {
   final String? error;
   final int cooldown;
   final bool logoutUnconfirmed;
+  final bool connectionLost;
   const AuthState({
     this.session,
     this.busy = false,
     this.error,
     this.cooldown = 0,
     this.logoutUnconfirmed = false,
+    this.connectionLost = false,
   });
 }
 
@@ -88,8 +90,14 @@ class AuthCubit extends Cubit<AuthState> {
       _startPresence();
       emit(AuthState(session: session));
       await _storage;
-    } on Object {
-      if (!isClosed && generation == _generation) invalidate();
+    } on Object catch (error) {
+      if (!isClosed && generation == _generation) {
+        if (error is AuthFailure && error.connectionFailure) {
+          _clearSession('Se perdió la conexión con el servidor. Inicia sesión de nuevo.', connectionLost: true);
+        } else {
+          invalidate();
+        }
+      }
     }
   }
 
@@ -272,7 +280,9 @@ class AuthCubit extends Cubit<AuthState> {
       );
     } on AuthFailure catch (error) {
       if (isClosed || generation != _generation) return;
-      if (error.status == 401 || error.status == 403) {
+      if (error.connectionFailure) {
+        loseConnection();
+      } else if (error.status == 401 || error.status == 403) {
         invalidate();
       } else if (error.status == 429) {
         final delay = Duration(
@@ -291,8 +301,7 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  /// A 401 from the authenticated probe clears every protected route. Network
-  /// errors do not claim the server closed a session; the next probe retries.
+  /// Comprueba presencia y desmonta las rutas si el servidor deja de responder.
   Future<void> checkSession() async {
     var session = state.session;
     if (session == null || state.busy || _checkingSession || isClosed) return;
@@ -312,11 +321,13 @@ class AuthCubit extends Cubit<AuthState> {
       await repository.checkSession(session.accessToken);
       if (!_background && generation == _generation) _persist(state.session);
     } on AuthFailure catch (error) {
-      if (!isClosed &&
-          generation == _generation &&
-          error.status == 401 &&
+      if (!isClosed && generation == _generation &&
           state.session?.accessToken == session.accessToken) {
-        invalidate();
+        if (error.connectionFailure) {
+          loseConnection();
+        } else if (error.status == 401) {
+          invalidate();
+        }
       }
     } finally {
       _checkingSession = false;
@@ -357,7 +368,12 @@ class AuthCubit extends Cubit<AuthState> {
     );
   }
 
-  void _clearSession(String message) {
+  void loseConnection() {
+    if (_background || state.session == null || isClosed) return;
+    _clearSession('Se perdió la conexión con el servidor. Inicia sesión de nuevo.', connectionLost: true);
+  }
+
+  void _clearSession(String message, {bool connectionLost = false}) {
     _persist(null);
     ++_generation;
     _uncertainRefreshToken = null;
@@ -366,7 +382,7 @@ class AuthCubit extends Cubit<AuthState> {
     _renewal?.cancel();
     _cooldown?.cancel();
     _presence?.cancel();
-    if (!isClosed) emit(AuthState(error: message));
+    if (!isClosed) emit(AuthState(error: message, connectionLost: connectionLost));
   }
 
   Future<void> deleteAccount(String password) async {

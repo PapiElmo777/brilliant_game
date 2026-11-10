@@ -25,6 +25,25 @@ class _AccesoPageState extends State<AccesoPage> {
   final _password = TextEditingController();
   bool _register = false;
   bool _visible = false;
+  bool _connectionDialogShown = false;
+
+  void _notifyConnectionLost(AuthState state) {
+    if (!state.connectionLost) { _connectionDialogShown = false; return; }
+    if (_connectionDialogShown) return;
+    _connectionDialogShown = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text('Conexión perdida'),
+          content: const Text('Se perdió la conexión con el servidor. Revisa tu conexión e inicia sesión de nuevo.'),
+          actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Aceptar'))],
+        ),
+      );
+    });
+  }
   @override
   void dispose() {
     _username.dispose();
@@ -47,6 +66,7 @@ class _AccesoPageState extends State<AccesoPage> {
   @override
   Widget build(BuildContext context) => BlocBuilder<AuthCubit, AuthState>(
     builder: (context, state) {
+      _notifyConnectionLost(state);
       final enabled =
           widget.canAuthenticate && !state.busy && state.cooldown == 0;
       return Scaffold(
