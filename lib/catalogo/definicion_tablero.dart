@@ -22,6 +22,25 @@ class DefinicionZona {
   }) : puntuaciones = puntuacionesInmutables(puntuaciones ?? tipo.puntuaciones),
        celdas = List.unmodifiable(celdas);
 
+  /// Nombre legible que conserva el número para distinguir zonas del mismo color.
+  String get nombre {
+    final parts = id.split('_');
+    final color = switch (parts.first) {
+      'amarillo' => 'Amarilla',
+      'rojo' => 'Roja',
+      'morado' => 'Morada',
+      'blanco' => 'Blanca',
+      'naranja' => 'Naranja',
+      'verde' => 'Verde',
+      'azul' => 'Azul',
+      final value =>
+        value.isEmpty
+            ? 'Sin nombre'
+            : '${value[0].toUpperCase()}${value.substring(1)}',
+    };
+    return [color, ...parts.skip(1)].join(' ');
+  }
+
   Zona crearZona() => Zona(
     id: id,
     tipo: tipo,

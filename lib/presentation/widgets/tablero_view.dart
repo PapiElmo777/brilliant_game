@@ -135,6 +135,7 @@ class _TableroViewState extends State<TableroView> {
                             ? widget.numeroPropuesto
                             : null,
                         tipo: zona.tipo,
+                        nombreZona: zona.nombre,
                         esDestino: widget.destinos.contains(celda.id),
                         seleccionada:
                             estado?.celdaSeleccionada == celda.id ||
@@ -226,7 +227,7 @@ class FichaZona extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Zona ${nombreTipo(zona.tipo)} · $tamano '
+              'Zona ${zona.nombre} · $tamano '
               '${tamano == 1 ? 'casilla' : 'casillas'}',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -302,6 +303,7 @@ extension on TableroView {
 }
 
 class CeldaView extends StatelessWidget {
+  final String? nombreZona;
   final int? numeroPropuesto;
   final Celda celda;
   final Tipo tipo;
@@ -330,6 +332,7 @@ class CeldaView extends StatelessWidget {
     required this.celda,
     this.numeroPropuesto,
     required this.tipo,
+    this.nombreZona,
     this.onTap,
     this.esDestino = false,
     this.enPartida = false,
@@ -363,7 +366,7 @@ class CeldaView extends StatelessWidget {
       enabled: onTap != null,
       onTap: onTap,
       label:
-          'Fila ${celda.fila + 1}, columna ${celda.columna + 1}${celda.esInicio ? ', celda inicial' : ''}, $estado. ${tipo.descripcion}${completada ? ', zona completa' : ''}${esDestino ? ', destino disponible' : ''}',
+          '${nombreZona == null ? '' : 'Zona $nombreZona, '}Fila ${celda.fila + 1}, columna ${celda.columna + 1}${celda.esInicio ? ', celda inicial' : ''}, $estado. ${tipo.descripcion}${completada ? ', zona completa' : ''}${esDestino ? ', destino disponible' : ''}',
       hint: pista != null
           ? pista!
           : enPartida

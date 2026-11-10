@@ -33,9 +33,11 @@ void main() {
     );
     await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
     await tester.pump();
-    expect(find.text('Zona verde · 6 casillas'), findsOneWidget);
+    expect(find.text('Zona Verde 1 · 6 casillas'), findsOneWidget);
     expect(find.text('Al completarla: 1.º 4 · 2.º 3 · 3.º 2'), findsOneWidget);
     expect(celda('f1_c2').enZonaResaltada, isTrue);
+    expect(celda('f1_c2').nombreZona, 'Verde 1');
+    expect(celda('f2_c7').nombreZona, 'Verde 2');
     expect(celda('f5_c1').enZonaResaltada, isTrue);
     expect(celda('f1_c1').atenuada, isTrue);
     await gesto.up();
@@ -52,7 +54,7 @@ void main() {
       tester.getCenter(find.byKey(const ValueKey('celda_f7_c7'))),
     );
     await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
-    expect(find.text('Zona amarilla · 5 casillas'), findsOneWidget);
+    expect(find.text('Zona Amarilla · 5 casillas'), findsOneWidget);
     expect(find.text('Al completarla: 1.º 8 · 2.º 6 · 3.º 4'), findsOneWidget);
     for (final id in ['f1_c1', 'f1_c7', 'f4_c4', 'f7_c1', 'f7_c7']) {
       expect(celda(id).enZonaResaltada, isTrue);

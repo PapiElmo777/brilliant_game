@@ -46,7 +46,7 @@ void main() {
       await openRooms(tester, repo);
       await tester.tap(find.byKey(const ValueKey('ranking_online')));
       await tester.pumpAndSettle();
-      expect(find.text('Verde 1 · 1.º · +4'), findsOneWidget);
+      expect(find.text('Zona Verde 1 · 1.º · +4'), findsOneWidget);
       expect(
         tester
             .widgetList<TarjetaRanking>(find.byType(TarjetaRanking))

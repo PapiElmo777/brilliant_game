@@ -17,8 +17,9 @@ class _ChatSalaState extends State<ChatSala> {
   final _scroll = ScrollController();
   void _followLatest() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && _scroll.hasClients)
+      if (mounted && _scroll.hasClients) {
         _scroll.jumpTo(_scroll.position.maxScrollExtent);
+      }
     });
   }
 
@@ -43,8 +44,9 @@ class _ChatSalaState extends State<ChatSala> {
           !identical(a.messages, b.messages) || a.chatDraft != b.chatDraft,
       listener: (context, state) {
         if (state.chatDraft.isEmpty && draft.text.isNotEmpty) draft.clear();
-        if (!_scroll.hasClients || _scroll.position.extentAfter < 80)
+        if (!_scroll.hasClients || _scroll.position.extentAfter < 80) {
           _followLatest();
+        }
       },
       buildWhen: (a, b) =>
           !identical(a.messages, b.messages) ||

@@ -735,3 +735,13 @@ El iniciador usa Java 21 y target/brilliant-server.jar en perfil LAN. La IP se o
 - El reloj actualiza su texto sin reconstruir el tablero cada segundo; se reutilizan partida interpretada, tablero y mensajes ordenados. El tablero tiene su propio límite de repintado. El clip de meteoritos pasa de 235 a 34 cuadros (28.045.974 a 4.009.562 bytes), preservando duración, transparencia y píxeles visibles de los cuadros retenidos, con el impacto sincronizado al nuevo recurso. `tool/optimize_meteor_clip.py` documenta la conversión desde el recurso original.
 
 Los clientes simulados pueden inyectar SessionStore y no acceden al almacenamiento del teléfono. La recuperación no reconstruye una navegación antigua: abre el menú con la cuenta validada. Para usar la reserva de diez minutos se necesita actualizar también Java. La mejora de fluidez debe comprobarse en el teléfono; las pruebas de interfaz comprueban que el reloj no reconstruya el tablero, sin afirmar una medición de FPS en un dispositivo físico.
+
+## Presentación de la misión, comunicaciones y podio — 9 de noviembre de 2026
+
+Los dados se revelan desde el impacto de los meteoritos y desde el inicio de la explosión al omitir la caída. Permanecen visibles al terminar; los controles esperan al final del efecto. Cuando ambos dados carecen de destinos aparece el aviso del modo solitario y el botón Omitir ronda sin elegir un dado. Si únicamente el elegido está bloqueado, se indica cambiar al otro.
+
+El ranking del trofeo ordena el top con las mismas prioridades de Java (abandono, puntos, zonas, secuencia e ingreso), se actualiza estando abierto y muestra las conquistas públicas con nombre, color, puesto y premio. Al finalizar usa exclusivamente los puestos congelados del resultado. Chat y ranking comparten paneles oscuros de estilo holográfico; los mensajes propios se distinguen de los del escuadrón y los avisos del sistema, con historial, reintentos y borradores conservados.
+
+El podio incluye salto estelar, corona y alas de piloto, insignia dorada para el campeón y puesto propio en grande para los demás. La fila ganadora tiene una entrada dorada visible para todos. Son animaciones finitas, sin video adicional ni ciclos permanentes; movimiento reducido muestra el resultado estático. Se mantienen revancha, salida y chat.
+
+Las zonas tienen un nombre legible consistente, por ejemplo Verde 1 y Verde 2. Se muestra en las conquistas del ranking, en la ficha al mantener presionada una casilla y en las etiquetas accesibles del tablero. Se conservan los identificadores del contrato y los datos de las partidas. Esta entrega solo requiere actualizar la app.

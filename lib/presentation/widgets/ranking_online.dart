@@ -214,7 +214,10 @@ class TarjetaRanking extends StatelessWidget {
                       final zone = zones.where((z) => z.id == id).firstOrNull;
                       final name = id.replaceAll('_', ' ');
                       final label =
-                          '${name[0].toUpperCase()}${name.substring(1)}';
+                          zone?.nombre ??
+                          (name.isEmpty
+                              ? 'Sin nombre'
+                              : '${name[0].toUpperCase()}${name.substring(1)}');
                       final color = zone?.tipo.color ?? cianHolograma;
                       return Semantics(
                         label:
@@ -232,7 +235,7 @@ class TarjetaRanking extends StatelessWidget {
                             ),
                           ),
                           child: Text(
-                            '$label · ${claim['place']}.º · +${claim['points']}',
+                            'Zona $label · ${claim['place']}.º · +${claim['points']}',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
