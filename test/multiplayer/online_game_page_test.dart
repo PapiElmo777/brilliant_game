@@ -82,6 +82,10 @@ void main() {
       await tester.tap(cell);
       await tester.pumpAndSettle();
       expect(repo.commands, isEmpty);
+      final preview = tester.widget<CeldaView>(cell);
+      expect(preview.numeroPropuesto, 1);
+      expect(preview.seleccionada, isTrue);
+      expect(find.descendant(of: cell, matching: find.text('1')), findsOneWidget);
       expect(
         tester
             .widget<TableroView>(find.byType(TableroView))

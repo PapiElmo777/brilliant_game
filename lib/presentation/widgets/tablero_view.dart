@@ -19,6 +19,7 @@ class TableroView extends StatefulWidget {
   /// destino no es válido.
   final bool interactiva;
   final String? celdaPropuesta;
+  final int? numeroPropuesto;
 
   /// Puestos ya reclamados de cada zona completada.
   final Map<String, int> puestosReclamados;
@@ -33,6 +34,7 @@ class TableroView extends StatefulWidget {
        destinos = const {},
        interactiva = true,
        celdaPropuesta = null,
+       numeroPropuesto = null,
        puestosReclamados = const {};
 
   const TableroView.partida({
@@ -43,6 +45,7 @@ class TableroView extends StatefulWidget {
     required this.onCeldaSeleccionada,
     this.interactiva = true,
     this.celdaPropuesta,
+    this.numeroPropuesto,
     this.puestosReclamados = const {},
     this.clavesCeldas = const {},
   }) : estado = null,
@@ -127,6 +130,7 @@ class _TableroViewState extends State<TableroView> {
                     child: CeldaView(
                       key: ValueKey('celda_${celda.id}'),
                       celda: celda,
+                      numeroPropuesto: widget.celdaPropuesta == celda.id ? widget.numeroPropuesto : null,
                       tipo: zona.tipo,
                       esDestino: widget.destinos.contains(celda.id),
                       seleccionada:
@@ -294,6 +298,7 @@ extension on TableroView {
 }
 
 class CeldaView extends StatelessWidget {
+  final int? numeroPropuesto;
   final Celda celda;
   final Tipo tipo;
   final VoidCallback? onTap;
@@ -319,6 +324,7 @@ class CeldaView extends StatelessWidget {
   const CeldaView({
     super.key,
     required this.celda,
+    this.numeroPropuesto,
     required this.tipo,
     this.onTap,
     this.esDestino = false,
@@ -340,7 +346,10 @@ class CeldaView extends StatelessWidget {
     final texto = ThemeData.estimateBrightnessForColor(color) == Brightness.dark
         ? Colors.white
         : const Color(0xFF071226);
-    final estado = celda.valor == null ? 'vacía' : 'número ${celda.valor}';
+    final valorVisible = celda.valor ?? numeroPropuesto;
+    final estado = numeroPropuesto != null && celda.valor == null
+      ? 'número $numeroPropuesto provisional, pendiente de confirmar'
+      : celda.valor == null ? 'vacía' : 'número ${celda.valor}';
     final resaltada = esDestino || seleccionada || enZonaResaltada;
     return Semantics(
       button: true,
@@ -410,10 +419,10 @@ class CeldaView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 onTap: onTap,
                 child: Center(
-                  child: celda.valor != null
+                  child: valorVisible != null
                       ? FittedBox(
                           child: Text(
-                            '${celda.valor}',
+                            '$valorVisible',
                             style: TextStyle(
                               fontSize: 25,
                               fontWeight: FontWeight.w900,

@@ -236,7 +236,8 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                 clavesCeldas: _cells,
                 destinos: canAct ? destinations : {},
                 interactiva: canAct,
-                celdaPropuesta: _target,
+                celdaPropuesta: canAct ? _target : null,
+                numeroPropuesto: canAct && _die != null ? round.dice[_die!] : null,
                 puestosReclamados: {
                   for (final z in game.zones)
                     z['zoneId'] as String: (z['nextPlace'] as int) - 1,
