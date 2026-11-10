@@ -71,7 +71,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 700));
       expect(find.byType(DerrotaOnline), findsOneWidget);
       expect(find.byType(CelebracionVictoria), findsNothing);
-      expect(find.text('Usted ha quedado en 2 lugar'), findsOneWidget);
+      expect(find.text('Tu puesto: 2.º'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('ver_ranking_online')));
       await tester.pumpAndSettle();
       expect(find.text('Beto ganó'), findsOneWidget);
@@ -87,7 +87,7 @@ void main() {
     await openRooms(tester, repo);
     expect(find.byType(CelebracionVictoria), findsNothing);
     expect(find.byType(DerrotaOnline), findsNothing);
-    expect(find.text('Usted ha quedado en 2 lugar'), findsOneWidget);
+    expect(find.text('Tu puesto: 2.º'), findsOneWidget);
   });
   testWidgets(
     'Revancha incierta reintenta el mismo comando y limpia tablero al abrir lobby',

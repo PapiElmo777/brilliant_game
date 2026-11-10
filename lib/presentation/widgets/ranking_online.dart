@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../catalogo/catalogo_tableros.dart';
@@ -121,7 +122,7 @@ class TarjetaRanking extends StatelessWidget {
     final zones = CatalogoTableros.predeterminado()
         .obtenerDefinicion(game.levelId)
         .zonas;
-    return Container(
+    final card = Container(
       key: ValueKey('ranking_jugador_${row['memberId']}'),
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
@@ -246,6 +247,31 @@ class TarjetaRanking extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+    if (game.result?['winnerMemberId'] != row['memberId']) return card;
+    final reduced = MediaQuery.disableAnimationsOf(context);
+    return TweenAnimationBuilder<double>(
+      key: ValueKey('coronacion_${row['memberId']}'),
+      tween: Tween(begin: reduced ? 1 : 0, end: 1),
+      duration: reduced ? Duration.zero : const Duration(milliseconds: 2600),
+      child: card,
+      builder: (context, value, child) => DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: oroGalactico.withValues(
+                alpha: .3 * math.sin(value * math.pi).abs(),
+              ),
+              blurRadius: 20,
+            ),
+          ],
+        ),
+        child: Transform.translate(
+          offset: Offset(0, 8 * (1 - value)),
+          child: Opacity(opacity: .7 + .3 * value, child: child),
+        ),
       ),
     );
   }

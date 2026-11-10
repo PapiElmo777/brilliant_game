@@ -6,6 +6,8 @@ import '../../multiplayer/rooms_repository.dart';
 import 'celebracion_victoria.dart';
 import 'fondo_espacial.dart';
 import 'nave_marciano.dart';
+import 'ranking_online.dart';
+import 'insignia_resultado.dart';
 
 class FinalPartidaOnline extends StatefulWidget {
   final OnlineMatch game;
@@ -70,7 +72,7 @@ class _FinalPartidaOnlineState extends State<FinalPartidaOnline> {
     final place = _own?['position'];
     final positionText = place == null
         ? 'Partida finalizada'
-        : 'Usted ha quedado en $place lugar';
+        : 'Tu puesto: $place.º';
     if (!_shown && _result['winnerMemberId'] != null) {
       final board = definition.crearTablero();
       for (final e in widget.game.board.entries) {
@@ -101,6 +103,7 @@ class _FinalPartidaOnlineState extends State<FinalPartidaOnline> {
                   hazActivo: false,
                 ),
                 puesto: positionText,
+                posicion: place as int?,
                 onComplete: _complete,
               ),
             Positioned(
@@ -125,96 +128,87 @@ class _FinalPartidaOnlineState extends State<FinalPartidaOnline> {
     return FondoEspacial(
       ruta: definition.recursos?.fondo,
       numeroEnContenido: true,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Icon(
-            _won ? Icons.emoji_events : Icons.leaderboard,
-            color: const Color(0xFFFFC94D),
-            size: 48,
-          ),
-          Text(
-            winner == null
-                ? 'Partida finalizada'
-                : '${winner['username']} ganó',
-            key: const ValueKey('resultado_online'),
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          Text(switch (_result['reason']) {
-            'TARGET' => 'Meta alcanzada',
-            'END_VOTE' => 'Finalizada por votación',
-            'ABANDONMENT' => 'Victoria por abandono',
-            _ => 'Sin participantes',
-          }, textAlign: TextAlign.center),
-          if (!_won && place != null)
-            Text(
-              positionText,
-              key: const ValueKey('puesto_online'),
-              textAlign: TextAlign.center,
-            ),
-          const SizedBox(height: 12),
-          for (final p in _ranking)
-            Card(
-              color: p['memberId'] == widget.ownId
-                  ? const Color(0xFF16405A)
-                  : const Color(0xE60C2038),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        Text('${p['position']}.º'),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            '${p['username']}${p['memberId'] == widget.ownId ? ' · Tú' : ''}',
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      alignment: WrapAlignment.spaceBetween,
-                      spacing: 12,
-                      runSpacing: 4,
-                      children: [
-                        Text(
-                          '${p['completedZones']} ${p['completedZones'] == 1 ? 'zona' : 'zonas'}${p['abandoned'] == 1 ? ' · Abandonó' : ''}',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        Text('${p['points']} pts'),
-                      ],
-                    ),
-                  ],
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 620),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+            children: [
+              InsigniaResultado(ganador: _won, puesto: place as int?),
+              const SizedBox(height: 18),
+              Text(
+                winner == null
+                    ? 'Partida finalizada'
+                    : '${winner['username']} ganó',
+                key: const ValueKey('resultado_online'),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-            ),
-          const SizedBox(height: 12),
-          Text(
-            available
-                ? '${widget.game.rematch?['acceptedCount'] ?? 0} aceptaron la revancha'
-                : 'La siguiente partida ya comenzó.',
-            textAlign: TextAlign.center,
+              const SizedBox(height: 4),
+              Text(
+                switch (_result['reason']) {
+                  'TARGET' => 'Meta alcanzada',
+                  'END_VOTE' => 'Finalizada por votación',
+                  'ABANDONMENT' => 'Victoria por abandono',
+                  _ => 'Sin participantes',
+                },
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 12, color: Color(0xFF9EB5C7)),
+              ),
+              if (!_won && place != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    positionText,
+                    key: const ValueKey('puesto_online'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF96ECFF),
+                    ),
+                  ),
+                ),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(2, 24, 2, 12),
+                child: Text(
+                  'REGISTRO DEL ESCUADRÓN',
+                  style: TextStyle(
+                    fontSize: 10,
+                    letterSpacing: 1.8,
+                    color: Color(0xFF9EB5C7),
+                  ),
+                ),
+              ),
+              for (final p in rankingDePartida(widget.game))
+                TarjetaRanking(game: widget.game, row: p, ownId: widget.ownId),
+              const SizedBox(height: 12),
+              Text(
+                available
+                    ? '${widget.game.rematch?['acceptedCount'] ?? 0} aceptaron la revancha'
+                    : 'La siguiente partida ya comenzó.',
+                textAlign: TextAlign.center,
+              ),
+              FilledButton(
+                key: const ValueKey('revancha_online'),
+                onPressed: enabled && available
+                    ? () => widget.rooms.acceptRematch(widget.game.id)
+                    : null,
+                child: const Text('Revancha'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                key: const ValueKey('salir_menu_online'),
+                onPressed: widget.state.busy || widget.state.uncertain
+                    ? null
+                    : widget.onExit,
+                child: const Text('Salir al menú principal'),
+              ),
+            ],
           ),
-          FilledButton(
-            key: const ValueKey('revancha_online'),
-            onPressed: enabled && available
-                ? () => widget.rooms.acceptRematch(widget.game.id)
-                : null,
-            child: const Text('Revancha'),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            key: const ValueKey('salir_menu_online'),
-            onPressed: widget.state.busy || widget.state.uncertain
-                ? null
-                : widget.onExit,
-            child: const Text('Salir al menú principal'),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -223,11 +217,13 @@ class _FinalPartidaOnlineState extends State<FinalPartidaOnline> {
 class DerrotaOnline extends StatefulWidget {
   final Widget nave;
   final String puesto;
+  final int? posicion;
   final VoidCallback onComplete;
   const DerrotaOnline({
     super.key,
     required this.nave,
     required this.puesto,
+    this.posicion,
     required this.onComplete,
   });
   @override
@@ -305,10 +301,25 @@ class _DerrotaOnlineState extends State<DerrotaOnline>
               left: 16,
               right: 16,
               bottom: 64,
-              child: Text(
-                widget.puesto,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineSmall,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (widget.posicion != null)
+                    Text(
+                      '${widget.posicion}.º',
+                      textScaler: TextScaler.noScaling,
+                      style: const TextStyle(
+                        fontSize: 80,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF96ECFF),
+                      ),
+                    ),
+                  Text(
+                    widget.puesto,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ],
               ),
             ),
           ],

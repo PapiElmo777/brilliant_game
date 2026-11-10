@@ -32,6 +32,21 @@ void main() {
       );
       expect(tester.takeException(), isNull);
     });
+    testWidgets('Ranking de victoria: $name', skip: !Platform.isMacOS, (
+      tester,
+    ) async {
+      pantallaNivel(tester, size: size, escala: 1.5);
+      final repo = FakeRoomsRepository()
+        ..snapshot = scoredSnapshot(finished: true);
+      await openRooms(tester, repo);
+      await precargarRecursos(tester);
+      await tester.pumpAndSettle();
+      await expectLater(
+        find.byType(BrilliantGameApp),
+        matchesGoldenFile('capturas/online_victoria_ranking_$name.png'),
+      );
+      expect(tester.takeException(), isNull);
+    });
   }
   for (final won in [true, false]) {
     testWidgets(
