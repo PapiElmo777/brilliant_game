@@ -99,20 +99,35 @@ class _MenuInicialPageState extends State<MenuInicialPage> {
                     alignment: Alignment.topRight,
                     child: Padding(
                       padding: const EdgeInsets.all(12),
-                      child: BlocBuilder<AuthCubit, AuthState>(
-                        builder: (context, auth) => IconButton(
-                          key: const ValueKey('account_menu'),
-                          tooltip: 'Mi cuenta',
-                          onPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => const CuentaPage(),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          BlocBuilder<AuthCubit, AuthState>(
+                            builder: (context, auth) => IconButton(
+                              key: const ValueKey('logout_menu'),
+                              tooltip: 'Cerrar sesión',
+                              onPressed: auth.busy
+                                  ? null
+                                  : () => context.read<AuthCubit>().logout(),
+                              icon: const Icon(Icons.logout_rounded),
                             ),
                           ),
-                          icon: AvatarUsuario(
-                            avatarId: auth.session?.user.avatarId,
-                            size: 44,
+                          BlocBuilder<AuthCubit, AuthState>(
+                            builder: (context, auth) => IconButton(
+                              key: const ValueKey('account_menu'),
+                              tooltip: 'Mi cuenta',
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => const CuentaPage(),
+                                ),
+                              ),
+                              icon: AvatarUsuario(
+                                avatarId: auth.session?.user.avatarId,
+                                size: 44,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                   ),
