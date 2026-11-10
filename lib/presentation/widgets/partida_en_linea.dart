@@ -87,6 +87,7 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
   String? _target;
   FasePartida _dicePhase = FasePartida.eligiendoNumero;
   late bool _meteors = _game.round != null;
+  bool _diceRevealed = false;
   DisparoPendiente? _shot;
   int _shotSequence = 0;
   bool get _enabled =>
@@ -103,6 +104,7 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
       _target = null;
       _dicePhase = FasePartida.eligiendoNumero;
       _meteors = _game.round != null;
+      _diceRevealed = false;
     }
     if (old.round != null) {
       for (final cell in _game.board.entries) {
@@ -441,7 +443,7 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
               final diceState = round == null
                   ? null
                   : PartidaEstado(
-                      fase: _meteors
+                      fase: _meteors && !_diceRevealed
                           ? FasePartida.tirando
                           : round.ownAction != null
                           ? FasePartida.rondaResuelta
@@ -679,7 +681,11 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                       child: MeteoritosAnimacion(
                         key: ValueKey('meteoros_${round.id}'),
                         tiradaId: round.number,
-                        onImpacto: (_) {},
+                        onImpacto: (_) {
+                          if (mounted && _game.round?.id == round.id) {
+                            setState(() => _diceRevealed = true);
+                          }
+                        },
                         onCompletada: (_) {
                           if (mounted) setState(() => _meteors = false);
                         },

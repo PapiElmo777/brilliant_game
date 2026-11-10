@@ -1,4 +1,5 @@
 import 'package:brilliant_game/presentation/widgets/dados_partida.dart';
+import 'package:brilliant_game/presentation/widgets/meteoritos_animacion.dart';
 import 'package:brilliant_game/presentation/widgets/tablero_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -105,6 +106,25 @@ void main() {
       identical(before, tester.widget<TableroView>(find.byType(TableroView))),
       isTrue,
     );
+  });
+  testWidgets('Los dados se revelan al impacto, antes de terminar la explosión', (tester) async {
+    pantallaNivel(tester);
+    final repo = FakeRoomsRepository()..snapshot = onlineSnapshot(prepared: true, playing: true);
+    await openRooms(tester, repo);
+    tester.platformDispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures(disableAnimations: false);
+    repo.publish(onlineSnapshot(prepared: true, playing: true, roundNumber: 2, sequence: 7), type: 'ROUND_STARTED');
+    await tester.pump();
+    final meteors = tester.widget<MeteoritosAnimacion>(find.byType(MeteoritosAnimacion));
+    expect(find.byType(FichaDado), findsNothing);
+    meteors.onImpacto(2);
+    await tester.pump();
+    await tester.pump();
+    expect(find.byType(FichaDado), findsNWidgets(2));
+    expect(find.byType(MeteoritosAnimacion), findsOneWidget);
+    meteors.onCompletada(2);
+    await tester.pump();
+    expect(find.byType(FichaDado), findsNWidgets(2));
+    expect(find.byType(MeteoritosAnimacion), findsNothing);
   });
   testWidgets(
     'Elegir dado y celda mantiene una propuesta local hasta confirmar',
