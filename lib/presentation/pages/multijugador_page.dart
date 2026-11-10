@@ -107,6 +107,7 @@ class _MultijugadorPageState extends State<MultijugadorPage>
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      backgroundColor: Colors.transparent,
       builder: (_) => ChatSala(rooms: _rooms, draft: _chatDraft),
     );
     _chatOpen = false;

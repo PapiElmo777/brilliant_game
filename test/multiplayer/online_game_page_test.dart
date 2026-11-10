@@ -107,50 +107,90 @@ void main() {
       isTrue,
     );
   });
-  testWidgets('Avisa sin destinos en ambos dados y ofrece omitir sin elegir dado', (tester) async {
+  testWidgets(
+    'Avisa sin destinos en ambos dados y ofrece omitir sin elegir dado',
+    (tester) async {
+      pantallaNivel(tester);
+      final repo = FakeRoomsRepository()
+        ..snapshot = onlineSnapshot(
+          prepared: true,
+          playing: true,
+          board: {'f1_c2': 3},
+        );
+      await openRooms(tester, repo);
+      expect(
+        find.text(
+          'Ninguno de los dados tiene destinos disponibles. Puedes omitir la ronda.',
+        ),
+        findsOneWidget,
+      );
+      final skip = find.byKey(const ValueKey('omitir_ronda_online'));
+      await revealOnline(tester, skip);
+      await tester.tap(skip);
+      await tester.pumpAndSettle();
+      expect(repo.commands.single['kind'], 'SKIP');
+    },
+  );
+  testWidgets('No anuncia bloqueo cuando al menos un dado tiene destinos', (
+    tester,
+  ) async {
     pantallaNivel(tester);
-    final repo = FakeRoomsRepository()..snapshot = onlineSnapshot(prepared: true, playing: true, board: {'f1_c2': 3});
-    await openRooms(tester, repo);
-    expect(find.text('Ninguno de los dados tiene destinos disponibles. Puedes omitir la ronda.'), findsOneWidget);
-    final skip = find.byKey(const ValueKey('omitir_ronda_online'));
-    await revealOnline(tester, skip);
-    await tester.tap(skip);
-    await tester.pumpAndSettle();
-    expect(repo.commands.single['kind'], 'SKIP');
-  });
-  testWidgets('No anuncia bloqueo cuando al menos un dado tiene destinos', (tester) async {
-    pantallaNivel(tester);
-    final snapshot = onlineSnapshot(prepared: true, playing: true, board: {'f1_c2': 3});
+    final snapshot = onlineSnapshot(
+      prepared: true,
+      playing: true,
+      board: {'f1_c2': 3},
+    );
     snapshot['match']['round']['dice'] = [3, 1];
     final repo = FakeRoomsRepository()..snapshot = snapshot;
     await openRooms(tester, repo);
     expect(find.textContaining('Ninguno de los dados'), findsNothing);
     await tester.tap(find.byKey(const ValueKey('dado_online_0')));
     await tester.pumpAndSettle();
-    expect(find.text('Este número no tiene destinos. Cambia al otro dado.'), findsOneWidget);
+    expect(
+      find.text('Este número no tiene destinos. Cambia al otro dado.'),
+      findsOneWidget,
+    );
     await tester.tap(find.byKey(const ValueKey('dado_online_1')));
     await tester.pumpAndSettle();
-    expect(find.text('Este número no tiene destinos. Cambia al otro dado.'), findsNothing);
+    expect(
+      find.text('Este número no tiene destinos. Cambia al otro dado.'),
+      findsNothing,
+    );
   });
-  testWidgets('Los dados se revelan al impacto, antes de terminar la explosión', (tester) async {
-    pantallaNivel(tester);
-    final repo = FakeRoomsRepository()..snapshot = onlineSnapshot(prepared: true, playing: true);
-    await openRooms(tester, repo);
-    tester.platformDispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures(disableAnimations: false);
-    repo.publish(onlineSnapshot(prepared: true, playing: true, roundNumber: 2, sequence: 7), type: 'ROUND_STARTED');
-    await tester.pump();
-    final meteors = tester.widget<MeteoritosAnimacion>(find.byType(MeteoritosAnimacion));
-    expect(find.byType(FichaDado), findsNothing);
-    meteors.onImpacto(2);
-    await tester.pump();
-    await tester.pump();
-    expect(find.byType(FichaDado), findsNWidgets(2));
-    expect(find.byType(MeteoritosAnimacion), findsOneWidget);
-    meteors.onCompletada(2);
-    await tester.pump();
-    expect(find.byType(FichaDado), findsNWidgets(2));
-    expect(find.byType(MeteoritosAnimacion), findsNothing);
-  });
+  testWidgets(
+    'Los dados se revelan al impacto, antes de terminar la explosión',
+    (tester) async {
+      pantallaNivel(tester);
+      final repo = FakeRoomsRepository()
+        ..snapshot = onlineSnapshot(prepared: true, playing: true);
+      await openRooms(tester, repo);
+      tester.platformDispatcher.accessibilityFeaturesTestValue =
+          const FakeAccessibilityFeatures(disableAnimations: false);
+      repo.publish(
+        onlineSnapshot(
+          prepared: true,
+          playing: true,
+          roundNumber: 2,
+          sequence: 7,
+        ),
+        type: 'ROUND_STARTED',
+      );
+      await tester.pump();
+      final meteors = tester.widget<MeteoritosAnimacion>(
+        find.byType(MeteoritosAnimacion),
+      );
+      expect(find.byType(FichaDado), findsNothing);
+      meteors.onImpacto(2);
+      await tester.pump();
+      await tester.pump();
+      expect(find.byType(FichaDado), findsNWidgets(2));
+      expect(find.byType(MeteoritosAnimacion), findsOneWidget);
+      meteors.onCompletada(2);
+      await tester.pump();
+      expect(find.byType(FichaDado), findsNWidgets(2));
+      expect(find.byType(MeteoritosAnimacion), findsNothing);
+    },
+  );
   testWidgets(
     'Elegir dado y celda mantiene una propuesta local hasta confirmar',
     (tester) async {

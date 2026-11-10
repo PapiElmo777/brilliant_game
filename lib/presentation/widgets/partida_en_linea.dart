@@ -22,6 +22,7 @@ import 'meteoritos_animacion.dart';
 import 'nave_entrada.dart';
 import 'nave_marciano.dart';
 import 'tablero_view.dart';
+import 'ranking_online.dart';
 
 /// Comparte el diseño y las animaciones del modo local. Java decide las jugadas.
 class PartidaEnLinea extends StatefulWidget {
@@ -133,32 +134,9 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
   void _ranking() => showModalBottomSheet<void>(
     context: context,
     useSafeArea: true,
-    builder: (context) => ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Row(
-          children: [
-            const Expanded(
-              child: Text(
-                'Ranking',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-            ),
-            IconButton(
-              key: const ValueKey('cerrar_ranking'),
-              tooltip: 'Cerrar ranking',
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.close),
-            ),
-          ],
-        ),
-        for (final s in _game.scores)
-          ListTile(
-            title: Text('${s['username']}'),
-            trailing: Text('${s['points']} pts'),
-          ),
-      ],
-    ),
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => RankingSala(rooms: widget.rooms),
   );
   List<RegistroTirada> _history(OnlineMatch game) => [
     for (final h in game.history)
@@ -216,11 +194,14 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                 as int? ??
             0;
         final selected = round?.ownAction?['dieIndex'] as int? ?? _die;
-        final movesByDie = round == null ? <Set<String>>[] : [
-          destinosConAncla(board, round.dice[0], round.dice[1]),
-          destinosConAncla(board, round.dice[1], round.dice[0]),
-        ];
-        final noMoves = round != null && movesByDie.every((cells) => cells.isEmpty);
+        final movesByDie = round == null
+            ? <Set<String>>[]
+            : [
+                destinosConAncla(board, round.dice[0], round.dice[1]),
+                destinosConAncla(board, round.dice[1], round.dice[0]),
+              ];
+        final noMoves =
+            round != null && movesByDie.every((cells) => cells.isEmpty);
         final destinations = round != null && _die != null
             ? movesByDie[_die!]
             : <String>{};
@@ -617,7 +598,10 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                         : SizedBox(
                             key: _below,
                             width: double.infinity,
-                            child: selected == null && round.ownAction == null && !noMoves
+                            child:
+                                selected == null &&
+                                    round.ownAction == null &&
+                                    !noMoves
                                 ? null
                                 : Center(child: actionRow),
                           ),
@@ -650,7 +634,8 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                     ),
                   if (round != null &&
                       selected == null &&
-                      round.ownAction == null && !noMoves)
+                      round.ownAction == null &&
+                      !noMoves)
                     Positioned(
                       bottom: 0,
                       right: 12,
