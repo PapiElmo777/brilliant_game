@@ -15,3 +15,7 @@ Menu loop 24 s; game loop 32 s, each with a 1.4 s overlap at its seam.
 Music and effects are included in the APK and require no network connection.
 
 Native player: flutter_soloud (separate dependency license retained by Flutter).
+
+Zone completion now uses the approved “Sector asegurado cristal” preview for
+all three places, reproduced by `tool/audio/zone_completed.py`. These replacement
+effects retain the preview's stereo PCM at 44100 Hz, 1.6 seconds.
