@@ -246,6 +246,7 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
               )
             : TableroView.partida(
                 definicion: _definition,
+                atenuarPremios: true,
                 celdas: drawCells,
                 clavesCeldas: _cells,
                 destinos: canAct ? destinations : {},

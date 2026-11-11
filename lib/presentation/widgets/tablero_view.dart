@@ -23,6 +23,7 @@ class TableroView extends StatefulWidget {
 
   /// Puestos ya reclamados de cada zona completada.
   final Map<String, int> puestosReclamados;
+  final bool atenuarPremios;
 
   const TableroView({
     super.key,
@@ -35,7 +36,8 @@ class TableroView extends StatefulWidget {
        interactiva = true,
        celdaPropuesta = null,
        numeroPropuesto = null,
-       puestosReclamados = const {};
+       puestosReclamados = const {},
+       atenuarPremios = false;
 
   const TableroView.partida({
     super.key,
@@ -47,6 +49,7 @@ class TableroView extends StatefulWidget {
     this.celdaPropuesta,
     this.numeroPropuesto,
     this.puestosReclamados = const {},
+    this.atenuarPremios = false,
     this.clavesCeldas = const {},
   }) : estado = null,
        celdasPartida = celdas;
@@ -136,6 +139,12 @@ class _TableroViewState extends State<TableroView> {
                             : null,
                         tipo: zona.tipo,
                         nombreZona: zona.nombre,
+                        puestosReclamados: widget.atenuarPremios
+                            ? widget.puestosReclamados[zona.id] ?? 0
+                            : 0,
+                        plazasPremiadas: zona.puntuaciones.values
+                            .where((p) => p > 0)
+                            .length,
                         esDestino: widget.destinos.contains(celda.id),
                         seleccionada:
                             estado?.celdaSeleccionada == celda.id ||
@@ -241,6 +250,11 @@ class FichaZona extends StatelessWidget {
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 12, color: Color(0xFFB1C4D4)),
             ),
+            if (reclamados >= puntos.length && puntos.isNotEmpty)
+              const Text(
+                'Sin premios disponibles',
+                style: TextStyle(color: Color(0xFFFFC66B), fontSize: 12),
+              ),
             if (puntos.isNotEmpty) ...[
               const SizedBox(height: 4),
               Text.rich(
@@ -302,7 +316,19 @@ extension on TableroView {
   }
 }
 
+Color colorPremioZona(Color original, int reclamados, int plazas) {
+  if (plazas == 0 || reclamados <= 0) return original;
+  final progress = (reclamados / plazas).clamp(0.0, 1.0);
+  final hsv = HSVColor.fromColor(original);
+  final faded = hsv
+      .withSaturation(hsv.saturation * (1 - progress))
+      .withValue(hsv.value * (1 - .3 * progress))
+      .toColor();
+  return Color.lerp(faded, const Color(0xFF243347), progress * .6)!;
+}
+
 class CeldaView extends StatelessWidget {
+  final int puestosReclamados, plazasPremiadas;
   final String? nombreZona;
   final int? numeroPropuesto;
   final Celda celda;
@@ -333,6 +359,8 @@ class CeldaView extends StatelessWidget {
     this.numeroPropuesto,
     required this.tipo,
     this.nombreZona,
+    this.puestosReclamados = 0,
+    this.plazasPremiadas = 3,
     this.onTap,
     this.esDestino = false,
     this.enPartida = false,
@@ -346,10 +374,20 @@ class CeldaView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Una zona completa conserva su color, sólo un poco más oscuro.
-    final color = completada
+    final base = completada
         ? Color.lerp(tipo.color, Colors.black, .28)!
         : tipo.color;
+    final color = colorPremioZona(base, puestosReclamados, plazasPremiadas);
+    return TweenAnimationBuilder<Color?>(
+      tween: ColorTween(begin: color, end: color),
+      duration: MediaQuery.disableAnimationsOf(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 700),
+      builder: (context, animated, _) => _contenido(context, animated!),
+    );
+  }
+
+  Widget _contenido(BuildContext context, Color color) {
     final texto = ThemeData.estimateBrightnessForColor(color) == Brightness.dark
         ? Colors.white
         : const Color(0xFF071226);
@@ -366,7 +404,7 @@ class CeldaView extends StatelessWidget {
       enabled: onTap != null,
       onTap: onTap,
       label:
-          '${nombreZona == null ? '' : 'Zona $nombreZona, '}Fila ${celda.fila + 1}, columna ${celda.columna + 1}${celda.esInicio ? ', celda inicial' : ''}, $estado. ${tipo.descripcion}${completada ? ', zona completa' : ''}${esDestino ? ', destino disponible' : ''}',
+          '${nombreZona == null ? '' : 'Zona $nombreZona, '}Fila ${celda.fila + 1}, columna ${celda.columna + 1}${celda.esInicio ? ', celda inicial' : ''}, $estado. ${tipo.descripcion}${completada ? ', zona completa' : ''}${esDestino ? ', destino disponible' : ''}${puestosReclamados >= plazasPremiadas ? ', sin premios disponibles' : ''}',
       hint: pista != null
           ? pista!
           : enPartida
