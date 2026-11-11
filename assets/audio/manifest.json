@@ -1,0 +1,212 @@
+[
+  {
+    "file": "music/menu.wav",
+    "seconds": 24.0,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 2116848
+  },
+  {
+    "file": "music/game.wav",
+    "seconds": 32.0,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 2822448
+  },
+  {
+    "file": "sfx/startup.wav",
+    "seconds": 1.4,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 61782
+  },
+  {
+    "file": "sfx/click.wav",
+    "seconds": 0.12,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 5336
+  },
+  {
+    "file": "sfx/back.wav",
+    "seconds": 0.18,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 7982
+  },
+  {
+    "file": "sfx/panel.wav",
+    "seconds": 0.45,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 19888
+  },
+  {
+    "file": "sfx/connect.wav",
+    "seconds": 0.6,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 26504
+  },
+  {
+    "file": "sfx/disconnect.wav",
+    "seconds": 0.8,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 35324
+  },
+  {
+    "file": "sfx/ready.wav",
+    "seconds": 0.6,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 26504
+  },
+  {
+    "file": "sfx/launch.wav",
+    "seconds": 1.7,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 75014
+  },
+  {
+    "file": "sfx/round.wav",
+    "seconds": 0.9,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 39734
+  },
+  {
+    "file": "sfx/meteor.wav",
+    "seconds": 1.5,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 66194
+  },
+  {
+    "file": "sfx/impact.wav",
+    "seconds": 1.55,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 68398
+  },
+  {
+    "file": "sfx/reveal.wav",
+    "seconds": 0.65,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 28708
+  },
+  {
+    "file": "sfx/select.wav",
+    "seconds": 0.14,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 6218
+  },
+  {
+    "file": "sfx/preview.wav",
+    "seconds": 0.22,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 9746
+  },
+  {
+    "file": "sfx/shot.wav",
+    "seconds": 0.26,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 11510
+  },
+  {
+    "file": "sfx/place.wav",
+    "seconds": 0.55,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 24298
+  },
+  {
+    "file": "sfx/reject.wav",
+    "seconds": 0.65,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 28708
+  },
+  {
+    "file": "sfx/skip.wav",
+    "seconds": 0.4,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 17684
+  },
+  {
+    "file": "sfx/zone_1.wav",
+    "seconds": 1.7,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 75014
+  },
+  {
+    "file": "sfx/zone_2.wav",
+    "seconds": 1.7,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 75014
+  },
+  {
+    "file": "sfx/zone_3.wav",
+    "seconds": 1.7,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 75014
+  },
+  {
+    "file": "sfx/zone_other.wav",
+    "seconds": 0.65,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 28708
+  },
+  {
+    "file": "sfx/zone_exhausted.wav",
+    "seconds": 0.65,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 28708
+  },
+  {
+    "file": "sfx/chat.wav",
+    "seconds": 0.35,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 15478
+  },
+  {
+    "file": "sfx/sent.wav",
+    "seconds": 0.18,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 7982
+  },
+  {
+    "file": "sfx/thirty.wav",
+    "seconds": 1.4,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 61782
+  },
+  {
+    "file": "sfx/tick.wav",
+    "seconds": 0.3,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 13274
+  },
+  {
+    "file": "sfx/tick_final.wav",
+    "seconds": 0.35,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 15478
+  },
+  {
+    "file": "sfx/timeout.wav",
+    "seconds": 0.4,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 17684
+  },
+  {
+    "file": "sfx/victory.wav",
+    "seconds": 6.0,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 264644
+  },
+  {
+    "file": "sfx/podium.wav",
+    "seconds": 2.8,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 123522
+  },
+  {
+    "file": "sfx/finish.wav",
+    "seconds": 2.4,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 105884
+  },
+  {
+    "file": "sfx/alert.wav",
+    "seconds": 1.0,
+    "source": "Original synthesis, Brilliant first voiceless demo",
+    "bytes": 44144
+  }
+]
