@@ -20,7 +20,7 @@ void main() {
             home: Scaffold(
               body: Center(
                 child: SizedBox(
-                  width: 272,
+                  width: 260,
                   height: 80,
                   child: LeyendaColores(definicion: level),
                 ),
@@ -32,7 +32,9 @@ void main() {
         expect(rules.length, reglasDelNivel(level).length);
         for (final tile in find.byType(CuadroRegla).evaluate()) {
           final rect = tester.getRect(find.byWidget(tile.widget));
-          final center = tester.getCenter(find.byType(LeyendaColores)).dx;
+          final area = tester.getRect(find.byType(LeyendaColores));
+          final center = area.center.dx;
+          expect(rect.top >= area.top && rect.bottom <= area.bottom, isTrue);
           expect(rect.right <= center - 72 || rect.left >= center + 72, isTrue);
         }
         expect(tester.takeException(), isNull);

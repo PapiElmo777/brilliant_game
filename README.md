@@ -745,3 +745,13 @@ El ranking del trofeo ordena el top con las mismas prioridades de Java (abandono
 El podio incluye salto estelar, corona y alas de piloto, insignia dorada para el campeón y puesto propio en grande para los demás. La fila ganadora tiene una entrada dorada visible para todos. Son animaciones finitas, sin video adicional ni ciclos permanentes; movimiento reducido muestra el resultado estático. Se mantienen revancha, salida y chat.
 
 Las zonas tienen un nombre legible consistente, por ejemplo Verde 1 y Verde 2. Se muestra en las conquistas del ranking, en la ficha al mantener presionada una casilla y en las etiquetas accesibles del tablero. Se conservan los identificadores del contrato y los datos de las partidas. Esta entrega solo requiere actualizar la app.
+
+## Reglas, premios y avisos de misión — 11 de noviembre de 2026
+
+- Reglas visibles a ambos lados del espacio superior de los dados en solitario y multijugador, calculadas desde los tipos del nivel: igualdad, desigualdad, cualquier número, dos números distintos y grupos naranjas 1–3/4–6. Los símbolos geométricos se dibujan para evitar glifos ausentes. Mantener presionado muestra la regla completa. Volver a tirar permanece disponible en la cabecera del modo solitario.
+- En línea, cada zona pierde saturación y brillo conforme se ocupan sus puestos premiados. La transición dura 700 ms; sin premios queda apagada, manteniendo números, selección y destinos legibles. Se utilizan nextPlace y las puntuaciones reales de la zona, sin impedir jugadas válidas ni cambiar reclamos.
+- La nave anuncia nueva ronda y segundos restantes, y cada reclamo nuevo con jugador, nombre de zona, puesto y puntos. Los avisos se encolan, destacan en ámbar y no repiten el historial al reconectar. Los avisos de falta de destinos tienen prioridad sobre la introducción de ronda.
+- Mensajes nuevos de otros jugadores producen una sacudida finita del icono de chat y respuesta háptica del sistema, sin dispararse por historial, mensajes propios o del sistema. No se repite al reconstruir; se omite cuando el chat está abierto. La vibración física depende del dispositivo y sus ajustes.
+- Pulso breve al cruzar los 30 segundos, una sola vez por ronda. Durante los últimos diez se muestra un radar rojo con el número grande que se vacía al terminar; no cubre el tablero ni intercepta controles. El tiempo sigue siendo el reloj monotónico anclado a Java. Movimiento reducido conserva los avisos estáticos.
+
+Se incluyen capturas de los cuatro niveles, los tres estados de desgaste y el reloj en 30/10 segundos, también en pantalla pequeña, horizontal y texto ampliado. Las animaciones son locales y finitas, y el reloj actualiza solo sus indicadores. Esta entrega utiliza el contrato existente y requiere actualizar la app.

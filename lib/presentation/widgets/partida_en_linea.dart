@@ -25,6 +25,7 @@ import 'tablero_view.dart';
 import 'ranking_online.dart';
 import 'leyenda_colores.dart';
 import 'avisos_nave.dart';
+import 'alerta_tiempo_ronda.dart';
 
 /// Comparte el diseño y las animaciones del modo local. Java decide las jugadas.
 class PartidaEnLinea extends StatefulWidget {
@@ -356,6 +357,17 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                               ],
                             ),
                           ),
+                          if (!preparing)
+                            SizedBox(
+                              width: 50,
+                              height: 54,
+                              child: TiempoRondaOnline(
+                                rooms: widget.rooms,
+                                roundId: round.id,
+                                initialSeconds:
+                                    widget.state.secondsRemaining ?? 0,
+                              ),
+                            ),
                         ],
                       ),
                     )
@@ -373,7 +385,14 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                               ? Center(child: ship)
                               : Row(
                                   children: [
-                                    const Spacer(),
+                                    Expanded(
+                                      child: TiempoRondaOnline(
+                                        rooms: widget.rooms,
+                                        roundId: round.id,
+                                        initialSeconds:
+                                            widget.state.secondsRemaining ?? 0,
+                                      ),
+                                    ),
                                     ship,
                                     Expanded(
                                       child: Padding(
@@ -403,7 +422,7 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                         ),
                         if (!preparing)
                           SizedBox(
-                            height: 54,
+                            height: 64,
                             child: _fit(
                               SizedBox(
                                 width: m.anchoPanel,
@@ -444,7 +463,7 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
               );
               final headerHeight = m.compacto
                   ? (preparing ? 62.0 : 68.0)
-                  : numberHeight + shipHeight + 22 + (preparing ? 0 : 54);
+                  : numberHeight + shipHeight + 22 + (preparing ? 0 : 64);
               final diceState = round == null
                   ? null
                   : PartidaEstado(
