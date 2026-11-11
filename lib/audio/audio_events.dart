@@ -85,8 +85,8 @@ class AudioEvents extends BlocObserver {
   void _rooms(RoomsCubit rooms, RoomsState a, RoomsState b) {
     final oldLobby = a.lobby, lobby = b.lobby;
     if (oldLobby?.id != lobby?.id) {
-      audio.play(lobby == null ? GameSound.disconnect : GameSound.connect);
       if (lobby == null) audio.setScene(AudioScene.menu);
+      audio.play(lobby == null ? GameSound.disconnect : GameSound.connect);
     } else if (lobby != null && oldLobby != null) {
       if (oldLobby.members.length != lobby.members.length) {
         audio.play(
