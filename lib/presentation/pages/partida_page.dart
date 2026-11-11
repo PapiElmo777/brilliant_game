@@ -1,3 +1,4 @@
+import '../../audio/game_audio.dart';
 import '../../core/anclas.dart';
 import '../widgets/leyenda_colores.dart';
 import 'dart:ui' as ui;
@@ -42,6 +43,12 @@ class PartidaPage extends StatefulWidget {
 }
 
 class _PartidaPageState extends State<PartidaPage> {
+  @override
+  void initState() {
+    super.initState();
+    GameAudio.instance.setScene(AudioScene.game);
+  }
+
   final _lienzo = GlobalKey();
   final _arriba = GlobalKey();
   final _impactos = GlobalKey();

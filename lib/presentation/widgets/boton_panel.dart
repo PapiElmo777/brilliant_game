@@ -1,3 +1,4 @@
+import '../../audio/game_audio.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/tema_brilliant.dart';
@@ -51,7 +52,12 @@ class BotonPanel extends StatelessWidget {
           child: SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              onPressed: onPressed,
+              onPressed: onPressed == null
+                  ? null
+                  : () {
+                      GameAudio.instance.play(GameSound.click);
+                      onPressed!();
+                    },
               style: FilledButton.styleFrom(
                 shape: _forma.copyWith(side: BorderSide.none),
                 backgroundColor: Colors.transparent,

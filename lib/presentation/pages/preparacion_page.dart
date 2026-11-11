@@ -1,3 +1,4 @@
+import '../../audio/game_audio.dart';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,6 +36,13 @@ class PreparacionPage extends StatefulWidget {
 }
 
 class _PreparacionPageState extends State<PreparacionPage> {
+  @override
+  void initState() {
+    super.initState();
+    GameAudio.instance.setScene(AudioScene.game);
+    GameAudio.instance.play(GameSound.launch);
+  }
+
   final _origenNave = GlobalKey();
   late final _clavesCeldas = <String, GlobalKey>{
     for (final z in widget.definicion.zonas)

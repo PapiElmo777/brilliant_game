@@ -1,3 +1,4 @@
+import '../../audio/game_audio.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -47,6 +48,16 @@ class _MeteoritosAnimacionState extends State<MeteoritosAnimacion>
   Timer? _limite;
   int _version = 0;
   int _indice = 0;
+  bool _audioInicio = false;
+  bool _audioImpacto = false;
+  void _sonarImpacto() {
+    if (_audioImpacto) return;
+    _audioImpacto = true;
+    GameAudio.instance.stop(GameSound.meteor);
+    GameAudio.instance.play(GameSound.impact);
+    GameAudio.instance.play(GameSound.reveal);
+  }
+
   bool _iniciada = false;
   bool _impacto = false;
   bool _terminada = false;
@@ -60,10 +71,15 @@ class _MeteoritosAnimacionState extends State<MeteoritosAnimacion>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (!_audioInicio) {
+      _audioInicio = true;
+      GameAudio.instance.play(GameSound.round);
+    }
     if (MediaQuery.disableAnimationsOf(context)) {
       _finalizar();
     } else if (!_iniciada) {
       _iniciada = true;
+      GameAudio.instance.play(GameSound.meteor);
       _omitible = false;
       _espera?.cancel();
       _espera = Timer(esperaParaOmitirCaida, () => _omitible = true);
@@ -79,6 +95,8 @@ class _MeteoritosAnimacionState extends State<MeteoritosAnimacion>
       _liberar();
       _indice = 0;
       _impacto = false;
+      _audioImpacto = false;
+      _audioInicio = false;
       _terminada = false;
       _iniciada = false;
       _explosion?.dispose();
@@ -133,6 +151,7 @@ class _MeteoritosAnimacionState extends State<MeteoritosAnimacion>
       // El clip conserva uno de cada siete cuadros a velocidad x7.
       if (_indice >= widget.cuadroImpacto && !_impacto) {
         _impacto = true;
+        _sonarImpacto();
         widget.onImpacto(widget.tiradaId);
       }
       _cuadro = Timer(
@@ -151,6 +170,7 @@ class _MeteoritosAnimacionState extends State<MeteoritosAnimacion>
     if (!_omitible) return;
     _liberar();
     _impacto = true;
+    _sonarImpacto();
     widget.onImpacto(widget.tiradaId);
     setState(() {
       _explosion =
@@ -173,7 +193,10 @@ class _MeteoritosAnimacionState extends State<MeteoritosAnimacion>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || version != _version) return;
       setState(() {});
-      if (impactoPendiente) widget.onImpacto(id);
+      if (impactoPendiente) {
+        _sonarImpacto();
+        widget.onImpacto(id);
+      }
       widget.onCompletada(id);
     });
     WidgetsBinding.instance.scheduleFrame();

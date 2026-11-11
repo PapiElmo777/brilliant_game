@@ -1,3 +1,4 @@
+import '../../audio/game_audio.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -40,6 +41,7 @@ class _DisparoNumeroOverlayState extends State<DisparoNumeroOverlay>
   void _notificar() {
     if (_notificado) return;
     _notificado = true;
+    GameAudio.instance.play(GameSound.place);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) widget.onCompletado();
     });
@@ -53,6 +55,7 @@ class _DisparoNumeroOverlayState extends State<DisparoNumeroOverlay>
       return;
     }
     _iniciado = true;
+    GameAudio.instance.play(GameSound.shot);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (MediaQuery.disableAnimationsOf(context)) {
