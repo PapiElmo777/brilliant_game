@@ -206,7 +206,7 @@ void main() {
     expect(backend.effects, ['skip.wav']);
   });
   test(
-    'Leaving a room preserves its exit cue across the music change',
+    'Leaving a room preserves its exit cue across the scene change',
     () async {
       await change(state(), const RoomsState());
       expect(backend.effects, ['disconnect.wav']);

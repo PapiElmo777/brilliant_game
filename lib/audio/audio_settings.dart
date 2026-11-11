@@ -66,12 +66,6 @@ class AudioSettings extends StatelessWidget {
                     onChanged: (value) => sound.configure(muted: value),
                   ),
                   slider(
-                    'Música',
-                    sound.musicVolume,
-                    (v) => sound.configure(music: v),
-                    null,
-                  ),
-                  slider(
                     'Efectos',
                     sound.effectsVolume,
                     (v) => sound.configure(effects: v),

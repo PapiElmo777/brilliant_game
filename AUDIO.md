@@ -1,7 +1,7 @@
 # Audio de Brilliant
 
 Implementación en la rama `audio`. Identidad: primera maqueta galáctica aprobada,
-sin voces. Los 35 WAV originales (33 efectos y 2 bucles) suman 9.20 MiB.
+sin voces. Los 33 efectos WAV originales suman 4.49 MiB. El menú y las partidas no tienen música de fondo.
 
 ## Recursos
 
@@ -13,24 +13,22 @@ de muestras; todos los sonidos proceden de la síntesis original de la maqueta.
 ## Reproducción
 
 `GameAudio` inicializa flutter_soloud una sola vez, después de abrir la interfaz.
-Precarga los recursos, mantiene separadas música, efectos y avisos, guarda sus
+Precarga los recursos, mantiene separados efectos y avisos, guarda sus
 volúmenes y el silencio general en SharedPreferences. Un fallo de audio no bloquea
-el acceso al juego. La implementación nativa limita la mezcla a 8 voces y protege
-la música contra el robo de voces. Los cambios de ambiente cruzan ambos bucles
-con fundido; las alertas prioritarias atenúan la música temporalmente.
+el acceso al juego. La implementación nativa limita la mezcla a 8 voces. Las alertas importantes
+tienen prioridad frente a otros efectos.
 
-Al minimizar o perder el foco se detienen los efectos y se pausa la música. Al
+Al minimizar o perder el foco se detienen los efectos. Al
 regresar no se reproducen avisos acumulados. Las operaciones de reproducción
 pendientes se invalidan cuando cambia la pantalla o se detiene un efecto.
 
 Los controles están en el login, el menú, la cabecera de salas y las opciones de
-salida de una partida. Música, efectos y avisos se pueden ajustar por separado.
+salida de una partida. Efectos y avisos se pueden ajustar por separado.
 
 ## Eventos
 
 | Recursos | Disparador |
 |---|---|
-| menu / game | Navegación, preparación y partida |
 | startup / launch | Arranque, entrada de misión e inicio de partida |
 | click / back / panel | Controles comunes, navegación, paneles y reglas |
 | connect / disconnect / ready | Acceso, salas, participantes y preparación |

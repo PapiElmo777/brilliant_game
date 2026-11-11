@@ -30,13 +30,7 @@ void main() {
                   as List)
               .cast<Map<String, dynamic>>();
       final paths = entries.map((e) => 'assets/audio/${e['file']}').toSet();
-      expect(
-        paths,
-        containsAll([
-          for (final s in GameSound.values) s.asset,
-          for (final s in AudioScene.values) GameAudio.musicAsset(s),
-        ]),
-      );
+      expect(paths, containsAll([for (final s in GameSound.values) s.asset]));
       expect(
         entries.every((e) => (e['source'] as String).startsWith('Original')),
         isTrue,
@@ -51,20 +45,24 @@ void main() {
     },
   );
   test(
-    'Preloads once and preserves chosen scene during initialization',
+    'Preloads only effects, even with an old saved music preference',
     () async {
+      SharedPreferences.setMockInitialValues({'audio.music': 1.0});
       audio.setScene(AudioScene.game);
       await audio.start();
       await flushAudio();
       await audio.start();
+      expect(backend.loaded.length, GameSound.values.length);
+      expect(audio.scene, AudioScene.game);
       expect(
-        backend.loaded.length,
-        GameSound.values.length + AudioScene.values.length,
+        backend.loaded.every((p) => p.startsWith('assets/audio/sfx/')),
+        isTrue,
       );
-      expect(
-        backend.played.where((p) => p.loop).single.asset,
-        endsWith('game.wav'),
-      );
+      expect(backend.effects, ['startup.wav']);
+      audio.setScene(AudioScene.menu);
+      audio.setScene(AudioScene.game);
+      await flushAudio();
+      expect(backend.effects, ['startup.wav']);
     },
   );
   test('Missing native device never stops app startup', () async {
@@ -77,7 +75,7 @@ void main() {
   test('Mute stops effects and persists independent volume controls', () async {
     await audio.start();
     await flushAudio();
-    audio.configure(music: .12, effects: .24, alerts: .36);
+    audio.configure(effects: .24, alerts: .36);
     audio.configure(muted: true);
     final count = backend.played.length;
     audio.play(GameSound.alert);
@@ -86,29 +84,25 @@ void main() {
     await audio.shutdown();
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getBool('audio.muted'), isTrue);
-    expect(prefs.getDouble('audio.music'), .12);
     expect(prefs.getDouble('audio.effects'), .24);
     expect(prefs.getDouble('audio.alerts'), .36);
   });
-  test(
-    'Background cancels sounds, pauses music, and never replays old notices',
-    () async {
-      await audio.start();
-      await flushAudio();
-      audio.play(GameSound.chat);
-      await flushAudio();
-      audio.setForeground(false);
-      final count = backend.played.length;
-      audio.play(GameSound.victory);
-      await flushAudio();
-      expect(backend.played.length, count);
-      expect(backend.paused.last.$2, isTrue);
-      audio.setForeground(true);
-      await flushAudio();
-      expect(backend.played.length, count);
-      expect(backend.paused.last.$2, isFalse);
-    },
-  );
+  test('Background cancels sounds and never replays old notices', () async {
+    await audio.start();
+    await flushAudio();
+    audio.play(GameSound.chat);
+    await flushAudio();
+    audio.setForeground(false);
+    final count = backend.played.length;
+    audio.play(GameSound.victory);
+    await flushAudio();
+    expect(backend.played.length, count);
+    expect(backend.stopped, isNotEmpty);
+    audio.setForeground(true);
+    await flushAudio();
+    expect(backend.played.length, count);
+    expect(audio.foreground, isTrue);
+  });
   test('Rapid chat is grouped; muted effects do not mute alerts', () async {
     await audio.start();
     await flushAudio();
@@ -124,7 +118,7 @@ void main() {
     await flushAudio();
     expect(backend.effects.length, 2);
   });
-  test('Victory takes priority and ducks the music', () async {
+  test('Victory keeps priority over chat and selection effects', () async {
     await audio.start();
     await flushAudio();
     backend.played.clear();
@@ -133,7 +127,6 @@ void main() {
     audio.play(GameSound.select);
     await flushAudio();
     expect(backend.effects, ['victory.wav']);
-    expect(backend.volumes.last.$2, closeTo(audio.musicVolume * .28, .00001));
   });
   test(
     'Impact cancels a meteor even if native playback finishes asynchronously',
@@ -159,9 +152,9 @@ void main() {
     backend.hold!.complete();
     await flushAudio();
     expect(backend.stopped, contains(chat.handle));
-    expect(backend.played.last.asset, endsWith('game.wav'));
+    expect(backend.effects.last, 'chat.wav');
   });
-  testWidgets('Settings expose mute and all three volume controls', (
+  testWidgets('Settings expose mute and only effects and alerts controls', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -170,7 +163,8 @@ void main() {
       ),
     );
     expect(find.text('Silenciar todo'), findsOneWidget);
-    expect(find.byType(Slider), findsNWidgets(3));
+    expect(find.byKey(const ValueKey('audio_Música')), findsNothing);
+    expect(find.byType(Slider), findsNWidgets(2));
     await tester.tap(find.byType(Switch));
     await tester.pump();
     expect(audio.muted, isTrue);
