@@ -135,4 +135,7 @@ render('podium',2.8,lambda:(motif(0,.11,.28,1.5,'brass'),chord([293.66,349.23,44
 render('finish',2.4,lambda:(note(440,1.1,'bell',.06),note(349.23,1.1,'bell',.06,0,.4),note(293.66,1.1,'bell',.06,0,.8)))
 render('alert',1,lambda:(chirp(0,800,450,.22,.09),chirp(.35,800,450,.22,.09)))
 (OUT/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+import runpy
+runpy.run_path(str(Path(__file__).parent/'audio/zone_completed.py'),run_name='__main__')
+manifest=json.loads((OUT/'manifest.json').read_text())
 print(str(len(manifest))+' files; '+str(round(sum(m['bytes'] for m in manifest)/1048576,2))+' MiB')
