@@ -1,17 +1,5 @@
 [
   {
-    "file": "music/menu.wav",
-    "seconds": 24.0,
-    "source": "Original synthesis, Brilliant first voiceless demo",
-    "bytes": 2116848
-  },
-  {
-    "file": "music/game.wav",
-    "seconds": 32.0,
-    "source": "Original synthesis, Brilliant first voiceless demo",
-    "bytes": 2822448
-  },
-  {
     "file": "sfx/startup.wav",
     "seconds": 1.4,
     "source": "Original synthesis, Brilliant first voiceless demo",

@@ -3,9 +3,8 @@ import 'package:brilliant_game/audio/game_audio.dart';
 
 class FakeAudioBackend implements AudioBackend {
   final loaded = <String>[];
-  final played = <({Object handle, String asset, bool loop, double volume})>[];
+  final played = <({Object handle, String asset, double volume})>[];
   final stopped = <Object>[];
-  final paused = <(Object, bool)>[];
   final volumes = <(Object, double)>[];
   bool failed = false, disposed = false;
   Completer<void>? hold;
@@ -21,9 +20,9 @@ class FakeAudioBackend implements AudioBackend {
   }
 
   @override
-  Future<Object> play(String asset, double volume, {bool loop = false}) async {
+  Future<Object> play(String asset, double volume) async {
     final handle = ++_id;
-    played.add((handle: handle, asset: asset, loop: loop, volume: volume));
+    played.add((handle: handle, asset: asset, volume: volume));
     await hold?.future;
     return handle;
   }
@@ -31,11 +30,6 @@ class FakeAudioBackend implements AudioBackend {
   @override
   Future<void> stop(Object handle) async {
     stopped.add(handle);
-  }
-
-  @override
-  void pause(Object handle, bool value) {
-    paused.add((handle, value));
   }
 
   @override
@@ -49,7 +43,7 @@ class FakeAudioBackend implements AudioBackend {
   }
 
   List<String> get effects =>
-      played.where((p) => !p.loop).map((p) => p.asset.split('/').last).toList();
+      played.map((p) => p.asset.split('/').last).toList();
 }
 
 Future<void> flushAudio() => Future<void>.delayed(Duration.zero);

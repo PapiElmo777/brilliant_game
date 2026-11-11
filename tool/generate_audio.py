@@ -68,40 +68,23 @@ def impact(start,gain=.29):
 
 
 manifest=[]
-def render(name,duration,fn,music=False):
+def render(name,duration,fn):
     global N,L,R
     N=int(SR*duration);L=array('f',[0])*N;R=array('f',[0])*N
     fn()
-    # Music uses matching fade-out/fade-in overlap at the loop seam.
-    if music:
-        overlap=int(SR*1.4)
-        for i in range(overlap):
-            a=i/overlap
-            L[i]=L[i]*a+L[N-overlap+i]*(1-a)
-            R[i]=R[i]*a+R[N-overlap+i]*(1-a)
-        N-=overlap
     peak=max(max(map(abs,L[:N])),max(map(abs,R[:N])),.001)
     gain=min(3,.75/peak)
     pcm=array('h')
     for i in range(N):
-        fade=1 if music else min(i/(SR*.004),1,(N-1-i)/(SR*.025))
-        values=(L[i],R[i]) if music else ((L[i]+R[i])*.7071,)
+        fade=min(i/(SR*.004),1,(N-1-i)/(SR*.025))
+        values=((L[i]+R[i])*.7071,)
         for value in values: pcm.append(int(max(-.95,min(.95,value*gain*fade))*32767))
-    path=OUT/('music' if music else 'sfx')/(name+'.wav')
+    path=OUT/'sfx'/(name+'.wav')
     path.parent.mkdir(parents=True,exist_ok=True)
     with wave.open(str(path),'wb') as f:
-        f.setnchannels(2 if music else 1);f.setsampwidth(2);f.setframerate(SR);f.writeframes(pcm.tobytes())
+        f.setnchannels(1);f.setsampwidth(2);f.setframerate(SR);f.writeframes(pcm.tobytes())
     manifest.append({'file':str(path.relative_to(OUT)),'seconds':round(N/SR,3),'source':'Original synthesis, Brilliant first voiceless demo','bytes':path.stat().st_size})
 
-def menu():
-    for j,fs in enumerate([[146.83,174.61,220,261.63],[116.54,146.83,174.61,220],[130.81,174.61,220,261.63],[130.81,174.61,196,261.63]]):
-        chord(fs,j*6,7.4,.024)
-    for t,f in [(1.1,587.33),(1.7,698.46),(2.4,880),(4,1174.66),(5.1,880),(13.1,587.33),(14.4,880)]:note(f,2.1,'bell',.035,0,t)
-def game():
-    for j,fs in enumerate([[146.83,174.61,220],[116.54,146.83,174.61],[130.81,174.61,220],[130.81,196,261.63]]):chord(fs,j*8,9.4,.018)
-    for j in range(8):note([293.66,349.23,440,349.23][j%4],2,'bell',.012,(-1)**j*.4,2+j*4)
-render('menu',25.4,menu,True)
-render('game',33.4,game,True)
 render('startup',1.4,lambda:(whoosh(0,1.1,.06),motif(.1,.08,.14,2)))
 render('click',.12,lambda:chirp(0,1250,1550,.065,.08))
 render('back',.18,lambda:chirp(0,1250,750,.1,.07))

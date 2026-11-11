@@ -252,7 +252,7 @@ class AudioEvents extends BlocObserver {
   }
 }
 
-/// Dialogs inherit the current scene. Returning to the root restores menu music.
+/// Dialogs inherit the current scene. Returning to the root clears mission effects.
 class AudioNavigation extends NavigatorObserver {
   final GameAudio audio;
   AudioNavigation(this.audio);
