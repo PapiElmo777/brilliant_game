@@ -1,3 +1,4 @@
+import '../../audio/audio_settings.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/tema_brilliant.dart';
@@ -24,7 +25,13 @@ class DialogoSalirPartida extends StatelessWidget {
       '¿Seguro que quieres salir?',
       style: TextStyle(fontWeight: FontWeight.w800),
     ),
-    content: const Text('Se perderá el progreso de la partida.'),
+    content: const Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('Se perderá el progreso de la partida.'),
+        AudioSettingsButton(),
+      ],
+    ),
     actions: [
       TextButton(
         key: const ValueKey('cancelar_salida'),

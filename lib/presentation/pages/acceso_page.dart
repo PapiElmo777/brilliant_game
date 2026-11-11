@@ -1,3 +1,4 @@
+import '../../audio/audio_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../auth/auth_cubit.dart';
@@ -94,10 +95,21 @@ class _AccesoPageState extends State<AccesoPage> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Image.asset(
-                          'assets/images/branding/LogoBrilliant.png',
-                          height: 110,
-                          semanticLabel: 'Brilliant',
+                        Stack(
+                          children: [
+                            Center(
+                              child: Image.asset(
+                                'assets/images/branding/LogoBrilliant.png',
+                                height: 110,
+                                semanticLabel: 'Brilliant',
+                              ),
+                            ),
+                            const Positioned(
+                              right: 0,
+                              top: 0,
+                              child: AudioSettingsButton(),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 24),
                         Text(

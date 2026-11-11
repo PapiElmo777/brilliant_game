@@ -4,13 +4,20 @@ import 'game_audio.dart';
 class AudioSettingsButton extends StatelessWidget {
   const AudioSettingsButton({super.key});
   @override
-  Widget build(BuildContext context) => IconButton(
-    key: const ValueKey('audio_settings'),
-    tooltip: 'Sonido',
-    icon: const Icon(Icons.volume_up_rounded),
-    onPressed: () => showDialog<void>(
-      context: context,
-      builder: (_) => const AudioSettings(),
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: GameAudio.instance,
+    builder: (context, _) => IconButton(
+      key: const ValueKey('audio_settings'),
+      tooltip: 'Sonido',
+      icon: Icon(
+        GameAudio.instance.muted
+            ? Icons.volume_off_rounded
+            : Icons.volume_up_rounded,
+      ),
+      onPressed: () => showDialog<void>(
+        context: context,
+        builder: (_) => const AudioSettings(),
+      ),
     ),
   );
 }
@@ -28,7 +35,7 @@ class AudioSettings extends StatelessWidget {
           String title,
           double value,
           ValueChanged<double> update,
-          GameSound preview,
+          GameSound? preview,
         ) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -38,7 +45,9 @@ class AudioSettings extends StatelessWidget {
               key: ValueKey('audio_$title'),
               value: value,
               onChanged: sound.muted ? null : update,
-              onChangeEnd: sound.muted ? null : (_) => sound.play(preview),
+              onChangeEnd: sound.muted || preview == null
+                  ? null
+                  : (_) => sound.play(preview),
             ),
           ],
         );
@@ -60,7 +69,7 @@ class AudioSettings extends StatelessWidget {
                     'Música',
                     sound.musicVolume,
                     (v) => sound.configure(music: v),
-                    GameSound.panel,
+                    null,
                   ),
                   slider(
                     'Efectos',
