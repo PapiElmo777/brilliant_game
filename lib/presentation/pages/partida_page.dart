@@ -1,3 +1,4 @@
+import '../widgets/leyenda_colores.dart';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -344,6 +345,14 @@ class _PartidaPageState extends State<PartidaPage> {
                         style: TextStyle(fontWeight: FontWeight.w800),
                       ),
               ),
+              if (e.puedeRelanzar)
+                Tooltip(
+                  message: 'Volver a tirar los dados',
+                  child: BotonRelanzar(
+                    tamano: m.altoCabecera,
+                    onPressed: () => bloc.add(DadosRelanzados(e.tirada.id)),
+                  ),
+                ),
               Flexible(
                 child: HistorialTiradas(
                   registros: e.historial,
@@ -359,16 +368,7 @@ class _PartidaPageState extends State<PartidaPage> {
                 key: _arriba,
                 height: 80,
                 width: double.infinity,
-                child: e.puedeRelanzar
-                    ? Align(
-                        alignment: Alignment.centerRight,
-                        child: BotonRelanzar(
-                          tamano: m.compacto ? 56 : 64,
-                          onPressed: () =>
-                              bloc.add(DadosRelanzados(e.tirada.id)),
-                        ),
-                      )
-                    : null,
+                child: LeyendaColores(definicion: widget.definicion),
               ),
             ],
           ),
@@ -685,33 +685,35 @@ class BotonRelanzar extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onPressed,
-          child: const Padding(
-            padding: EdgeInsets.all(6),
-            child: FittedBox(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.casino_rounded,
-                    color: Color(0xFF72E9FF),
-                    size: 28,
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'VOLVER\nA TIRAR',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 11,
-                      height: 1.1,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1,
-                      color: Color(0xFFB6F6FF),
+          child: tamano <= 48
+              ? const Icon(Icons.casino_rounded, color: Color(0xFF72E9FF))
+              : const Padding(
+                  padding: EdgeInsets.all(6),
+                  child: FittedBox(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.casino_rounded,
+                          color: Color(0xFF72E9FF),
+                          size: 28,
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'VOLVER\nA TIRAR',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 11,
+                            height: 1.1,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1,
+                            color: Color(0xFFB6F6FF),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
+                ),
         ),
       ),
     ),

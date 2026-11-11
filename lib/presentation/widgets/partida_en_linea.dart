@@ -23,6 +23,7 @@ import 'nave_entrada.dart';
 import 'nave_marciano.dart';
 import 'tablero_view.dart';
 import 'ranking_online.dart';
+import 'leyenda_colores.dart';
 
 /// Comparte el diseño y las animaciones del modo local. Java decide las jugadas.
 class PartidaEnLinea extends StatefulWidget {
@@ -589,6 +590,7 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                             key: _above,
                             height: 80,
                             width: double.infinity,
+                            child: LeyendaColores(definicion: _definition),
                           ),
                       ],
                     ),
