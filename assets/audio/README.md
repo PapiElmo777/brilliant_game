@@ -19,3 +19,8 @@ Native player: flutter_soloud (separate dependency license retained by Flutter).
 Zone completion now uses the approved “Sector asegurado cristal” preview for
 all three places, reproduced by `tool/audio/zone_completed.py`. These replacement
 effects retain the preview's stereo PCM at 44100 Hz, 1.6 seconds.
+
+All match results (victory, podium and remaining places) use the approved
+“Cierre imperial original” preview, reproduced by `tool/audio/imperial_finish.py`.
+The cue retains its stereo PCM at 44100 Hz, 5.8 seconds; music ducking and effect
+tracking cover the full cue. Result visuals still distinguish player positions.

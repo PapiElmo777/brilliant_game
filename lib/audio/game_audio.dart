@@ -79,9 +79,7 @@ enum GameSound {
   };
   Duration get duration => Duration(
     milliseconds: switch (this) {
-      victory => 6000,
-      podium => 2800,
-      finish => 2400,
+      victory || podium || finish => 5800,
       launch => 1700,
       zone1 || zone2 || zone3 => 1600,
       meteor || impact => 1550,
