@@ -499,15 +499,21 @@ class _PartidaPageState extends State<PartidaPage> {
 class GloboAlien extends StatelessWidget {
   final String mensaje;
   final bool error;
+  final bool importante;
   final bool compacto;
   const GloboAlien({
     super.key,
     required this.mensaje,
     this.error = false,
+    this.importante = false,
     this.compacto = false,
   });
 
-  Color get _borde => error ? const Color(0xFFFF6B6B) : const Color(0xFF72E9FF);
+  Color get _borde => error
+      ? const Color(0xFFFF6B6B)
+      : importante
+      ? const Color(0xFFFFD583)
+      : const Color(0xFF72E9FF);
 
   @override
   Widget build(BuildContext context) => Column(
@@ -535,17 +541,28 @@ class GloboAlien extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xE6102B4A),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _borde, width: error ? 2.5 : 1.5),
+          border: Border.all(
+            color: _borde,
+            width: error || importante ? 2.5 : 1.5,
+          ),
+          boxShadow: importante
+              ? const [BoxShadow(color: Color(0x55FFD583), blurRadius: 14)]
+              : null,
         ),
         child: Text(
           mensaje,
           textAlign: TextAlign.center,
-          maxLines: 3,
+          maxLines: importante ? 4 : 3,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontSize: compacto ? 12 : 16,
             height: compacto ? 1.2 : 1.3,
-            color: error ? const Color(0xFFFFB4B4) : const Color(0xFFB6F6FF),
+            color: error
+                ? const Color(0xFFFFB4B4)
+                : importante
+                ? const Color(0xFFFFE4A9)
+                : const Color(0xFFB6F6FF),
+            fontWeight: importante ? FontWeight.w700 : FontWeight.normal,
           ),
         ),
       ),

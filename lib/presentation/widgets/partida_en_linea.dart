@@ -10,7 +10,7 @@ import '../../core/tablero.dart';
 import '../../models/tirada.dart';
 import '../../multiplayer/rooms_cubit.dart';
 import '../../multiplayer/rooms_repository.dart';
-import '../pages/partida_page.dart' show GloboAlien, PanelPuntos;
+import '../pages/partida_page.dart' show PanelPuntos;
 import 'bandeja_numeros.dart';
 import 'dados_partida.dart';
 import 'diseno_juego_fijo.dart';
@@ -24,6 +24,7 @@ import 'nave_marciano.dart';
 import 'tablero_view.dart';
 import 'ranking_online.dart';
 import 'leyenda_colores.dart';
+import 'avisos_nave.dart';
 
 /// Comparte el diseño y las animaciones del modo local. Java decide las jugadas.
 class PartidaEnLinea extends StatefulWidget {
@@ -342,9 +343,13 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                                             maxLines: 2,
                                             textAlign: TextAlign.center,
                                           )
-                                        : GloboAlien(
-                                            mensaje: message,
-                                            compacto: true,
+                                        : SizedBox(
+                                            width: m.anchoPanel - 88,
+                                            child: AvisosNave(
+                                              rooms: widget.rooms,
+                                              mensajeBase: message,
+                                              compacto: true,
+                                            ),
                                           ),
                                   ),
                                 ),
@@ -399,7 +404,15 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                         if (!preparing)
                           SizedBox(
                             height: 54,
-                            child: _fit(GloboAlien(mensaje: message)),
+                            child: _fit(
+                              SizedBox(
+                                width: m.anchoPanel,
+                                child: AvisosNave(
+                                  rooms: widget.rooms,
+                                  mensajeBase: message,
+                                ),
+                              ),
+                            ),
                           ),
                       ],
                     );
