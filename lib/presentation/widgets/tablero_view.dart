@@ -1,3 +1,4 @@
+import '../../audio/game_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -164,7 +165,10 @@ class _TableroViewState extends State<TableroView> {
                             (estado != null
                                 ? !estado.interaccionBloqueada
                                 : widget.interactiva)
-                            ? () => widget.onCeldaSeleccionada(celda.id)
+                            ? () {
+                                GameAudio.instance.play(GameSound.preview);
+                                widget.onCeldaSeleccionada(celda.id);
+                              }
                             : null,
                       ),
                     );

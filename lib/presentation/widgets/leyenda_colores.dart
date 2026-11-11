@@ -1,3 +1,4 @@
+import '../../audio/game_audio.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../catalogo/definicion_tablero.dart';
@@ -71,6 +72,7 @@ class CuadroRegla extends StatelessWidget {
         ThemeData.estimateBrightnessForColor(tipo.color) == Brightness.dark;
     return Tooltip(
       message: tipo.descripcion,
+      onTriggered: () => GameAudio.instance.play(GameSound.panel),
       triggerMode: TooltipTriggerMode.tap,
       showDuration: const Duration(seconds: 8),
       child: Semantics(

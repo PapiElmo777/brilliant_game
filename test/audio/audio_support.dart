@@ -11,9 +11,15 @@ class FakeAudioBackend implements AudioBackend {
   Completer<void>? hold;
   int _id = 0;
   @override
-  Future<void> initialize() async { if (failed) throw StateError('No audio device'); }
+  Future<void> initialize() async {
+    if (failed) throw StateError('No audio device');
+  }
+
   @override
-  Future<void> load(String asset) async { loaded.add(asset); }
+  Future<void> load(String asset) async {
+    loaded.add(asset);
+  }
+
   @override
   Future<Object> play(String asset, double volume, {bool loop = false}) async {
     final handle = ++_id;
@@ -21,14 +27,29 @@ class FakeAudioBackend implements AudioBackend {
     await hold?.future;
     return handle;
   }
+
   @override
-  Future<void> stop(Object handle) async { stopped.add(handle); }
+  Future<void> stop(Object handle) async {
+    stopped.add(handle);
+  }
+
   @override
-  void pause(Object handle, bool value) { paused.add((handle, value)); }
+  void pause(Object handle, bool value) {
+    paused.add((handle, value));
+  }
+
   @override
-  void volume(Object handle, double value, Duration fade) { volumes.add((handle, value)); }
+  void volume(Object handle, double value, Duration fade) {
+    volumes.add((handle, value));
+  }
+
   @override
-  Future<void> dispose() async { disposed = true; }
-  List<String> get effects => played.where((p) => !p.loop).map((p) => p.asset.split('/').last).toList();
+  Future<void> dispose() async {
+    disposed = true;
+  }
+
+  List<String> get effects =>
+      played.where((p) => !p.loop).map((p) => p.asset.split('/').last).toList();
 }
+
 Future<void> flushAudio() => Future<void>.delayed(Duration.zero);

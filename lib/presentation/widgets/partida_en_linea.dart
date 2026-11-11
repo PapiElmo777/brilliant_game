@@ -1,3 +1,4 @@
+import '../../audio/game_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/inicio_bloc.dart';
@@ -49,6 +50,12 @@ class PartidaEnLinea extends StatefulWidget {
 }
 
 class _PartidaEnLineaState extends State<PartidaEnLinea> {
+  @override
+  void initState() {
+    super.initState();
+    GameAudio.instance.setScene(AudioScene.game);
+  }
+
   Map<String, dynamic>? _matchSource;
   OnlineMatch? _parsedGame;
   OnlineMatch get _game {
@@ -737,6 +744,19 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                         onImpacto: (_) {
                           if (mounted && _game.round?.id == round.id) {
                             setState(() => _diceRevealed = true);
+                            final board = _board(_game);
+                            if (destinosConAncla(
+                                  board,
+                                  round.dice[0],
+                                  round.dice[1],
+                                ).isEmpty &&
+                                destinosConAncla(
+                                  board,
+                                  round.dice[1],
+                                  round.dice[0],
+                                ).isEmpty) {
+                              GameAudio.instance.play(GameSound.reject);
+                            }
                           }
                         },
                         onCompletada: (_) {

@@ -379,17 +379,27 @@ class GameAudio extends ChangeNotifier {
     _last.clear();
     final handle = _musicHandle;
     if (handle != null) {
-      backend.pause(handle, !value);
+      _safe(() => backend.pause(handle, !value));
+    }
+  }
+
+  void _safe(void Function() action) {
+    try {
+      action();
+    } catch (e) {
+      debugPrint('Audio device unavailable: $e');
     }
   }
 
   void _musicGain() {
     final handle = _musicHandle;
     if (handle != null) {
-      backend.volume(
-        handle,
-        _muted ? 0 : _music * (_priority >= 2 ? .28 : 1),
-        const Duration(milliseconds: 220),
+      _safe(
+        () => backend.volume(
+          handle,
+          _muted ? 0 : _music * (_priority >= 2 ? .28 : 1),
+          const Duration(milliseconds: 220),
+        ),
       );
     }
   }
@@ -407,10 +417,12 @@ class GameAudio extends ChangeNotifier {
     // Existing sounds respect a volume change immediately.
     for (final entry in _handles.entries.toList()) {
       final gain = entry.value.bus == AudioBus.effects ? _effects : _alerts;
-      backend.volume(
-        entry.key,
-        _muted ? 0 : gain * entry.value.gain,
-        Duration.zero,
+      _safe(
+        () => backend.volume(
+          entry.key,
+          _muted ? 0 : gain * entry.value.gain,
+          Duration.zero,
+        ),
       );
     }
     if (_muted) {
