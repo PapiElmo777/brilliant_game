@@ -1,3 +1,4 @@
+import '../../audio/audio_settings.dart';
 import 'dart:math' as math;
 import '../../auth/auth_cubit.dart';
 import '../widgets/avatar_usuario.dart';
@@ -93,15 +94,16 @@ class _MenuInicialPageState extends State<MenuInicialPage> {
                       )
                     : null,
               ),
-              if (widget.cuenta != null)
-                SafeArea(
-                  child: Align(
-                    alignment: Alignment.topRight,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
+              SafeArea(
+                child: Align(
+                  alignment: Alignment.topRight,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const AudioSettingsButton(),
+                        if (widget.cuenta != null)
                           BlocBuilder<AuthCubit, AuthState>(
                             builder: (context, auth) => IconButton(
                               key: const ValueKey('logout_menu'),
@@ -112,6 +114,7 @@ class _MenuInicialPageState extends State<MenuInicialPage> {
                               icon: const Icon(Icons.logout_rounded),
                             ),
                           ),
+                        if (widget.cuenta != null)
                           BlocBuilder<AuthCubit, AuthState>(
                             builder: (context, auth) => IconButton(
                               key: const ValueKey('account_menu'),
@@ -127,11 +130,11 @@ class _MenuInicialPageState extends State<MenuInicialPage> {
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                      ],
                     ),
                   ),
                 ),
+              ),
             ],
           ),
         ),

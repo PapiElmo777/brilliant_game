@@ -1,3 +1,4 @@
+import '../../audio/audio_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../auth/auth_cubit.dart';
@@ -71,8 +72,14 @@ class _MultijugadorPageState extends State<MultijugadorPage>
       builder: (context) => AlertDialog(
         scrollable: true,
         title: const Text('¿Salir de la sala?'),
-        content: const Text(
-          'Dejarás de ocupar un lugar. Si eres el anfitrión, otro jugador asumirá el rol.',
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Dejarás de ocupar un lugar. Si eres el anfitrión, otro jugador asumirá el rol.',
+            ),
+            AudioSettingsButton(),
+          ],
         ),
         actions: [
           TextButton(
@@ -205,6 +212,7 @@ class _MultijugadorPageState extends State<MultijugadorPage>
                     },
                   ),
                   actions: [
+                    const AudioSettingsButton(),
                     IconButton(
                       tooltip: 'Actualizar',
                       onPressed: state.busy ? null : _rooms.refresh,
