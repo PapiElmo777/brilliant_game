@@ -205,6 +205,14 @@ void main() {
     await change(next, state(resolved: true));
     expect(backend.effects, ['skip.wav']);
   });
+  test(
+    'Leaving a room preserves its exit cue across the music change',
+    () async {
+      await change(state(), const RoomsState());
+      expect(backend.effects, ['disconnect.wav']);
+      expect(audio.scene, AudioScene.menu);
+    },
+  );
   test('Connection loss overrides existing celebration', () async {
     audio.play(GameSound.victory);
     await flushAudio();
