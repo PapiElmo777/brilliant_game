@@ -71,6 +71,8 @@ class CuadroRegla extends StatelessWidget {
         ThemeData.estimateBrightnessForColor(tipo.color) == Brightness.dark;
     return Tooltip(
       message: tipo.descripcion,
+      triggerMode: TooltipTriggerMode.tap,
+      showDuration: const Duration(seconds: 8),
       child: Semantics(
         label: tipo.descripcion,
         excludeSemantics: true,
