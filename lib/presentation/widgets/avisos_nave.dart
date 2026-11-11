@@ -10,11 +10,13 @@ class AvisosNave extends StatefulWidget {
   final RoomsCubit rooms;
   final String mensajeBase;
   final bool compacto;
+  final bool prioridadBase;
   const AvisosNave({
     super.key,
     required this.rooms,
     required this.mensajeBase,
     this.compacto = false,
+    this.prioridadBase = false,
   });
   @override
   State<AvisosNave> createState() => _AvisosNaveState();
@@ -135,10 +137,13 @@ class _AvisosNaveState extends State<AvisosNave> {
           final ruleWarning =
               aviso?.roundId != null &&
               (widget.mensajeBase.startsWith('Ninguno de los dados') ||
+                  widget.mensajeBase.startsWith('Jugada confirmada') ||
+                  widget.mensajeBase.startsWith('Confirma tu jugada') ||
                   widget.mensajeBase.startsWith(
                     'Este número no tiene destinos',
                   ));
           final active =
+              !widget.prioridadBase &&
               !ruleWarning &&
               aviso != null &&
               (aviso.roundId == null || aviso.roundId == _roundId);
@@ -149,7 +154,7 @@ class _AvisosNaveState extends State<AvisosNave> {
           return GloboAlien(
             key: const ValueKey('globo_nave_online'),
             mensaje: message,
-            importante: active,
+            importante: active || widget.prioridadBase,
             compacto: widget.compacto,
           );
         },

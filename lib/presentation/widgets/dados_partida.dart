@@ -78,6 +78,7 @@ class FichaDado extends StatelessWidget {
 
 class DadosPartida extends StatefulWidget {
   final PartidaEstado estado;
+  final bool interactiva;
   final String prefijoClave;
   final GlobalKey lienzo;
   final GlobalKey arriba;
@@ -88,6 +89,7 @@ class DadosPartida extends StatefulWidget {
   const DadosPartida({
     super.key,
     required this.estado,
+    this.interactiva = true,
     this.prefijoClave = 'dado_',
     required this.lienzo,
     required this.arriba,
@@ -219,7 +221,7 @@ class _DadosPartidaState extends State<DadosPartida>
                   key: ValueKey('${widget.prefijoClave}${dado.id}'),
                   dado: dado,
                   seleccionado: widget.estado.dadoSeleccionado == dado.id,
-                  onTap: widget.estado.puedeSeleccionar
+                  onTap: widget.interactiva && widget.estado.puedeSeleccionar
                       ? () => widget.onSeleccionar(dado.id)
                       : null,
                 ),

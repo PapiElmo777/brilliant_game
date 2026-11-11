@@ -120,15 +120,31 @@ void main() {
       await openRooms(tester, repo);
       expect(
         find.text(
-          'Ninguno de los dados tiene destinos disponibles. Puedes omitir la ronda.',
+          'No hay anclas con los números de los dados. Solo puedes omitir el turno.',
         ),
         findsOneWidget,
       );
+      expect(
+        find.byKey(const ValueKey('confirmar_jugada_online')),
+        findsNothing,
+      );
+      expect(find.text('Omitir turno'), findsOneWidget);
+      expect(
+        tester.widget<TableroView>(find.byType(TableroView)).interactiva,
+        isFalse,
+      );
+      for (final die in tester.widgetList<FichaDado>(find.byType(FichaDado))) {
+        expect(die.onTap, isNull);
+      }
       final skip = find.byKey(const ValueKey('omitir_ronda_online'));
       await revealOnline(tester, skip);
       await tester.tap(skip);
       await tester.pumpAndSettle();
       expect(repo.commands.single['kind'], 'SKIP');
+      expect(
+        find.text('Jugada confirmada · esperando a los demás'),
+        findsOneWidget,
+      );
     },
   );
   testWidgets('No anuncia bloqueo cuando al menos un dado tiene destinos', (
@@ -143,7 +159,7 @@ void main() {
     snapshot['match']['round']['dice'] = [3, 1];
     final repo = FakeRoomsRepository()..snapshot = snapshot;
     await openRooms(tester, repo);
-    expect(find.textContaining('Ninguno de los dados'), findsNothing);
+    expect(find.textContaining('Solo puedes omitir el turno'), findsNothing);
     await tester.tap(find.byKey(const ValueKey('dado_online_0')));
     await tester.pumpAndSettle();
     expect(

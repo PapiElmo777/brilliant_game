@@ -755,3 +755,8 @@ Las zonas tienen un nombre legible consistente, por ejemplo Verde 1 y Verde 2. S
 - Pulso breve al cruzar los 30 segundos, una sola vez por ronda. Durante los últimos diez se muestra un radar rojo con el número grande que se vacía al terminar; no cubre el tablero ni intercepta controles. El tiempo sigue siendo el reloj monotónico anclado a Java. Movimiento reducido conserva los avisos estáticos.
 
 Se incluyen capturas de los cuatro niveles, los tres estados de desgaste y el reloj en 30/10 segundos, también en pantalla pequeña, horizontal y texto ampliado. Las animaciones son locales y finitas, y el reloj actualiza solo sus indicadores. Esta entrega utiliza el contrato existente y requiere actualizar la app.
+
+
+## Turno bloqueado — 11 de noviembre de 2026
+
+Cuando ninguna orientación de los dados admite una colocación, la única acción de jugada es **Omitir turno**. Se oculta Confirmar jugada, se desactivan los dados y la colocación en el tablero, y en solitario se retira Volver a tirar hasta omitir. El aviso de la nave explica si el tablero está lleno, faltan anclas, no hay vecinos vacíos de las anclas o las reglas de color bloquean las casillas disponibles. Esta explicación tiene prioridad sobre las transmisiones temporales; navegación, chat y consulta de reglas siguen accesibles. Si al menos uno de los dados tiene un destino, se conserva el cambio entre dados y la confirmación normal. Omitir continúa siendo una decisión explícita y el servidor confirma el resultado.

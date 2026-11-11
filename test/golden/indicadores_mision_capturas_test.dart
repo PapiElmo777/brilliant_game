@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:brilliant_game/app/brilliant_game_app.dart';
 import 'package:brilliant_game/catalogo/catalogo_tableros.dart';
 import 'package:brilliant_game/core/preparacion_inicial.dart';
+import 'package:brilliant_game/core/anclas.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import '../multiplayer/lobby_page_test.dart' show openRooms;
@@ -102,4 +103,54 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+  testWidgets(
+    'Sin movimientos: únicamente omitir y explicación visible',
+    skip: !Platform.isMacOS,
+    (tester) async {
+      pantallaNivel(tester);
+      final definition = CatalogoTableros.predeterminado().obtenerDefinicion(
+        'tablero_01',
+      );
+      final board = definition.crearTablero();
+      final prep = PreparacionInicial(board);
+      for (final (id, value) in prep.distribucionAleatoria(Random(19))) {
+        board.colocarValor(id, value);
+      }
+      while (destinosConAncla(board, 6, 6).isNotEmpty) {
+        final id = destinosConAncla(board, 6, 6).first;
+        final value = [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+        ].firstWhere((n) => board.puedeColocarValor(id, n));
+        board.colocarValor(id, value);
+      }
+      expect(board.celdas.values.any((c) => !c.estaOcupada), isTrue);
+      final snapshot = onlineSnapshot(
+        prepared: true,
+        playing: true,
+        board: {
+          for (final c in board.celdas.values)
+            if (c.valor != null) c.id: c.valor!,
+        },
+      );
+      snapshot['match']['round']['dice'] = [6, 6];
+      await openRooms(tester, FakeRoomsRepository()..snapshot = snapshot);
+      await precargarRecursos(tester);
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('confirmar_jugada_online')),
+        findsNothing,
+      );
+      expect(find.text('Omitir turno'), findsOneWidget);
+      await expectLater(
+        find.byType(BrilliantGameApp),
+        matchesGoldenFile('capturas/indicadores_omitir_unico.png'),
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

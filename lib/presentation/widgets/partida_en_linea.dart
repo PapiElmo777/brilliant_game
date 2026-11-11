@@ -221,7 +221,7 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
             : round.ownAction != null
             ? 'Jugada confirmada · esperando a los demás'
             : noMoves && (!_meteors || _diceRevealed)
-            ? 'Ninguno de los dados tiene destinos disponibles. Puedes omitir la ronda.'
+            ? '${motivoSinMovimientos(board, round.dice[0], round.dice[1])} Solo puedes omitir el turno.'
             : _target != null
             ? 'Confirma tu jugada'
             : _die == null
@@ -252,7 +252,7 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                 celdas: drawCells,
                 clavesCeldas: _cells,
                 destinos: canAct ? destinations : {},
-                interactiva: canAct,
+                interactiva: canAct && !noMoves,
                 celdaPropuesta: canAct ? _target : null,
                 numeroPropuesto: canAct && _die != null
                     ? round.dice[_die!]
@@ -349,6 +349,9 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                                             child: AvisosNave(
                                               rooms: widget.rooms,
                                               mensajeBase: message,
+                                              prioridadBase:
+                                                  noMoves &&
+                                                  round.ownAction == null,
                                               compacto: true,
                                             ),
                                           ),
@@ -429,6 +432,8 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                                 child: AvisosNave(
                                   rooms: widget.rooms,
                                   mensajeBase: message,
+                                  prioridadBase:
+                                      noMoves && round.ownAction == null,
                                 ),
                               ),
                             ),
@@ -486,34 +491,50 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                       destinos: destinations,
                       puntos: points,
                     );
-              final actionRow = Row(
-                children: [
-                  Expanded(
-                    child: FilledButton(
-                      key: const ValueKey('confirmar_jugada_online'),
-                      onPressed: canAct && _target != null
-                          ? () => widget.rooms.confirmAction(
-                              game.id,
-                              round.id,
-                              dieIndex: _die,
-                              cellId: _target,
-                            )
-                          : null,
-                      child: _fit(const Text('Confirmar jugada')),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton(
-                      key: const ValueKey('omitir_ronda_online'),
-                      onPressed: canAct
-                          ? () => widget.rooms.confirmAction(game.id, round.id)
-                          : null,
-                      child: _fit(const Text('Omitir ronda')),
-                    ),
-                  ),
-                ],
-              );
+              final actionRow = noMoves
+                  ? SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        key: const ValueKey('omitir_ronda_online'),
+                        onPressed: canAct
+                            ? () =>
+                                  widget.rooms.confirmAction(game.id, round.id)
+                            : null,
+                        icon: const Icon(Icons.skip_next_rounded),
+                        label: _fit(const Text('Omitir turno')),
+                      ),
+                    )
+                  : Row(
+                      children: [
+                        Expanded(
+                          child: FilledButton(
+                            key: const ValueKey('confirmar_jugada_online'),
+                            onPressed: canAct && _target != null
+                                ? () => widget.rooms.confirmAction(
+                                    game.id,
+                                    round.id,
+                                    dieIndex: _die,
+                                    cellId: _target,
+                                  )
+                                : null,
+                            child: _fit(const Text('Confirmar jugada')),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton(
+                            key: const ValueKey('omitir_ronda_online'),
+                            onPressed: canAct
+                                ? () => widget.rooms.confirmAction(
+                                    game.id,
+                                    round.id,
+                                  )
+                                : null,
+                            child: _fit(const Text('Omitir ronda')),
+                          ),
+                        ),
+                      ],
+                    );
               final preparationFooter = game.prepared
                   ? _fit(const Text('Posiciones iniciales confirmadas'))
                   : FilledButton(
@@ -644,11 +665,12 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                   if (round != null && diceState != null)
                     Positioned.fill(
                       child: IgnorePointer(
-                        ignoring: !canAct,
+                        ignoring: !canAct || noMoves,
                         child: DadosPartida(
                           key: ValueKey('dados_${round.id}'),
                           prefijoClave: 'dado_online_',
                           estado: diceState,
+                          interactiva: canAct && !noMoves,
                           lienzo: _canvas,
                           arriba: _above,
                           abajo: _below,

@@ -181,7 +181,18 @@ void main() {
   ) async {
     final b = await abrir(tester, lleno: true);
     final antes = b.state.celdas;
-    final omitir = find.text('OMITIR TIRO');
+    expect(find.byKey(const ValueKey('boton_relanzar')), findsNothing);
+    expect(
+      tester.widget<TableroView>(find.byType(TableroView)).interactiva,
+      isFalse,
+    );
+    expect(
+      find.text(
+        'El tablero está lleno: no quedan casillas libres. Solo puedes omitir el turno.',
+      ),
+      findsOneWidget,
+    );
+    final omitir = find.text('OMITIR TURNO');
     await tester.ensureVisible(omitir);
     await tester.tap(omitir);
     await tester.pumpAndSettle();

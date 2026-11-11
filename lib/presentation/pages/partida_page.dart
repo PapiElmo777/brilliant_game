@@ -1,3 +1,4 @@
+import '../../core/anclas.dart';
 import '../widgets/leyenda_colores.dart';
 import 'dart:ui' as ui;
 
@@ -111,6 +112,13 @@ class _PartidaPageState extends State<PartidaPage> {
     if (e.fase == FasePartida.rondaResuelta) {
       return '¡Listo! Lanza otra vez los meteoros.';
     }
+    if (e.puedeOmitir) {
+      final board = widget.definicion.crearTablero();
+      for (final cell in e.celdas.values) {
+        if (cell.valor != null) board.colocarValor(cell.id, cell.valor!);
+      }
+      return '${motivoSinMovimientos(board, e.tirada.dados[0].valor, e.tirada.dados[1].valor)} Solo puedes omitir el turno.';
+    }
     if (e.ancla != null) {
       return e.fase == FasePartida.eligiendoDestino &&
               e.destinos.isEmpty &&
@@ -118,9 +126,7 @@ class _PartidaPageState extends State<PartidaPage> {
           ? 'Tu ancla es el ${e.ancla!.valor}. Cambia de número: este no tiene destinos.'
           : 'Tu ancla es el ${e.ancla!.valor}';
     }
-    return e.puedeOmitir
-        ? 'Ninguno de los dados tiene destinos disponibles.'
-        : 'Elige el número que quieres colocar.';
+    return 'Elige el número que quieres colocar.';
   }
 
   Widget _globo(PartidaEstado e, {bool compacto = false}) => Semantics(
@@ -153,7 +159,7 @@ class _PartidaPageState extends State<PartidaPage> {
     if (e.puedeOmitir) {
       return BotonPanel(
         key: const ValueKey('boton_omitir'),
-        texto: 'OMITIR TIRO',
+        texto: 'OMITIR TURNO',
         compacto: true,
         icono: Icons.skip_next_rounded,
         onPressed: () => bloc.add(TiroOmitido(e.tirada.id)),
@@ -171,7 +177,7 @@ class _PartidaPageState extends State<PartidaPage> {
         celdas: e.celdas,
         destinos: e.destinos,
         puestosReclamados: e.puestosReclamados,
-        interactiva: e.puedeSeleccionar,
+        interactiva: e.puedeSeleccionar && !e.puedeOmitir,
         onCeldaSeleccionada: (id) =>
             bloc.add(DestinoSeleccionado(e.tirada.id, id)),
       ),
@@ -345,7 +351,7 @@ class _PartidaPageState extends State<PartidaPage> {
                         style: TextStyle(fontWeight: FontWeight.w800),
                       ),
               ),
-              if (e.puedeRelanzar)
+              if (e.puedeRelanzar && !e.puedeOmitir)
                 Tooltip(
                   message: 'Volver a tirar los dados',
                   child: BotonRelanzar(
@@ -391,6 +397,7 @@ class _PartidaPageState extends State<PartidaPage> {
             child: DadosPartida(
               key: ValueKey('dados_${e.tirada.id}'),
               estado: e,
+              interactiva: !e.puedeOmitir,
               lienzo: _lienzo,
               arriba: _arriba,
               abajo: _impactos,

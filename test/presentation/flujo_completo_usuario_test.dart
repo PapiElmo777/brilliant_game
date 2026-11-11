@@ -190,7 +190,7 @@ void main() {
           [2, 5],
         );
         expect(find.text('LANZAR METEOROS'), findsNothing);
-        expect(find.text('OMITIR TIRO'), findsNothing);
+        expect(find.text('OMITIR TURNO'), findsNothing);
 
         await _pulsar(tester, _dado(0));
         expect(find.text('Tu ancla es el 5'), findsOneWidget);
@@ -282,7 +282,7 @@ void main() {
             findsOneWidget,
           );
           expect(find.text('LANZAR METEOROS'), findsNothing);
-          expect(find.text('OMITIR TIRO'), findsNothing);
+          expect(find.text('OMITIR TURNO'), findsNothing);
           // Tocar salta la celebración y muestra el ranking.
           await _pulsar(
             tester,
@@ -416,7 +416,7 @@ void main() {
       }
       expect(find.text('¡Llegaste a la meta de 26 puntos!'), findsOneWidget);
       expect(find.text('LANZAR METEOROS'), findsNothing);
-      expect(find.text('OMITIR TIRO'), findsNothing);
+      expect(find.text('OMITIR TURNO'), findsNothing);
       expect(find.text('Tiradas · 4  (5 · 3)'), findsOneWidget);
       expect(azar.llamadas, 8);
       // El regreso del sistema omite la celebración y luego sale sin
@@ -458,10 +458,12 @@ void main() {
       await _abrirPartida(tester, tablero, azar);
       await tester.pumpAndSettle();
       expect(
-        find.text('Ninguno de los dados tiene destinos disponibles.'),
+        find.text(
+          'El tablero está lleno: no quedan casillas libres. Solo puedes omitir el turno.',
+        ),
         findsOneWidget,
       );
-      await _pulsar(tester, find.text('OMITIR TIRO'));
+      await _pulsar(tester, find.text('OMITIR TURNO'));
       for (final celda in tablero.celdas.values) {
         _valorVisible(tester, celda.id, celda.valor!);
       }
@@ -483,7 +485,7 @@ void main() {
       await _pulsar(tester, find.text('LANZAR METEOROS'));
       expect(azar.llamadas, 4);
       expect(find.text('Tiradas · 1  (2 · 5)'), findsOneWidget);
-      expect(find.text('OMITIR TIRO'), findsOneWidget);
+      expect(find.text('OMITIR TURNO'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
