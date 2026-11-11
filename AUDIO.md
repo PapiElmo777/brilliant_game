@@ -1,7 +1,7 @@
 # Audio de Brilliant
 
 Implementación en la rama `audio`. Identidad: primera maqueta galáctica aprobada,
-sin voces. Los 35 WAV originales (33 efectos y 2 bucles) suman 6.15 MiB.
+sin voces. Los 35 WAV originales (33 efectos y 2 bucles) suman 9.20 MiB.
 
 ## Recursos
 
@@ -62,3 +62,10 @@ su fanfarria al actualizarse la sala.
 - Revisar en Android: inicio, panel de sonido, minimizar/regresar, tirada completa
   y omitida, colocación, cierre de ronda y resultados; comparar también con un
   teléfono físico para evaluar latencia y volumen de sus altavoces.
+
+## Reemplazos aprobados
+
+Las tres variantes de zona usan “Sector asegurado cristal” (1.6 s). Todos los
+resultados usan “Cierre imperial original” (5.8 s). Los archivos coinciden byte
+por byte con las muestras aprobadas; los generadores conservan esos reemplazos
+al regenerar el catálogo. Son estéreo a 44100 Hz.

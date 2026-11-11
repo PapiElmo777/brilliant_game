@@ -137,5 +137,6 @@ render('alert',1,lambda:(chirp(0,800,450,.22,.09),chirp(.35,800,450,.22,.09)))
 (OUT/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 import runpy
 runpy.run_path(str(Path(__file__).parent/'audio/zone_completed.py'),run_name='__main__')
+runpy.run_path(str(Path(__file__).parent/'audio/imperial_finish.py'),run_name='__main__')
 manifest=json.loads((OUT/'manifest.json').read_text())
 print(str(len(manifest))+' files; '+str(round(sum(m['bytes'] for m in manifest)/1048576,2))+' MiB')
