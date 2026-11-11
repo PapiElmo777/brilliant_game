@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../auth/auth_cubit.dart';
 import '../widgets/chat_sala.dart';
+import '../widgets/boton_chat_mision.dart';
 import '../widgets/partida_en_linea.dart';
 import '../../catalogo/catalogo_tableros.dart';
 import '../../core/marcador.dart';
@@ -357,27 +358,17 @@ class _MultijugadorPageState extends State<MultijugadorPage>
       );
     },
   );
-  Widget _chatButton(RoomsState state, {bool compact = false}) => compact
-      ? IconButton.filledTonal(
-          key: const ValueKey('abrir_chat'),
-          tooltip: 'Chat de la sala',
-          onPressed: _showChat,
-          icon: Badge(
-            isLabelVisible: state.unread > 0,
-            label: Text('${state.unread}'),
-            child: const Icon(Icons.chat_bubble_outline),
-          ),
-        )
-      : FloatingActionButton(
-          key: const ValueKey('abrir_chat'),
-          tooltip: 'Chat de la sala',
-          onPressed: _showChat,
-          child: Badge(
-            isLabelVisible: state.unread > 0,
-            label: Text('${state.unread}'),
-            child: const Icon(Icons.chat_bubble_outline),
-          ),
-        );
+  Widget _chatButton(RoomsState state, {bool compact = false}) =>
+      BotonChatMision(
+        state: state,
+        ownId: state.lobby?.members
+            .where((m) => m.userId == _rooms.auth.state.session?.user.id)
+            .firstOrNull
+            ?.id,
+        onPressed: _showChat,
+        compact: compact,
+        abierto: _chatOpen,
+      );
   Widget _list(RoomsState state, bool enabled) => ListView(
     padding: const EdgeInsets.all(16),
     children: [
