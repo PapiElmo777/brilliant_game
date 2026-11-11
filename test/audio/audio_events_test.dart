@@ -213,6 +213,21 @@ void main() {
       expect(audio.scene, AudioScene.menu);
     },
   );
+  test(
+    'Reconnecting consumes old claims and omissions without replay',
+    () async {
+      final claim = <String, dynamic>{
+        'memberId': 'otro',
+        'zoneId': 'z1',
+        'place': 1,
+        'points': 4,
+      };
+      final next = state(resolved: true, claims: [claim]);
+      await change(state(connected: false), next);
+      await change(next, state(resolved: true, claims: [claim]));
+      expect(backend.effects, isEmpty);
+    },
+  );
   test('Connection loss overrides existing celebration', () async {
     audio.play(GameSound.victory);
     await flushAudio();

@@ -84,10 +84,11 @@ class AudioEvents extends BlocObserver {
 
   void _rooms(RoomsCubit rooms, RoomsState a, RoomsState b) {
     final oldLobby = a.lobby, lobby = b.lobby;
+    final live = a.channelConnected && b.channelConnected;
     if (oldLobby?.id != lobby?.id) {
       if (lobby == null) audio.setScene(AudioScene.menu);
       audio.play(lobby == null ? GameSound.disconnect : GameSound.connect);
-    } else if (lobby != null && oldLobby != null) {
+    } else if (live && lobby != null && oldLobby != null) {
       if (oldLobby.members.length != lobby.members.length) {
         audio.play(
           lobby.members.length > oldLobby.members.length
@@ -150,13 +151,16 @@ class AudioEvents extends BlocObserver {
       return; // Initial/restored snapshot must not replay past claims/messages.
     }
     if (changed) {
-      if (!oldGame!.prepared && game.prepared) audio.play(GameSound.ready);
-      if (oldGame.round?.id != game.round?.id && game.round != null) {
+      if (live && !oldGame!.prepared && game.prepared) {
+        audio.play(GameSound.ready);
+      }
+      if (oldGame!.round?.id != game.round?.id && game.round != null) {
         audio
             .stopEffects(); // Cancels the previous countdown and outdated effects.
       }
       final action = game.round?.ownAction;
-      if (oldGame.round?.id == game.round?.id &&
+      if (live &&
+          oldGame.round?.id == game.round?.id &&
           oldGame.round?.ownAction == null &&
           action != null) {
         if (action['kind'] == 'SKIP') audio.play(GameSound.skip);
@@ -170,9 +174,9 @@ class AudioEvents extends BlocObserver {
       final seen = oldGame.claims.map(key).toSet();
       final fresh = game.claims.where((c) => !seen.contains(key(c))).toList();
       final mine = fresh.where((c) => c['memberId'] == own).firstOrNull;
-      if (mine != null && game.result == null) {
+      if (live && mine != null && game.result == null) {
         audio.play(zoneSound(mine['place'] as int));
-      } else if (fresh.isNotEmpty && game.result == null) {
+      } else if (live && fresh.isNotEmpty && game.result == null) {
         final exhausted = fresh.any((c) => (c['place'] as int) >= 3);
         audio.play(exhausted ? GameSound.zoneExhausted : GameSound.zoneOther);
       }
@@ -181,7 +185,7 @@ class AudioEvents extends BlocObserver {
       }
       final accepted = game.rematch?['acceptedCount'] as int? ?? 0;
       final oldAccepted = oldGame.rematch?['acceptedCount'] as int? ?? 0;
-      if (accepted > oldAccepted) audio.play(GameSound.ready);
+      if (live && accepted > oldAccepted) audio.play(GameSound.ready);
     }
     // Keep a low-water mark per round: server clock corrections and reconnects
     // must not repeat a warning. Silent/background transitions still advance it.
