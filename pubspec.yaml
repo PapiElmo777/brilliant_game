@@ -10,12 +10,15 @@ dependencies:
     sdk: flutter
   flutter_bloc: ^9.1.1
   flutter_secure_storage: ^11.2.0
+  flutter_soloud: ^4.1.7
   shared_preferences: ^2.5.5
   video_player: ^2.10.1
 
 flutter:
   uses-material-design: true
   assets:
+    - assets/audio/music/
+    - assets/audio/sfx/
     - assets/videos/meteoritos.mp4
     - assets/videos/meteoritos_transparente.webp
     - assets/images/backgrounds/
