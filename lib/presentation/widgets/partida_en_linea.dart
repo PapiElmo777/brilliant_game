@@ -191,7 +191,8 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
             _enabled &&
             round != null &&
             round.ownAction == null &&
-            (widget.state.secondsRemaining ?? 0) > 0 &&
+            (round.deadline == null ||
+                (widget.state.secondsRemaining ?? 0) > 0) &&
             !_meteors &&
             _shot == null;
         final own = widget.lobby.members
@@ -588,7 +589,7 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                                     bloc: widget.rooms,
                                     selector: (state) => state.secondsRemaining,
                                     builder: (context, seconds) => Text(
-                                      'Ronda ${round.number} · ${seconds ?? widget.state.secondsRemaining ?? 0} s',
+                                      'Ronda ${round.number} · ${round.deadline == null ? 'Sin límite' : '${seconds ?? widget.state.secondsRemaining ?? 0} s'}',
                                       key: const ValueKey('reloj_online'),
                                       style: const TextStyle(fontSize: 11),
                                     ),

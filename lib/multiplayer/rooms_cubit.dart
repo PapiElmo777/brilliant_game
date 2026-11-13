@@ -692,13 +692,18 @@ class RoomsCubit extends Cubit<RoomsState> {
     if (l != null) await _send('POST', 'rooms/${l.id}/leave', {}, leave: true);
   }
 
-  Future<void> settings(int capacity, String? levelId) async {
+  Future<void> settings(
+    int capacity,
+    String? levelId, {
+    bool? roundTimerEnabled,
+  }) async {
     final l = state.lobby;
     if (l != null) {
       await _send('PATCH', 'rooms/${l.id}/settings', {
         'expectedRevision': l.revision,
         'capacity': capacity,
         'levelId': levelId,
+        'roundTimerEnabled': roundTimerEnabled ?? l.roundTimerEnabled,
       });
     }
   }

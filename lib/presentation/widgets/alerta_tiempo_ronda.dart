@@ -19,10 +19,9 @@ class TiempoRondaOnline extends StatelessWidget {
       BlocSelector<RoomsCubit, RoomsState, int?>(
         bloc: rooms,
         selector: (s) => s.secondsRemaining,
-        builder: (context, seconds) => AlertaTiempoRonda(
-          roundId: roundId,
-          seconds: seconds ?? initialSeconds,
-        ),
+        builder: (context, seconds) => seconds == null
+            ? const SizedBox.shrink()
+            : AlertaTiempoRonda(roundId: roundId, seconds: seconds),
       );
 }
 
