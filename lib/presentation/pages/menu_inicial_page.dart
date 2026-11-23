@@ -16,11 +16,13 @@ class MenuInicialPage extends StatefulWidget {
 
   final Account? cuenta;
   final Future<void> Function()? onMultijugador;
+  final VoidCallback? onRankets;
   const MenuInicialPage({
     super.key,
     required this.onNuevaPartida,
     this.cuenta,
     this.onMultijugador,
+    this.onRankets,
   });
 
   @override
@@ -103,6 +105,13 @@ class _MenuInicialPageState extends State<MenuInicialPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const AudioSettingsButton(),
+                        if (widget.onRankets != null)
+                          IconButton(
+                            key: const ValueKey('rankets_menu'),
+                            tooltip: 'Rankets',
+                            onPressed: widget.onRankets,
+                            icon: const Icon(Icons.emoji_events_rounded),
+                          ),
                         if (widget.cuenta != null)
                           BlocBuilder<AuthCubit, AuthState>(
                             builder: (context, auth) => IconButton(

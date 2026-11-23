@@ -19,6 +19,7 @@ abstract final class RutasBrilliant {
     Random? azarPartida,
     Account? cuenta,
     WidgetBuilder? multijugadorBuilder,
+    WidgetBuilder? ranketsBuilder,
   }) {
     if (settings.arguments case (
       DefinicionTablero definicion,
@@ -42,6 +43,11 @@ abstract final class RutasBrilliant {
       settings: const RouteSettings(name: menu),
       builder: (context) => MenuInicialPage(
         cuenta: cuenta,
+        onRankets: ranketsBuilder == null
+            ? null
+            : () => Navigator.of(
+                context,
+              ).push(MaterialPageRoute<void>(builder: ranketsBuilder)),
         onMultijugador: multijugadorBuilder == null
             ? null
             : () async {

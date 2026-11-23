@@ -760,3 +760,8 @@ Se incluyen capturas de los cuatro niveles, los tres estados de desgaste y el re
 ## Turno bloqueado — 11 de noviembre de 2026
 
 Cuando ninguna orientación de los dados admite una colocación, la única acción de jugada es **Omitir turno**. Se oculta Confirmar jugada, se desactivan los dados y la colocación en el tablero, y en solitario se retira Volver a tirar hasta omitir. El aviso de la nave explica si el tablero está lleno, faltan anclas, no hay vecinos vacíos de las anclas o las reglas de color bloquean las casillas disponibles. Esta explicación tiene prioridad sobre las transmisiones temporales; navegación, chat y consulta de reglas siguen accesibles. Si al menos uno de los dados tiene un destino, se conserva el cambio entre dados y la confirmación normal. Omitir continúa siendo una decisión explícita y el servidor confirma el resultado.
+
+
+## Rankets — clasificación global
+
+Rama `rankets`. Clasificación por victorias multijugador, con puestos compartidos en empates y desglose visual de los cuatro niveles. El servidor calcula las estadísticas desde los resultados definitivos existentes; no requiere migración. Consulta autenticada `GET /api/v1/rankets`, paginada, con posición propia. La app muestra el acceso mediante el trofeo «Rankets» en el menú. Detalles y reglas en [contracts/rankets-v1.md](contracts/rankets-v1.md).

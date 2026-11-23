@@ -1,3 +1,5 @@
+import '../rankets/rankets_repository.dart';
+import '../presentation/pages/rankets_page.dart';
 import '../audio/game_audio.dart';
 import '../audio/audio_events.dart';
 import 'dart:math';
@@ -18,6 +20,7 @@ class BrilliantGameApp extends StatefulWidget {
   final Random? azarPartida;
   final AuthRepository? authRepository;
   final RoomsRepository? roomsRepository;
+  final RanketsRepository? ranketsRepository;
   final ServerSettingsStore? serverStore;
   final SessionStore? sessionStore;
   final ServerProbe? serverProbe;
@@ -27,6 +30,7 @@ class BrilliantGameApp extends StatefulWidget {
     this.azarPartida,
     this.authRepository,
     this.roomsRepository,
+    this.ranketsRepository,
     this.serverStore,
     this.sessionStore,
     this.serverProbe,
@@ -41,6 +45,7 @@ class _BrilliantGameAppState extends State<BrilliantGameApp>
   final _audioNavigation = AudioNavigation(GameAudio.instance);
   AuthRepository? _repository;
   RoomsRepository? _roomsRepository;
+  RanketsRepository? _ranketsRepository;
   AuthCubit? _auth;
   late final _store = widget.serverStore ?? PreferencesServerSettingsStore();
   late final _probe = widget.serverProbe ?? HttpServerProbe();
@@ -86,6 +91,8 @@ class _BrilliantGameAppState extends State<BrilliantGameApp>
     if (sessionStore != null) _auth!.restoreSession();
     _roomsRepository =
         widget.roomsRepository ?? HttpRoomsRepository(baseUrl: _server);
+    _ranketsRepository =
+        widget.ranketsRepository ?? HttpRanketsRepository(baseUrl: _server);
   }
 
   Future<void> _load() async {
@@ -113,6 +120,7 @@ class _BrilliantGameAppState extends State<BrilliantGameApp>
     final previousAuth = _auth;
     final previousRepository = _repository;
     final previousRoomsRepository = _roomsRepository;
+    final previousRanketsRepository = _ranketsRepository;
     setState(() {
       _server = address;
       _configured = true;
@@ -123,6 +131,7 @@ class _BrilliantGameAppState extends State<BrilliantGameApp>
     previousAuth?.close();
     if (widget.authRepository == null) previousRepository?.close();
     if (widget.roomsRepository == null) previousRoomsRepository?.close();
+    if (widget.ranketsRepository == null) previousRanketsRepository?.close();
   }
 
   @override
@@ -131,6 +140,7 @@ class _BrilliantGameAppState extends State<BrilliantGameApp>
     _auth?.close();
     if (widget.authRepository == null) _repository?.close();
     if (widget.roomsRepository == null) _roomsRepository?.close();
+    if (widget.ranketsRepository == null) _ranketsRepository?.close();
     super.dispose();
   }
 
@@ -186,6 +196,8 @@ class _BrilliantGameAppState extends State<BrilliantGameApp>
                   settings,
                   azarPartida: widget.azarPartida,
                   cuenta: state.session!.user,
+                  ranketsBuilder: (_) =>
+                      RanketsPage(repository: _ranketsRepository!),
                   multijugadorBuilder: (_) =>
                       MultijugadorPage(repository: _roomsRepository!),
                 ),

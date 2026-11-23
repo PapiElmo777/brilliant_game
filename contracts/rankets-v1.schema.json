@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Rankets v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entries",
+    "total",
+    "offset",
+    "limit",
+    "me"
+  ],
+  "properties": {
+    "entries": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "$ref": "#/$defs/player"
+      }
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "offset": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50
+    },
+    "me": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/player"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "player": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "userId",
+        "username",
+        "avatarId",
+        "position",
+        "played",
+        "wins",
+        "winsByLevel"
+      ],
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "username": {
+          "type": "string",
+          "minLength": 1
+        },
+        "avatarId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "position": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "played": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "wins": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "winsByLevel": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "tablero_01",
+            "tablero_02",
+            "tablero_03",
+            "tablero_04"
+          ],
+          "properties": {
+            "tablero_01": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "tablero_02": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "tablero_03": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "tablero_04": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    }
+  }
+}
