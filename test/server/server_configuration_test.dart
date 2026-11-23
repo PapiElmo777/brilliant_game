@@ -3,6 +3,36 @@ import 'package:brilliant_game/server/server_configuration.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('IP-only configuration builds the complete internal address', () {
+    expect(
+      ServerAddress.fromIp('192.168.0.31').toString(),
+      'http://192.168.0.31:8080/api/v1',
+    );
+    expect(ServerAddress.fromIp('010.000.002.002').host, '10.0.2.2');
+    expect(
+      ServerAddress.fromIp(
+        '192.168.0.32',
+        currentAddress: Uri.parse('https://192.168.0.31:9443/api/v1'),
+      ).toString(),
+      'https://192.168.0.32:9443/api/v1',
+    );
+    for (final input in [
+      '',
+      '192.168.0',
+      '256.1.1.1',
+      '1.2.3.4.5',
+      '1.2.-1.4',
+      '1.2.a.4',
+      '1.2.3.0000',
+      'http://1.2.3.4',
+      '1.2.3.4:8080',
+    ]) {
+      expect(
+        () => ServerAddress.fromIp(input),
+        throwsA(isA<ServerConfigurationException>()),
+      );
+    }
+  });
   for (final (input, expected) in [
     ('192.168.0.31', 'http://192.168.0.31:8080/api/v1'),
     ('192.168.0.31:8090', 'http://192.168.0.31:8090/api/v1'),

@@ -11,6 +11,29 @@ class ServerConfigurationException implements Exception {
 }
 
 abstract final class ServerAddress {
+  /// The user edits only the IPv4 host; transport settings stay internal.
+  static Uri fromIp(String input, {Uri? currentAddress}) {
+    final parts = input.trim().split('.');
+    if (parts.length != 4 ||
+        parts.any(
+          (part) =>
+              !RegExp(r'^[0-9]{1,3}$').hasMatch(part) || int.parse(part) > 255,
+        )) {
+      throw const ServerConfigurationException(
+        'Escribe una IP válida, por ejemplo 192.168.0.31.',
+      );
+    }
+    final host = parts.map(int.parse).join('.');
+    return parse(
+      Uri(
+        scheme: currentAddress?.scheme ?? (kDebugMode ? 'http' : 'https'),
+        host: host,
+        port: currentAddress?.hasPort == true ? currentAddress!.port : 8080,
+        path: currentAddress?.path ?? '/api/v1',
+      ).toString(),
+    );
+  }
+
   static Uri parse(String input) {
     final value = input.trim();
     if (value.isEmpty || RegExp(r'\s').hasMatch(value)) {
@@ -112,7 +135,7 @@ class HttpServerProbe implements ServerProbe {
       );
     } on IOException {
       throw const ServerConfigurationException(
-        'No se pudo conectar. Revisa la dirección, el puerto y la red Wi-Fi.',
+        'No se pudo conectar. Revisa la IP y la red Wi-Fi.',
       );
     } on FormatException {
       throw const ServerConfigurationException(

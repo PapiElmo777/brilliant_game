@@ -33,13 +33,13 @@ void main() {
         );
         await tester.enterText(
           find.byKey(const ValueKey('server_address')),
-          '192.168.0.31:8080',
+          '192.168.0.31',
         );
         tester.testTextInput.hide();
         await tester.pumpAndSettle();
         if (screen == 'error') {
           probe.failure = const ServerConfigurationException(
-            'No se pudo conectar. Revisa la dirección, el puerto y la red Wi-Fi.',
+            'No se pudo conectar. Revisa la IP y la red Wi-Fi.',
           );
           await pulsarNivel(tester, find.byKey(const ValueKey('server_save')));
         }

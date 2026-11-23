@@ -43,7 +43,8 @@ void main() {
         _RealHttpOverrides(),
       );
       final repository = HttpAuthRepository(baseUrl: url, client: realClient());
-      final serverStore = MemoryServerSettingsStore();
+      // Keep the ephemeral test port internal while the form edits only the IP.
+      final serverStore = MemoryServerSettingsStore(url.toString());
       final serverProbe = HttpServerProbe(clientFactory: realClient);
       Widget app() => BrilliantGameApp(
         authRepository: repository,
@@ -170,7 +171,7 @@ void main() {
       await tap('server_settings');
       await tester.enterText(
         find.byKey(const ValueKey('server_address')),
-        url.toString(),
+        url.host,
       );
       await tap('server_save');
       expect(serverStore.value, url.toString());

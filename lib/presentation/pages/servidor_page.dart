@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../server/server_configuration.dart';
 import '../widgets/fondo_espacial.dart';
 
@@ -20,7 +21,7 @@ class ServidorPage extends StatefulWidget {
 
 class _ServidorPageState extends State<ServidorPage> {
   late final _address = TextEditingController(
-    text: widget.currentAddress?.toString() ?? '',
+    text: widget.currentAddress?.host ?? '',
   );
   final _form = GlobalKey<FormState>();
   bool _busy = false;
@@ -36,7 +37,10 @@ class _ServidorPageState extends State<ServidorPage> {
       return;
     }
     FocusScope.of(context).unfocus();
-    final address = ServerAddress.parse(_address.text);
+    final address = ServerAddress.fromIp(
+      _address.text,
+      currentAddress: widget.currentAddress,
+    );
     setState(() {
       _busy = true;
       _error = null;
@@ -96,26 +100,33 @@ class _ServidorPageState extends State<ServidorPage> {
                       ),
                       const SizedBox(height: 16),
                       const Text(
-                        'Conecta este dispositivo a la misma red Wi-Fi que la computadora. Escribe la dirección que aparece en la terminal del servidor.',
+                        'Conecta este dispositivo a la misma red Wi-Fi que la computadora. Escribe únicamente los números de la IP que aparece en la computadora.',
                       ),
                       const SizedBox(height: 24),
                       TextFormField(
                         key: const ValueKey('server_address'),
                         controller: _address,
                         enabled: !_busy,
-                        keyboardType: TextInputType.url,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                        ],
                         autocorrect: false,
                         enableSuggestions: false,
                         decoration: const InputDecoration(
-                          labelText: 'Dirección del servidor',
-                          hintText: 'http://192.168.0.31:8080',
-                          helperText:
-                              'También puedes escribir solo la IP y el puerto.',
+                          labelText: 'IP del servidor',
+                          hintText: '192.168.0.31',
+                          helperText: 'Solo números y puntos.',
                         ),
                         onFieldSubmitted: _busy ? null : (_) => _save(),
                         validator: (value) {
                           try {
-                            ServerAddress.parse(value ?? '');
+                            ServerAddress.fromIp(
+                              value ?? '',
+                              currentAddress: widget.currentAddress,
+                            );
                             return null;
                           } on ServerConfigurationException catch (error) {
                             return error.message;

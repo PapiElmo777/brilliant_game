@@ -58,12 +58,14 @@ void main() {
     await tap(tester, 'server_settings');
     await tester.enterText(
       find.byKey(const ValueKey('server_address')),
-      '192.168.0.31:8080',
+      '192.168.0.31',
     );
+    expect(find.textContaining('http://'), findsNothing);
+    expect(find.textContaining('/api/v1'), findsNothing);
     await tap(tester, 'server_save');
     expect(store.value, 'http://192.168.0.31:8080/api/v1');
     expect(probe.calls.single, Uri.parse(store.value!));
-    expect(find.text('192.168.0.31:8080'), findsOneWidget);
+    expect(find.text('192.168.0.31'), findsOneWidget);
     expect(find.byKey(const ValueKey('server_save')), findsNothing);
     await tester.enterText(find.byKey(const ValueKey('auth_username')), 'Ana');
     await tester.enterText(find.byKey(const ValueKey('auth_password')), 'a!2');
@@ -110,9 +112,16 @@ void main() {
       await tap(tester, 'account_menu');
       await tap(tester, 'logout_account');
       await tap(tester, 'server_settings');
+      expect(
+        tester
+            .widget<TextFormField>(find.byKey(const ValueKey('server_address')))
+            .controller!
+            .text,
+        '192.168.0.31',
+      );
       await tester.enterText(
         find.byKey(const ValueKey('server_address')),
-        '192.168.0.32:8080',
+        '192.168.0.32',
       );
       await tap(tester, 'server_save');
       expect(repositories.last.host, '192.168.0.32');
@@ -220,10 +229,10 @@ void main() {
       await tap(tester, 'server_settings');
       await tester.enterText(
         find.byKey(const ValueKey('server_address')),
-        '192.168.0.31:8080',
+        '192.168.0.31',
       );
       await tap(tester, 'server_save');
-      expect(find.text('192.168.0.31:8080'), findsOneWidget);
+      expect(find.text('192.168.0.31'), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     });

@@ -172,9 +172,7 @@ class _BrilliantGameAppState extends State<BrilliantGameApp>
                   builder: (context) => AccesoPage(
                     canAuthenticate: !_configurationEnabled || _configured,
                     serverWarning: _warning,
-                    serverLabel: _configured
-                        ? _server.authority
-                        : 'Sin configurar',
+                    serverLabel: _configured ? _server.host : 'Sin configurar',
                     onServerSettings: !_configurationEnabled
                         ? null
                         : () => Navigator.of(context).push(
