@@ -1,3 +1,4 @@
+import '../../audio/game_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/inicio_bloc.dart';
@@ -49,6 +50,12 @@ class PartidaEnLinea extends StatefulWidget {
 }
 
 class _PartidaEnLineaState extends State<PartidaEnLinea> {
+  @override
+  void initState() {
+    super.initState();
+    GameAudio.instance.setScene(AudioScene.game);
+  }
+
   Map<String, dynamic>? _matchSource;
   OnlineMatch? _parsedGame;
   OnlineMatch get _game {
@@ -184,7 +191,8 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
             _enabled &&
             round != null &&
             round.ownAction == null &&
-            (widget.state.secondsRemaining ?? 0) > 0 &&
+            (round.deadline == null ||
+                (widget.state.secondsRemaining ?? 0) > 0) &&
             !_meteors &&
             _shot == null;
         final own = widget.lobby.members
@@ -581,7 +589,7 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                                     bloc: widget.rooms,
                                     selector: (state) => state.secondsRemaining,
                                     builder: (context, seconds) => Text(
-                                      'Ronda ${round.number} · ${seconds ?? widget.state.secondsRemaining ?? 0} s',
+                                      'Ronda ${round.number} · ${round.deadline == null ? 'Sin límite' : '${seconds ?? widget.state.secondsRemaining ?? 0} s'}',
                                       key: const ValueKey('reloj_online'),
                                       style: const TextStyle(fontSize: 11),
                                     ),
@@ -737,6 +745,19 @@ class _PartidaEnLineaState extends State<PartidaEnLinea> {
                         onImpacto: (_) {
                           if (mounted && _game.round?.id == round.id) {
                             setState(() => _diceRevealed = true);
+                            final board = _board(_game);
+                            if (destinosConAncla(
+                                  board,
+                                  round.dice[0],
+                                  round.dice[1],
+                                ).isEmpty &&
+                                destinosConAncla(
+                                  board,
+                                  round.dice[1],
+                                  round.dice[0],
+                                ).isEmpty) {
+                              GameAudio.instance.play(GameSound.reject);
+                            }
                           }
                         },
                         onCompletada: (_) {

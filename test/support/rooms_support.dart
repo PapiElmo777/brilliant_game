@@ -96,6 +96,9 @@ class FakeRoomsRepository implements RoomsRepository {
     final updated = Map<String, dynamic>.from(room);
     if (path.endsWith('/settings')) {
       updated['capacity'] = body['capacity'];
+      if (body.containsKey('roundTimerEnabled')) {
+        updated['roundTimerEnabled'] = body['roundTimerEnabled'];
+      }
       updated['levelId'] = body['levelId'];
       updated['revision'] = (room['revision'] as int) + 1;
     }

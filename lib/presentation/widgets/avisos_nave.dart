@@ -133,7 +133,9 @@ class _AvisosNaveState extends State<AvisosNave> {
         stream: widget.rooms.stream,
         initialData: widget.rooms.state,
         builder: (context, snapshot) {
-          final seconds = snapshot.data?.secondsRemaining ?? 0;
+          final seconds = snapshot.data?.secondsRemaining;
+          final untimed =
+              snapshot.data?.lobby?.match?['roundTimerEnabled'] == false;
           final ruleWarning =
               aviso?.roundId != null &&
               (widget.mensajeBase.startsWith('Ninguno de los dados') ||
@@ -150,7 +152,9 @@ class _AvisosNaveState extends State<AvisosNave> {
           final message = !active
               ? widget.mensajeBase
               : aviso.text ??
-                    '¡Ronda ${aviso.roundNumber}! Tienes $seconds segundos para mover.';
+                    (untimed
+                        ? '¡Ronda ${aviso.roundNumber}! Sin límite de tiempo. Confirma u omite para avanzar.'
+                        : '¡Ronda ${aviso.roundNumber}! ${seconds == null ? 'Prepara tu jugada.' : 'Tienes $seconds segundos para mover.'}');
           return GloboAlien(
             key: const ValueKey('globo_nave_online'),
             mensaje: message,

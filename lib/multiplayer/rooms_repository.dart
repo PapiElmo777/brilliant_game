@@ -137,6 +137,7 @@ class LobbySnapshot {
   final String id, name, state;
   final String? hostId, levelId;
   final int capacity, revision, sequence;
+  final bool roundTimerEnabled;
   final DateTime serverTime;
   final List<RoomMember> members;
   final Map<String, dynamic>? match;
@@ -147,6 +148,7 @@ class LobbySnapshot {
       state = (json['room'] as Map)['state'] as String,
       hostId = (json['room'] as Map)['hostMemberId'] as String?,
       levelId = (json['room'] as Map)['levelId'] as String?,
+      roundTimerEnabled = (json['room'] as Map)['roundTimerEnabled'] != false,
       capacity = (json['room'] as Map)['capacity'] as int,
       revision = (json['room'] as Map)['revision'] as int,
       sequence = json['sequence'] as int,
@@ -166,7 +168,7 @@ class OnlineMatch {
   final String id, levelId, state;
   final int target;
   final Map<String, int> board;
-  final bool prepared;
+  final bool prepared, roundTimerEnabled;
   final Set<String> preparedIds;
   final OnlineRound? round;
   final List<Map<String, dynamic>> scores, claims, zones, history;
@@ -181,6 +183,7 @@ class OnlineMatch {
           (key, value) => MapEntry(key as String, value as int),
         ),
       ),
+      roundTimerEnabled = json['roundTimerEnabled'] != false,
       prepared = json['ownPreparationConfirmed'] == true,
       preparedIds = Set.unmodifiable(
         (json['preparedMemberIds'] as List? ?? []).cast<String>(),
@@ -214,14 +217,16 @@ class OnlineRound {
   final String id;
   final int number;
   final List<int> dice;
-  final DateTime deadline;
+  final DateTime? deadline;
   final Set<String> resolvedIds;
   final Map<String, dynamic>? ownAction;
   OnlineRound.fromJson(Map<String, dynamic> json)
     : id = json['id'] as String,
       number = json['number'] as int,
       dice = List.unmodifiable((json['dice'] as List).cast<int>()),
-      deadline = DateTime.parse(json['deadline'] as String),
+      deadline = json['deadline'] == null
+          ? null
+          : DateTime.parse(json['deadline'] as String),
       resolvedIds = Set.unmodifiable(
         (json['resolvedMemberIds'] as List).cast<String>(),
       ),

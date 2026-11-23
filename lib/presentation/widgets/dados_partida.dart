@@ -1,3 +1,4 @@
+import '../../audio/game_audio.dart';
 import 'package:flutter/material.dart';
 import '../../bloc/partida_estado.dart';
 import '../../models/tirada.dart';
@@ -31,7 +32,12 @@ class FichaDado extends StatelessWidget {
         color: seleccionado ? Colors.white : const Color(0xFFB6F6FF),
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
-          onTap: onTap,
+          onTap: onTap == null
+              ? null
+              : () {
+                  GameAudio.instance.play(GameSound.select);
+                  onTap!();
+                },
           borderRadius: BorderRadius.circular(14),
           child: DecoratedBox(
             decoration: BoxDecoration(

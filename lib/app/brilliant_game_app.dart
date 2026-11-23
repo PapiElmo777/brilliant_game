@@ -1,3 +1,5 @@
+import '../audio/game_audio.dart';
+import '../audio/audio_events.dart';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -36,6 +38,7 @@ class BrilliantGameApp extends StatefulWidget {
 
 class _BrilliantGameAppState extends State<BrilliantGameApp>
     with WidgetsBindingObserver {
+  final _audioNavigation = AudioNavigation(GameAudio.instance);
   AuthRepository? _repository;
   RoomsRepository? _roomsRepository;
   AuthCubit? _auth;
@@ -61,6 +64,7 @@ class _BrilliantGameAppState extends State<BrilliantGameApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    GameAudio.instance.setForeground(state == AppLifecycleState.resumed);
     if (state == AppLifecycleState.resumed) _auth?.resumeSession();
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
@@ -150,6 +154,7 @@ class _BrilliantGameAppState extends State<BrilliantGameApp>
         builder: (context, state) => MaterialApp(
           key: ValueKey((_revision, state.session?.user.id)),
           title: 'Brilliant Game',
+          navigatorObservers: [_audioNavigation],
           debugShowCheckedModeBanner: false,
           theme: TemaBrilliant.oscuro,
           home: state.session == null

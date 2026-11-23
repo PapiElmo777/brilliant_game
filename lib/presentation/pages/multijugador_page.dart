@@ -1,3 +1,4 @@
+import '../../audio/audio_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../auth/auth_cubit.dart';
@@ -71,8 +72,14 @@ class _MultijugadorPageState extends State<MultijugadorPage>
       builder: (context) => AlertDialog(
         scrollable: true,
         title: const Text('¿Salir de la sala?'),
-        content: const Text(
-          'Dejarás de ocupar un lugar. Si eres el anfitrión, otro jugador asumirá el rol.',
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Dejarás de ocupar un lugar. Si eres el anfitrión, otro jugador asumirá el rol.',
+            ),
+            AudioSettingsButton(),
+          ],
         ),
         actions: [
           TextButton(
@@ -189,7 +196,7 @@ class _MultijugadorPageState extends State<MultijugadorPage>
                               child: Text(
                                 game.state == 'END_VOTE'
                                     ? 'Votación · ${state.secondsRemaining ?? 0} s'
-                                    : 'Ronda ${game.round!.number} · ${state.secondsRemaining ?? 0} s',
+                                    : 'Ronda ${game.round!.number} · ${game.round!.deadline == null ? 'Sin límite' : '${state.secondsRemaining ?? 0} s'}',
                                 key: const ValueKey('reloj_online'),
                               ),
                             ),
@@ -205,6 +212,7 @@ class _MultijugadorPageState extends State<MultijugadorPage>
                     },
                   ),
                   actions: [
+                    const AudioSettingsButton(),
                     IconButton(
                       tooltip: 'Actualizar',
                       onPressed: state.busy ? null : _rooms.refresh,
@@ -460,6 +468,25 @@ class _MultijugadorPageState extends State<MultijugadorPage>
                       },
               ),
             ),
+          ),
+        if (lobby.state == 'LOBBY')
+          SwitchListTile.adaptive(
+            key: const ValueKey('timer_ronda_sala'),
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Tiempo por ronda'),
+            subtitle: Text(
+              lobby.roundTimerEnabled
+                  ? '60 segundos para jugar'
+                  : 'Sin límite · avanzan cuando todos confirman u omiten',
+            ),
+            value: lobby.roundTimerEnabled,
+            onChanged: canConfigure
+                ? (value) => _rooms.settings(
+                    lobby.capacity,
+                    lobby.levelId,
+                    roundTimerEnabled: value,
+                  )
+                : null,
           ),
         const SizedBox(height: 16),
         Text(

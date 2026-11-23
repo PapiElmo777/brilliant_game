@@ -1,3 +1,4 @@
+import '../../audio/game_audio.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../catalogo/catalogo_tableros.dart';
@@ -28,6 +29,22 @@ class FinalPartidaOnline extends StatefulWidget {
 }
 
 class _FinalPartidaOnlineState extends State<FinalPartidaOnline> {
+  @override
+  void initState() {
+    super.initState();
+    if (!_shown) {
+      GameAudio.instance.stopEffects();
+      final position = _own?['position'] as int?;
+      GameAudio.instance.play(
+        _won
+            ? GameSound.victory
+            : position != null && position <= 3
+            ? GameSound.podium
+            : GameSound.finish,
+      );
+    }
+  }
+
   final _control = ControlCelebracion();
   final _ship = GlobalKey(), _board = GlobalKey();
   late bool _shown = widget.rooms.resultWasShown(widget.game.id);

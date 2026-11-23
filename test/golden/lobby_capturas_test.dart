@@ -12,22 +12,31 @@ import 'fuentes_prueba.dart';
 
 void main() {
   setUpAll(cargarFuentesPrueba);
-  for (final (name, size) in [
-    ('pequeno', const Size(320, 568)),
-    ('grande', const Size(390, 844)),
-    ('horizontal', const Size(844, 390)),
-  ]) {
-    testWidgets('Lobby: $name', skip: !Platform.isMacOS, (tester) async {
-      pantallaNivel(tester, size: size, escala: 1.5);
-      final rooms = FakeRoomsRepository()
-        ..snapshot = lobbyJson(levelId: 'tablero_03', guestReady: true);
-      await openRooms(tester, rooms);
-      await precargarRecursos(tester);
-      await expectLater(
-        find.byType(BrilliantGameApp),
-        matchesGoldenFile('capturas/lobby_$name.png'),
+  for (final timed in [true, false]) {
+    for (final (name, size) in [
+      ('pequeno', const Size(320, 568)),
+      ('grande', const Size(390, 844)),
+      ('horizontal', const Size(844, 390)),
+    ]) {
+      testWidgets(
+        'Lobby: $name ${timed ? 'timer' : 'sin timer'}',
+        skip: !Platform.isMacOS,
+        (tester) async {
+          pantallaNivel(tester, size: size, escala: 1.5);
+          final rooms = FakeRoomsRepository()
+            ..snapshot = lobbyJson(levelId: 'tablero_03', guestReady: true);
+          rooms.snapshot!['room']['roundTimerEnabled'] = timed;
+          await openRooms(tester, rooms);
+          await precargarRecursos(tester);
+          await expectLater(
+            find.byType(BrilliantGameApp),
+            matchesGoldenFile(
+              'capturas/lobby_${name}${timed ? '' : '_sin_timer'}.png',
+            ),
+          );
+          expect(tester.takeException(), isNull);
+        },
       );
-      expect(tester.takeException(), isNull);
-    });
+    }
   }
 }
