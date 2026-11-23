@@ -144,7 +144,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(auth.state.session, isNull);
   });
-  testWidgets('Menu trophy opens Rankets', (tester) async {
+  testWidgets('Main menu button opens Rankets', (tester) async {
     await tester.pumpWidget(
       BrilliantGameApp(
         authRepository: FakeAuthRepository(),
@@ -158,7 +158,8 @@ void main() {
     await tester.ensureVisible(find.byKey(const ValueKey('auth_submit')));
     await tester.tap(find.byKey(const ValueKey('auth_submit')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('rankets_menu')));
+    expect(find.byKey(const ValueKey('rankets_menu')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('rankets_boton_menu')));
     await tester.pumpAndSettle();
     expect(find.byType(RanketsPage), findsOneWidget);
     expect(find.text('Los mejores jugadores'), findsOneWidget);

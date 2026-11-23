@@ -83,6 +83,7 @@ class _MenuInicialPageState extends State<MenuInicialPage> {
             fit: StackFit.expand,
             children: [
               _PortadaMenu(
+                onRankets: widget.onRankets,
                 nombre: widget.cuenta?.username,
                 onMultijugador:
                     widget.onMultijugador == null || _multijugadorAbierto
@@ -157,10 +158,12 @@ class _MenuInicialPageState extends State<MenuInicialPage> {
 class _PortadaMenu extends StatelessWidget {
   final VoidCallback? onNuevaPartida;
   final VoidCallback? onMultijugador;
+  final VoidCallback? onRankets;
   final String? nombre;
   const _PortadaMenu({
     required this.onNuevaPartida,
     this.onMultijugador,
+    this.onRankets,
     this.nombre,
   });
 
@@ -171,10 +174,15 @@ class _PortadaMenu extends StatelessWidget {
       final barras = MediaQuery.paddingOf(context);
       final ancho = math.min(340.0, espacio.maxWidth - 48);
       final altoLogo = (espacio.maxHeight * .16).clamp(86.0, 140.0);
-      final arribaControles = espacio.maxHeight - barras.bottom - 16 - 166;
+      final altoControles = onRankets == null ? 166.0 : 228.0;
+      final compacto = horizontal && onRankets != null;
+      final arribaControles =
+          espacio.maxHeight - barras.bottom - 16 - altoControles;
       final controles = _ControlesMenu(
         onNuevaPartida: onNuevaPartida,
         onMultijugador: onMultijugador,
+        onRankets: onRankets,
+        compacto: compacto,
       );
       return Stack(
         fit: StackFit.expand,
@@ -217,7 +225,10 @@ class _PortadaMenu extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _LogoMenu(ancho: 230, alto: nombre == null ? 56 : 48),
+                      _LogoMenu(
+                        ancho: 230,
+                        alto: compacto ? 36 : (nombre == null ? 56 : 48),
+                      ),
                       if (nombre != null)
                         SizedBox(
                           height: 18,
@@ -230,7 +241,7 @@ class _PortadaMenu extends StatelessWidget {
                             ),
                           ),
                         ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: compacto ? 8 : 12),
                       controles,
                     ],
                   ),
@@ -263,7 +274,7 @@ class _PortadaMenu extends StatelessWidget {
               left: (espacio.maxWidth - ancho) / 2,
               width: ancho,
               top: arribaControles,
-              height: 166,
+              height: altoControles,
               child: controles,
             ),
           ],
@@ -296,27 +307,46 @@ class _LogoMenu extends StatelessWidget {
 class _ControlesMenu extends StatelessWidget {
   final VoidCallback? onNuevaPartida;
   final VoidCallback? onMultijugador;
-  const _ControlesMenu({required this.onNuevaPartida, this.onMultijugador});
+  final VoidCallback? onRankets;
+  final bool compacto;
+  const _ControlesMenu({
+    required this.onNuevaPartida,
+    this.onMultijugador,
+    this.onRankets,
+    this.compacto = false,
+  });
   @override
   Widget build(BuildContext context) => Column(
     mainAxisSize: MainAxisSize.min,
     children: [
       _BotonModoMenu(
+        alto: compacto ? 48 : 52,
         clave: const ValueKey('nueva_partida_menu'),
         texto: 'UN JUGADOR',
         icono: Icons.play_arrow_rounded,
         onPressed: onNuevaPartida,
       ),
-      const SizedBox(height: 10),
+      SizedBox(height: compacto ? 8 : 10),
       _BotonModoMenu(
+        alto: compacto ? 48 : 52,
         clave: const ValueKey('multijugador_menu'),
         texto: 'MULTIJUGADOR',
         icono: Icons.groups,
         onPressed: onMultijugador,
       ),
-      const SizedBox(height: 10),
+      SizedBox(height: compacto ? 8 : 10),
+      if (onRankets != null) ...[
+        _BotonModoMenu(
+          alto: compacto ? 48 : 52,
+          clave: const ValueKey('rankets_boton_menu'),
+          texto: 'RANKETS',
+          icono: Icons.emoji_events_rounded,
+          onPressed: onRankets,
+        ),
+        SizedBox(height: compacto ? 8 : 10),
+      ],
       SizedBox(
-        height: 42,
+        height: compacto ? 24 : 42,
         child: LayoutBuilder(
           builder: (context, espacio) => FittedBox(
             fit: BoxFit.scaleDown,
@@ -342,11 +372,13 @@ class _ControlesMenu extends StatelessWidget {
 }
 
 class _BotonModoMenu extends StatelessWidget {
+  final double alto;
   final Key clave;
   final String texto;
   final IconData icono;
   final VoidCallback? onPressed;
   const _BotonModoMenu({
+    this.alto = 52,
     required this.clave,
     required this.texto,
     required this.icono,
@@ -366,7 +398,7 @@ class _BotonModoMenu extends StatelessWidget {
     ),
     child: SizedBox(
       width: double.infinity,
-      height: 52,
+      height: alto,
       child: FilledButton(
         key: clave,
         onPressed: onPressed,
